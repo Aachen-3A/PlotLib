@@ -243,6 +243,17 @@ class Plot(object):
             if b.name==name:
                 return b
         return None
+        
+    def getBGAdded(self,name,label):
+        temp = []
+        for key in self.bgDict.keys():
+            if name in key:
+                temp.append( self.bgDict[key] )
+        addedBG = temp[0]
+        for i in temp[1:]:
+            addedBG += i
+        addedBG.name=label
+        return addedBG
 
     def getSG(self,name):
         for s in self.sg:
@@ -253,14 +264,19 @@ class Plot(object):
     
     def joinBG(self,name,label):
         if name == "*" or name == "":
-            # join all backgrounds:
+            # join all bg:
             joined = self.getAllBGAdded()
             self.bg = []
             self.bgDict = {}
             self.addBG(joined, label)
         else:
-            # join backgrounds filtered by name:
-            print "not yet uploaded in repo"
+            # join bg filtered by name:
+            joined = self.getBGAdded(name,label)
             
-        
+            # delete bg from plot dictionary (todo: also delete from bg list):
+            for key in self.bgDict.keys():
+                if name in key:
+                    self.bgDict.pop(key,0)
+                                       
+            self.addBG(joined, label)
         
