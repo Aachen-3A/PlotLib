@@ -2,7 +2,7 @@
 
 import ROOT
 import rootplotlib
-
+from lib.rootplotlib import *
 
 
 ##helper classes
@@ -69,10 +69,10 @@ class Hist(object):
         return h
     
     def __add__(self,other):
-        return add(self,other)
+        return self.add(other)
     
     def Add(self,other):
-        return add(self,other)
+        return self.add(other)
     
     def __str__(self):
         return str(self.fcolor)+" "+str(self.lcolor)+" "+str(self.lstyle)+" "+str(self.lwidth)+" "+str(self.fstyle)+" "+str(self.scale)
@@ -96,9 +96,10 @@ class Plot(object):
         self.smallestBinWidth=-1
         self.yAxisLabel="Events / %s "
         self.yAxisUnit=""
-        self.legend=Legend()
+        #self.legend=Legend()
         
         self.canvas=canvas=ROOT.TCanvas("c","c",1050,1050)
+        self.legend=Legend(pad=ROOT.gPad)
         rootplotlib.init()
         self.canvas.UseCurrentStyle()
 
@@ -224,15 +225,17 @@ class Plot(object):
         self.bgDict.update({name:h})
         self.bg.append(h)
         
-    def addSG(self,h):
+    def addSG(self,h,name):
         self.sgDict.update({name:h})
         self.sg.append(h)
     
     def addData(self,h):
         self.data=h
-        
+
     def getAllBGAdded(self):
-        addedBG=sum(self.bg)
+        addedBG=self.bg[0]
+        for i in self.bg[1:]:
+            addedBG += i
         addedBG.name="allbg"
         return addedBG
         
@@ -240,6 +243,13 @@ class Plot(object):
         for b in self.bg:
             if b.name==name:
                 return b
+        return None
+
+    def getSG(self,name):
+        for s in self.sg:
+            if s.name==name:
+                return s
+        print "SG not found"
         return None
     
     def joinBG(self,name,label):
