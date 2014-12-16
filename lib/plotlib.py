@@ -252,7 +252,15 @@ class Plot(object):
         return None
     
     def joinBG(self,name,label):
-        print "n/a"
-        
+        if name == "*" or name == "":
+            # join all backgrounds:
+            joined = self.getAllBGAdded()
+            self.bg = []
+            self.bgDict = {}
+            self.addBG(joined, label)
+        else:
+            # join backgrounds filtered by name:
+            print "not yet uploaded in repo"
+            
         
         
