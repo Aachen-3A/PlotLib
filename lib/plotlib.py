@@ -2,7 +2,6 @@
 
 import ROOT
 import rootplotlib
-from lib.rootplotlib import *
 
 
 ##helper classes
@@ -99,7 +98,7 @@ class Plot(object):
         #self.legend=Legend()
         
         self.canvas=canvas=ROOT.TCanvas("c","c",1050,1050)
-        self.legend=Legend(pad=ROOT.gPad)
+        self.legend=rootplotlib.Legend(pad=ROOT.gPad)
         rootplotlib.init()
         self.canvas.UseCurrentStyle()
 
@@ -253,7 +252,7 @@ class Plot(object):
         return None
     
     def joinBG(self,name,label):
-        wefmo
+        print "n/a"
         
         
         
