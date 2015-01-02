@@ -257,8 +257,8 @@ def test():
     np.random.seed(42)
     
     # signal distribution
-    signal = 126 + 10 * np.random.randn(100)
-    signal_obs = 126 + 10 * np.random.randn(100)
+    signal = 126 + 10 * np.random.randn(1000)
+    signal_obs = 126 + 10 * np.random.randn(1000)
     
     # create histograms
     h1 = Hist(30, 40, 200, title='Background', markersize=0)
@@ -267,9 +267,9 @@ def test():
     h3.markersize = 1.2
     
     # fill the histograms with our distributions
-    h1.FillRandom('landau', 1000)
+    h1.FillRandom('landau', 10000)
     map(h2.Fill, signal)
-    h3.FillRandom('landau', 1000)
+    h3.FillRandom('landau', 10000)
     map(h3.Fill, signal_obs)
     
     # set visual attributes
@@ -296,30 +296,41 @@ def test():
     ax1.yaxis.set_major_locator(MultipleLocator(20))
     rplt.bar(stack, stacked=True, axes=ax1)
     rplt.errorbar(h3, xerr=False, emptybins=False, axes=ax1, markersize=4)
-    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='bottom', ha='right')
-    plt.ylabel('Events', position=(0., 1.), va='top', ha='right')
-    leg = plt.legend()
+    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='top', ha='right')
+    plt.ylabel('Events', position=(0.1, 1.), va='top', ha='right')
+    leg = plt.legend(numpoints=1)
+    leg.get_frame().set_alpha(0.0)
+    #ax1.set_yscale('symlog')
     ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
     
     ax0 = plt.subplot2grid((6,4), (0,0), rowspan=1, colspan=4, sharex=ax1)
+    sig_hist = h1.Clone(title='signi')
+    for i in range(sig_hist.GetNbinsX()+1):
+        value = float(h3.GetBinContent(i) - h1.GetBinContent(i))/np.sqrt(float(pow(h3.GetBinError(i),2) + pow(h1.GetBinError(i),2)))
+        sig_hist.SetBinContent(i,value)
+        sig_hist.SetBinError(i,1)
+    rplt.errorbar(sig_hist, xerr=False, emptybins=False, axes=ax0, markersize=4)
     plt.ylabel('Significance', position=(0., 1.), va='top', ha='right')
+    ax0.axhline(0, color='blue')
     ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
 
     ax2 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
-    ratio = h3.Clone(title='ratio')
-    ratio.Divide(h1)
     sum_hist = h1.Clone(title='sum')
     sum_hist.Add(h2)
     ratio_sig = h3.Clone(title='ratio_sig')
     ratio_sig.Divide(sum_hist)
-    rplt.errorbar(ratio_sig, xerr=False, emptybins=False, axes=ax2, ecolor='red', markersize=4)
-    rplt.errorbar(ratio, xerr=False, emptybins=False, axes=ax2, ecolor='green', markersize=4)
-    ax2.axhline(1, color='blue')
-    plt.ylabel('Ratio', position=(0., 1.), va='top', ha='right')
-    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='bottom', ha='right')
+    ratio_1 = rplt.errorbar(ratio_sig, xerr=False, emptybins=False, axes=ax2, ecolor='red', markersize=4, label='Data/(Bag+Sig)')
+    ratio = h3.Clone(title='ratio')
+    ratio.Divide(h1)
+    ratio_2 = rplt.errorbar(ratio, xerr=False, emptybins=False, axes=ax2, ecolor='green', markersize=4, label='Data/Bag')
+    leg = plt.legend(loc=2, ncol=1, prop={'size':8}, borderaxespad=0., numpoints=1)
+    leg.get_frame().set_alpha(0.0)
     ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
-    
-    plt.subplots_adjust(left=.10, bottom=.10, right= .95, top=.95, wspace =.2, hspace=.0)
+    ax2.axhline(1, color='blue')
+    plt.ylabel('Ratio Data/MC', position=(0., 1.), va='top', ha='right')
+    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='top', ha='right')
+
+    plt.subplots_adjust(left=.08, bottom=.10, right= .92, top=.95, wspace =.2, hspace=.0)
     plt.setp(ax0.get_xticklabels(), visible=False)
     plt.setp(ax1.get_xticklabels(), visible=False)
     
