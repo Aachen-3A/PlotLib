@@ -8,9 +8,15 @@ from rootpy.plotting.style import get_style, set_style
 from rootpy.plotting.utils import get_limits
 from rootpy.interactive import wait
 import random
+import matplotlib
+from matplotlib import rc
+import matplotlib.ticker as mticker
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+
+matplotlib.rcParams.update({'font.size': 10})
+rc('text', usetex=True)
 
 def hist_example():
     # create a simple 1D histogram with 10 constant-width bins between 0 and 1
@@ -241,7 +247,86 @@ def r2m_example():
         wait(True)
 
 def test():
-    print 'bla'
+    # set the style
+    style = get_style('ATLAS')
+    style.SetEndErrorSize(3)
+    set_style(style)
+    
+    # set the random seed
+    ROOT.gRandom.SetSeed(42)
+    np.random.seed(42)
+    
+    # signal distribution
+    signal = 126 + 10 * np.random.randn(100)
+    signal_obs = 126 + 10 * np.random.randn(100)
+    
+    # create histograms
+    h1 = Hist(30, 40, 200, title='Background', markersize=0)
+    h2 = h1.Clone(title='Signal')
+    h3 = h1.Clone(title='Data')
+    h3.markersize = 1.2
+    
+    # fill the histograms with our distributions
+    h1.FillRandom('landau', 1000)
+    map(h2.Fill, signal)
+    h3.FillRandom('landau', 1000)
+    map(h3.Fill, signal_obs)
+    
+    # set visual attributes
+    h1.fillstyle = 'solid'
+    h1.fillcolor = 'green'
+    h1.linecolor = 'green'
+    h1.linewidth = 0
+    
+    h2.fillstyle = 'solid'
+    h2.fillcolor = 'red'
+    h2.linecolor = 'red'
+    h2.linewidth = 0
+    
+    stack = HistStack()
+    stack.Add(h1)
+    stack.Add(h2)
+
+    # plot with matplotlib
+    fig = plt.figure(figsize=(6, 6), dpi=100, facecolor='w')
+
+    ax1 = plt.subplot2grid((6,4), (1,0), rowspan=4, colspan=4)
+    ax1.xaxis.set_minor_locator(AutoMinorLocator())
+    ax1.yaxis.set_minor_locator(AutoMinorLocator())
+    ax1.yaxis.set_major_locator(MultipleLocator(20))
+    rplt.bar(stack, stacked=True, axes=ax1)
+    rplt.errorbar(h3, xerr=False, emptybins=False, axes=ax1, markersize=4)
+    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='bottom', ha='right')
+    plt.ylabel('Events', position=(0., 1.), va='top', ha='right')
+    leg = plt.legend()
+    ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
+    
+    ax0 = plt.subplot2grid((6,4), (0,0), rowspan=1, colspan=4, sharex=ax1)
+    plt.ylabel('Significance', position=(0., 1.), va='top', ha='right')
+    ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+
+    ax2 = plt.subplot2grid((6,4), (5,0), rowspan=1, colspan=4, sharex=ax1)
+    ratio = h3.Clone(title='ratio')
+    ratio.Divide(h1)
+    sum_hist = h1.Clone(title='sum')
+    sum_hist.Add(h2)
+    ratio_sig = h3.Clone(title='ratio_sig')
+    ratio_sig.Divide(sum_hist)
+    rplt.errorbar(ratio_sig, xerr=False, emptybins=False, axes=ax2, ecolor='red', markersize=4)
+    rplt.errorbar(ratio, xerr=False, emptybins=False, axes=ax2, ecolor='green', markersize=4)
+    ax2.axhline(1, color='blue')
+    plt.ylabel('Ratio', position=(0., 1.), va='top', ha='right')
+    plt.xlabel('Mass (GeV)', position=(1., -0.1), va='bottom', ha='right')
+    ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+    
+    plt.subplots_adjust(left=.10, bottom=.10, right= .95, top=.95, wspace =.2, hspace=.0)
+    plt.setp(ax0.get_xticklabels(), visible=False)
+    plt.setp(ax1.get_xticklabels(), visible=False)
+    
+    if not ROOT.gROOT.IsBatch():
+        plt.savefig('test_plt.pdf',facecolor=fig.get_facecolor())
+        # wait for you to close the ROOT canvas before exiting
+        wait(True)
 
 def main():
     if len(sys.argv) > 1:
