@@ -309,7 +309,7 @@ def test():
         value = float(h3.GetBinContent(i) - h1.GetBinContent(i))/np.sqrt(float(pow(h3.GetBinError(i),2) + pow(h1.GetBinError(i),2)))
         sig_hist.SetBinContent(i,value)
         sig_hist.SetBinError(i,1)
-    rplt.errorbar(sig_hist, xerr=False, emptybins=False, axes=ax0, markersize=4)
+    rplt.errorbar(sig_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, ecolor='black')
     plt.ylabel('Significance', position=(0., 1.), va='top', ha='right')
     ax0.axhline(0, color='blue')
     ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
@@ -333,6 +333,10 @@ def test():
     plt.subplots_adjust(left=.08, bottom=.10, right= .92, top=.95, wspace =.2, hspace=.0)
     plt.setp(ax0.get_xticklabels(), visible=False)
     plt.setp(ax1.get_xticklabels(), visible=False)
+
+    fig.text(0.92, 0.955, '$42\,\mathrm{fb^{-1}} (13\,\mathrm{TeV})$', va='bottom', ha='right', color='black', size=12)
+    fig.text(0.10, 0.915, 'CMS', va='bottom', ha='left', color='black', size=14, weight='bold')
+    fig.text(0.10, 0.885, '$Preliminary$', va='bottom', ha='left', color='black', size=10)
     
     if not ROOT.gROOT.IsBatch():
         plt.savefig('test_plt.pdf',facecolor=fig.get_facecolor())
