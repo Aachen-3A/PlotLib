@@ -27,7 +27,7 @@ def main():
     sig_hist.yaxis.SetTitle('Events')
     sig_hist.xaxis.SetTitle('Mass (GeV)')
 
-    test = plotter(hist=[bag_hist, sig_hist])
+    test = plotter(hist=[bag_hist, sig_hist],style='CMS')
     test.Add_data(dat_hist)
     test.Add_signi(pos=0, height=15)
     test.Add_ratio(pos=1, height=15)
@@ -61,7 +61,7 @@ def create_test_histos():
     return h1, h2, h3
 
 class plotter():
-    def __init__(self, style = 'CMS', hist = [], data_hist = None, data = False, doRatio = False, doSigni = False, doDiff = False):
+    def __init__(self, style = 'Plain', hist = [], data_hist = None, data = False, doRatio = False, doSigni = False, doDiff = False):
         ## style variables
         self.style = style
         ## BG histograms
@@ -98,16 +98,37 @@ class plotter():
             self.add_lumi_text = True
             self.label_text_color = 'black'
             self.bg_color = 'w'
+            self.ref_line_color = 'blue'
+            self.spine_color = 'black'
+            self.tick_color = 'black'
+            self.marker_style = 'o'
+            self.marker_size = 3
+            self.marker_color = 'black'
+            self.marker_error_cap_width = 0
         elif self.style == 'Plain':
             self.add_cms_text = False
             self.add_lumi_text = False
             self.label_text_color = 'black'
             self.bg_color = 'w'
+            self.ref_line_color = 'blue'
+            self.spine_color = 'black'
+            self.tick_color = 'black'
+            self.marker_style = 'o'
+            self.marker_size = 4
+            self.marker_color = 'black'
+            self.marker_error_cap_width = 1
         elif self.style == 'Cool':
             self.add_cms_text = True
             self.add_lumi_text = True
             self.label_text_color = 'white'
             self.bg_color = '#07000d'
+            self.ref_line_color = 'y'
+            self.spine_color = '#5998ff'
+            self.tick_color = 'w'
+            self.marker_style = 'o'
+            self.marker_size = 3
+            self.marker_color = 'lightgray'
+            self.marker_error_cap_width = 0
 
     def Add_data(self, data_hist):
         self.data = True
@@ -218,40 +239,82 @@ class plotter():
         ## Plot the main distribution on axis 1
         ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1, axisbg = self.bg_color)
         if len(self.hist) == 1:
-            rplt.bar(self.hist[0], stacked=False, axes=ax1)
+            rplt.bar(self.hist[0], stacked=False, axes=ax1, yerr=False)
             if self.data:
-                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, markersize=4)
+                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, 
+                              markersize=self.marker_size,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
         else:
-            stack = HistStack()
-            for item in self.hist:
-                stack.Add(item)
-            rplt.bar(stack, stacked=True, axes=ax1)
+            rplt.bar(self.hist, stacked=True, axes=ax1, yerr=False)
             if self.data:
-                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, markersize=4)
+                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1,
+                              markersize=self.marker_size,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
         ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self.y_label_offset,0.9)
         if not ((self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1) or (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2)):
             plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
         ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
+        ax1.spines['bottom'].set_color(self.spine_color)
+        ax1.spines['top'].set_color(self.spine_color)
+        ax1.spines['left'].set_color(self.spine_color)
+        ax1.spines['right'].set_color(self.spine_color)
+        ax1.tick_params(axis='y', colors=self.tick_color)
+        ax1.tick_params(axis='x', colors=self.tick_color)
         ## Plot a derived distribution on top of the main distribution on axis 0
         if (self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0):
             ax0 = plt.subplot2grid((100,1), (0,0), rowspan=self.hist_start, colspan=1, sharex = ax1, axisbg = self.bg_color)
+            ax0.spines['bottom'].set_color(self.spine_color)
+            ax0.spines['top'].set_color(self.spine_color)
+            ax0.spines['left'].set_color(self.spine_color)
+            ax0.spines['right'].set_color(self.spine_color)
+            ax0.tick_params(axis='y', colors=self.tick_color)
+            ax0.tick_params(axis='x', colors=self.tick_color)
             if (self.ratio and self.ratio_pos == 0):
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.ratio_text)
-                ax0.axhline(1, color='blue')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax0,
+                              markersize=self.marker_size,
+                              label=self.ratio_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax0.axhline(1, color=self.ref_line_color)
                 ax0.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
                 ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 0):
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.diff_text)
-                ax0.axhline(0, color='blue')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax0,
+                              markersize=self.marker_size,
+                              label=self.diff_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax0.axhline(0, color=self.ref_line_color)
                 ax0.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
                 ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 0):
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.signi_text)
-                ax0.axhline(0, color='blue')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax0,
+                              markersize=self.marker_size,
+                              label=self.signi_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax0.axhline(0, color=self.ref_line_color)
                 ax0.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
                 ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
@@ -262,24 +325,51 @@ class plotter():
             if (self.ratio and self.ratio_pos == 1):
                 ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.ratio_text)
-                ax2.axhline(1, color='blue')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax2,
+                              markersize=self.marker_size,
+                              label=self.ratio_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax2.axhline(1, color=self.ref_line_color)
                 ax2.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
                 ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 1):
                 ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.diff_text)
-                ax2.axhline(0, color='blue')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax2,
+                              markersize=self.marker_size,
+                              label=self.diff_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax2.axhline(0, color=self.ref_line_color)
                 ax2.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
                 ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 1):
                 ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.signi_text)
-                ax2.axhline(0, color='blue')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax2,
+                              markersize=self.marker_size,
+                              label=self.signi_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax2.axhline(0, color=self.ref_line_color)
                 ax2.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
                 ax2.yaxis.set_label_coords(self.y_label_offset,1.)
+            ax2.spines['bottom'].set_color(self.spine_color)
+            ax2.spines['top'].set_color(self.spine_color)
+            ax2.spines['left'].set_color(self.spine_color)
+            ax2.spines['right'].set_color(self.spine_color)
+            ax2.tick_params(axis='y', colors=self.tick_color)
+            ax2.tick_params(axis='x', colors=self.tick_color)
             if (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2):
                 plt.setp(ax2.get_xticklabels(), visible=False)
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -293,25 +383,52 @@ class plotter():
             if (self.ratio and self.ratio_pos == 2):
                 ax3 = plt.subplot2grid((100,1), (100-self.ratio_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.ratio_text)
-                ax3.axhline(1, color='blue')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax3,
+                              markersize=self.marker_size,
+                              label=self.ratio_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax3.axhline(1, color=self.ref_line_color)
                 ax3.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
                 ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 2):
                 ax3 = plt.subplot2grid((100,1), (100-self.diff_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.diff_text)
-                ax3.axhline(0, color='blue')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax3,
+                              markersize=self.marker_size,
+                              label=self.diff_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax3.axhline(0, color=self.ref_line_color)
                 ax3.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
                 ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 2):
                 ax3 = plt.subplot2grid((100,1), (100-self.signi_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.signi_text)
-                ax3.axhline(0, color='blue')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax3,
+                              markersize=self.marker_size,
+                              label=self.signi_text,
+                              marker = self.marker_style,
+                              ecolor = self.marker_color,
+                              markerfacecolor = self.marker_color,
+                              markeredgecolor = self.marker_color,
+                              capthick = self.marker_error_cap_width)
+                ax3.axhline(0, color=self.ref_line_color)
                 ax3.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
                 ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+            ax3.spines['bottom'].set_color(self.spine_color)
+            ax3.spines['top'].set_color(self.spine_color)
+            ax3.spines['left'].set_color(self.spine_color)
+            ax3.spines['right'].set_color(self.spine_color)
+            ax3.tick_params(axis='y', colors=self.tick_color)
+            ax3.tick_params(axis='x', colors=self.tick_color)
             plt.setp(ax1.get_xticklabels(), visible=False)
             plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
 
