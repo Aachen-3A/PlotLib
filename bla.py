@@ -239,7 +239,7 @@ class plotter():
         ## Plot the main distribution on axis 1
         ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1, axisbg = self.bg_color)
         if len(self.hist) == 1:
-            rplt.bar(self.hist[0], stacked=False, axes=ax1, yerr=False)
+            rplt.hist(self.hist[0], stacked=False, axes=ax1, zorder=2)
             if self.data:
                 rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, 
                               markersize=self.marker_size,
@@ -249,7 +249,7 @@ class plotter():
                               markeredgecolor = self.marker_color,
                               capthick = self.marker_error_cap_width)
         else:
-            rplt.bar(self.hist, stacked=True, axes=ax1, yerr=False)
+            rplt.hist(self.hist, stacked=True, axes=ax1, zorder=2)
             if self.data:
                 rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1,
                               markersize=self.marker_size,
