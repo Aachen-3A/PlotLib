@@ -17,11 +17,15 @@ def main():
     bag_hist.fillcolor = 'green'
     bag_hist.linecolor = 'green'
     bag_hist.linewidth = 0
+    bag_hist.yaxis.SetTitle('Events')
+    bag_hist.xaxis.SetTitle('Mass (GeV)')
     
     sig_hist.fillstyle = 'solid'
     sig_hist.fillcolor = 'red'
     sig_hist.linecolor = 'red'
     sig_hist.linewidth = 0
+    sig_hist.yaxis.SetTitle('Events')
+    sig_hist.xaxis.SetTitle('Mass (GeV)')
 
     test = plotter(hist=[bag_hist, sig_hist])
     test.Add_data(dat_hist)
@@ -58,21 +62,52 @@ def create_test_histos():
 
 class plotter():
     def __init__(self, style = 'CMS', hist = [], data_hist = None, data = False, doRatio = False, doSigni = False, doDiff = False):
+        ## style variables
         self.style = style
+        ## BG histograms
         self.hist = hist
         self.hist_height = 100
         self.hist_start = 0
+        ## Data histograms
         self.data = data
         self.data_hist = data_hist
+        ## Ratio variables
         self.ratio = doRatio
         self.ratio_height = 20
         self.ratio_pos = 1
+        ## Significance variables
         self.signi = doSigni
         self.signi_height = 20
         self.signi_pos = 0
+        ## Difference variables
         self.diff = doDiff
         self.diff_height = 20
         self.diff_pos = 2
+
+    def Set_style(self):
+        matplotlib.rcParams.update({'font.size': 10})
+        rc('text', usetex=True)
+        self.xaxis_title = self.hist[0].xaxis.GetTitle()
+        self.yaxis_title = self.hist[0].yaxis.GetTitle()
+        self.signi_text = 'Significance'
+        self.ratio_text = 'Data/MC'
+        self.diff_text  = 'Data - MC'
+        self.y_label_offset = -0.1
+        if self.style == 'CMS':
+            self.add_cms_text = True
+            self.add_lumi_text = True
+            self.label_text_color = 'black'
+            self.bg_color = 'w'
+        elif self.style == 'Plain':
+            self.add_cms_text = False
+            self.add_lumi_text = False
+            self.label_text_color = 'black'
+            self.bg_color = 'w'
+        elif self.style == 'Cool':
+            self.add_cms_text = True
+            self.add_lumi_text = True
+            self.label_text_color = 'white'
+            self.bg_color = '#07000d'
 
     def Add_data(self, data_hist):
         self.data = True
@@ -176,17 +211,12 @@ class plotter():
             signi.SetBinError(i,1)
         return signi
 
-    def Set_Style(self):
-        matplotlib.rcParams.update({'font.size': 10})
-        matplotlib.rcParams.update({'text': True})
-        #rc('text', usetex=True)
-
     def Draw(self):
-        self.Set_Style()
-        self.fig = plt.figure(figsize=(6, 6), dpi=100, facecolor='w')
+        self.Set_style()
+        self.fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self.bg_color)
 
         ## Plot the main distribution on axis 1
-        ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1)
+        ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1, axisbg = self.bg_color)
         if len(self.hist) == 1:
             rplt.bar(self.hist[0], stacked=False, axes=ax1)
             if self.data:
@@ -198,67 +228,94 @@ class plotter():
             rplt.bar(stack, stacked=True, axes=ax1)
             if self.data:
                 rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, markersize=4)
+        ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
+        ax1.yaxis.set_label_coords(self.y_label_offset,0.9)
+        if not ((self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1) or (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2)):
+            plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
         ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
         ## Plot a derived distribution on top of the main distribution on axis 0
         if (self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0):
-            ax0 = plt.subplot2grid((100,1), (0,0), rowspan=self.hist_start, colspan=1, sharex = ax1)
+            ax0 = plt.subplot2grid((100,1), (0,0), rowspan=self.hist_start, colspan=1, sharex = ax1, axisbg = self.bg_color)
             if (self.ratio and self.ratio_pos == 0):
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label='Data/MC')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.ratio_text)
                 ax0.axhline(1, color='blue')
+                ax0.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
+                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 0):
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label='Data - MC')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.diff_text)
                 ax0.axhline(0, color='blue')
+                ax0.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
+                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 0):
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label='Significance')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax0, markersize=4, label=self.signi_text)
                 ax0.axhline(0, color='blue')
+                ax0.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
+                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+            #plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
             plt.setp(ax0.get_xticklabels(), visible=False)
         ## Plot a derived distribution below the main distribution on axis 2
         if (self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1):
             if (self.ratio and self.ratio_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1)
+                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label='Data/MC')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.ratio_text)
                 ax2.axhline(1, color='blue')
+                ax2.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
+                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1)
+                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label='Data - MC')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.diff_text)
                 ax2.axhline(0, color='blue')
+                ax2.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
+                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1)
+                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label='Significance')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax2, markersize=4, label=self.signi_text)
                 ax2.axhline(0, color='blue')
-            plt.setp(ax1.get_xticklabels(), visible=False)
+                ax2.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
+                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2):
                 plt.setp(ax2.get_xticklabels(), visible=False)
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
+                plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
             else:
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+                plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
+            plt.setp(ax1.get_xticklabels(), visible=False)
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2):
             if (self.ratio and self.ratio_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.ratio_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1)
+                ax3 = plt.subplot2grid((100,1), (100-self.ratio_height,0), rowspan=self.ratio_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 ratio_hist = self.Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label='Data/MC')
+                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.ratio_text)
                 ax3.axhline(1, color='blue')
+                ax3.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
+                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.diff and self.diff_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.diff_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1)
+                ax3 = plt.subplot2grid((100,1), (100-self.diff_height,0), rowspan=self.diff_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 diff_hist = self.Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label='Data - MC')
+                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.diff_text)
                 ax3.axhline(0, color='blue')
+                ax3.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
+                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             if (self.signi and self.signi_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.signi_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1)
+                ax3 = plt.subplot2grid((100,1), (100-self.signi_height,0), rowspan=self.signi_height, colspan=1, sharex = ax1, axisbg = self.bg_color)
                 signi_hist = self.Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label='Significance')
+                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax3, markersize=4, label=self.signi_text)
                 ax3.axhline(0, color='blue')
+                ax3.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
+                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+            plt.setp(ax1.get_xticklabels(), visible=False)
+            plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
 
-        plt.subplots_adjust(left=.08, bottom=.10, right= .92, top=.95, wspace =.2, hspace=.0)
+        plt.subplots_adjust(left=.10, bottom=.08, right= .95, top=.95, wspace =.2, hspace=.0)
 
     def SavePlot(self):
         plt.savefig('bla_plt.pdf',facecolor=self.fig.get_facecolor())
