@@ -22,18 +22,18 @@ def main():
     bag_hist.yaxis.SetTitle('Events')
     bag_hist.xaxis.SetTitle('Mass (GeV)')
     
-    sig_hist.fillstyle = 'solid'
+    sig_hist.fillstyle = '0'
     sig_hist.fillcolor = 'red'
     sig_hist.linecolor = 'red'
-    sig_hist.linewidth = 0
+    sig_hist.linewidth = 1
     sig_hist.yaxis.SetTitle('Events')
     sig_hist.xaxis.SetTitle('Mass (GeV)')
 
-    test = plotter(hist=[bag_hist, sig_hist],style='CMS')
+    test = plotter(hist=[bag_hist], sig = [sig_hist],style='CMS')
     test.Add_data(dat_hist)
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)
-    test.Add_plot('Diff',pos=2, height=15)
+    test.Add_plot('DiffRatio',pos=2, height=15)
     test.make_plot('bla_plt.pdf')
     return 42
 
@@ -61,13 +61,15 @@ def create_test_histos():
 
 class plotter():
     ## Constructor:
-    def __init__(self, style = 'Plain', hist = [], data_hist = None, data = False):
+    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False):
         ## style variables
         self.style                = style
         ## BG histograms
         self.hist                 = hist
         self.hist_height          = 100
         self.hist_start           = 0
+        ## SG histograms
+        self.sig_hist             = sig
         ## Data histograms
         self.data                 = data
         self.data_hist            = data_hist
@@ -122,31 +124,15 @@ class plotter():
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
-    def _Calc_additional_plot(self, plot, pos):
-        if plot == 'Ratio':
-            self.add_plots_labels[pos] = 'Data/MC'
-            self.add_plots_ref_line[pos] = 1.
-            return self._Calc_ratio()
-        elif plot == 'Diff':
-            self.add_plots_labels[pos] = 'Data - MC'
-            self.add_plots_ref_line[pos] = 0.
-            return self._Calc_diff()
-        elif plot == 'Signi':
-            self.add_plots_labels[pos] = 'Significance'
-            self.add_plots_ref_line[pos] = 0.
-            return self._Calc_signi()
-        else:
-            print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
-
     def _Set_style(self):
         matplotlib.rcParams.update({'font.size': 10})
-        rc('text', usetex=True)
+        #rc('text', usetex=True)
         self.xaxis_title     = self.hist[0].xaxis.GetTitle()
         self.yaxis_title     = self.hist[0].yaxis.GetTitle()
         self.lumi_val        = 42000
         self.cms_val         = 13
         self.additional_text = '$Preliminary$'
-        self.y_label_offset  = -0.1
+        self.y_label_offset  = -0.11
         if self.style == 'CMS':
             self.add_cms_text           = True
             self.add_lumi_text          = True
@@ -235,6 +221,10 @@ class plotter():
             col_patch = mpatches.Patch(color=item.GetFillColor())
             handle_list.append(col_patch)
             label_list.append(item.GetTitle())
+        for item in self.sig_hist:
+            col_patch = mlines.Line2D([], [], color=item.GetLineColor(), markersize=0)
+            handle_list.append(col_patch)
+            label_list.append(item.GetTitle())
         if self.data:
             dat_line = mlines.Line2D([], [], color=self.marker_color, marker=self.marker_style, markersize=self.marker_size)
             handle_list.append(dat_line)
@@ -257,6 +247,26 @@ class plotter():
         if self.add_plots[2] != '':
             self.hist_height -= self.add_plots_height[2]
 
+    def _Calc_additional_plot(self, plot, pos):
+        if plot == 'Ratio':
+            self.add_plots_labels[pos] = 'Data/MC'
+            self.add_plots_ref_line[pos] = 1.
+            return self._Calc_ratio()
+        elif plot == 'Diff':
+            self.add_plots_labels[pos] = 'Data - MC'
+            self.add_plots_ref_line[pos] = 0.
+            return self._Calc_diff()
+        elif plot == 'Signi':
+            self.add_plots_labels[pos] = 'Significance'
+            self.add_plots_ref_line[pos] = 0.
+            return self._Calc_signi()
+        elif plot == 'DiffRatio':
+            self.add_plots_labels[pos] = '(Data - MC)/MC'
+            self.add_plots_ref_line[pos] = 0.
+            return self._Calc_diffratio()
+        else:
+            print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
+
     def _Calc_ratio(self):
         sum_hist = self.hist[0].Clone('sum_hist')
         for i in range(1,len(self.hist)):
@@ -269,6 +279,16 @@ class plotter():
         diff = self.data_hist.Clone('diff')
         for item in self.hist:
             diff.Add(item,-1)
+        return diff
+
+    def _Calc_diffratio(self):
+        diff = self.data_hist.Clone('diffratio')
+        for item in self.hist:
+            diff.Add(item,-1)
+        sum_hist = self.hist[0].Clone('sum_hist')
+        for i in range(1,len(self.hist)):
+            sum_hist.Add(self.hist[i])
+        diff.Divide(sum_hist)
         return diff
 
     def _Calc_signi(self):
@@ -333,6 +353,8 @@ class plotter():
                               markerfacecolor = self.marker_color,
                               markeredgecolor = self.marker_color,
                               capthick = self.marker_error_cap_width)
+        if len(self.sig_hist) > 0:
+            rplt.hist(self.sig_hist, stacked = False, axes = ax1)
         ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self.y_label_offset,0.9)
         self._Add_legend(ax1)
