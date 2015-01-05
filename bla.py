@@ -31,9 +31,9 @@ def main():
 
     test = plotter(hist=[bag_hist, sig_hist],style='CMS')
     test.Add_data(dat_hist)
-    test.Add_signi(pos=0, height=15)
-    test.Add_ratio(pos=1, height=15)
-    test.Add_diff(pos=2, height=15)
+    test.Add_plot('Signi',pos=0, height=15)
+    test.Add_plot('Ratio',pos=1, height=15)
+    test.Add_plot('Diff',pos=2, height=15)
     test.make_plot('bla_plt.pdf')
     return 42
 
@@ -61,7 +61,7 @@ def create_test_histos():
 
 class plotter():
     ## Constructor:
-    def __init__(self, style = 'Plain', hist = [], data_hist = None, data = False, doRatio = False, doSigni = False, doDiff = False):
+    def __init__(self, style = 'Plain', hist = [], data_hist = None, data = False):
         ## style variables
         self.style                = style
         ## BG histograms
@@ -71,18 +71,11 @@ class plotter():
         ## Data histograms
         self.data                 = data
         self.data_hist            = data_hist
-        ## Ratio variables
-        self.ratio                = doRatio
-        self.ratio_height         = 20
-        self.ratio_pos            = 1
-        ## Significance variables
-        self.signi                = doSigni
-        self.signi_height         = 20
-        self.signi_pos            = 0
-        ## Difference variables
-        self.diff                 = doDiff
-        self.diff_height          = 20
-        self.diff_pos             = 2
+        ## Additional plots
+        self.add_plots            = ['', '', '']
+        self.add_plots_height     = [0, 0, 0]
+        self.add_plots_labels     = ['', '', '']
+        self.add_plots_ref_line   = [0, 0, 0]
         self.annotations_modified = False
         self._Set_style()
 
@@ -111,38 +104,45 @@ class plotter():
     def Draw_data(self, doData = True):
         self.data = doData
 
+    def Add_plot(self, plot = 'Ratio', pos = 0, height = 15, label = ''):
+        if self.add_plots[pos] == '':
+            self.add_plots[pos] = plot
+            self.add_plots_height[pos] = height
+            if label == '':
+                self.add_plots_labels[pos] = plot
+            else:
+                self.add_plots_labels[pos] = label
+            self._Set_style()
+        else:
+            print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
+
     def Add_histo(self, histo):
         self.hist.append(histo)
-
-    def Add_ratio(self, height = 20, pos = 1):
-        self.ratio = True
-        self.ratio_height = height
-        self.ratio_pos = pos
-        self._Set_style()
-
-    def Add_signi(self, height = 20, pos = 0):
-        self.signi = True
-        self.signi_height = height
-        self.signi_pos = pos
-        self._Set_style()
-
-    def Add_diff(self, height = 20, pos = 2):
-        self.diff = True
-        self.diff_height = height
-        self.diff_pos = pos
-        self._Set_style()
 
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
+    def _Calc_additional_plot(self, plot, pos):
+        if plot == 'Ratio':
+            self.add_plots_labels[pos] = 'Data/MC'
+            self.add_plots_ref_line[pos] = 1.
+            return self._Calc_ratio()
+        elif plot == 'Diff':
+            self.add_plots_labels[pos] = 'Data - MC'
+            self.add_plots_ref_line[pos] = 0.
+            return self._Calc_diff()
+        elif plot == 'Signi':
+            self.add_plots_labels[pos] = 'Significance'
+            self.add_plots_ref_line[pos] = 0.
+            return self._Calc_signi()
+        else:
+            print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
+
     def _Set_style(self):
         matplotlib.rcParams.update({'font.size': 10})
         rc('text', usetex=True)
         self.xaxis_title     = self.hist[0].xaxis.GetTitle()
         self.yaxis_title     = self.hist[0].yaxis.GetTitle()
-        self.signi_text      = 'Significance'
-        self.ratio_text      = 'Data/MC'
-        self.diff_text       = 'Data - MC'
         self.lumi_val        = 42000
         self.cms_val         = 13
         self.additional_text = '$Preliminary$'
@@ -161,17 +161,12 @@ class plotter():
             self.marker_color           = 'black'
             self.marker_error_cap_width = 0
             self.cms_text_alignment     = 'row'
-            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
+            if self.add_plots[0] == '':
                 self.cms_text_x         = 0.8
                 self.cms_text_y         = 0.9
             else:
                 self.cms_text_x         = 0.8
-                if self.ratio_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.ratio_height / 100.)
-                elif self.diff_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.diff_height / 100.)
-                elif self.signi_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.signi_height / 100.)
+                self.cms_text_y         = 0.9 - (0.8 * self.add_plots_height[0] / 100.)
         elif self.style == 'Plain':
             self.add_cms_text           = False
             self.add_lumi_text          = False
@@ -186,17 +181,12 @@ class plotter():
             self.marker_color           = 'black'
             self.marker_error_cap_width = 1
             self.cms_text_alignment     = 'row'
-            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
+            if self.add_plots[0] == '':
                 self.cms_text_x         = 0.8
                 self.cms_text_y         = 0.9
             else:
                 self.cms_text_x         = 0.8
-                if self.ratio_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.ratio_height / 100.)
-                elif self.diff_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.diff_height / 100.)
-                elif self.signi_pos == 0:
-                    self.cms_text_y     = 0.9 - (0.8 * self.dsigni_height / 100.)
+                self.cms_text_y         = 0.9 - (0.8 * self.add_plots_height[0] / 100.)
         elif self.style == 'Cool':
             self.add_cms_text           = True
             self.add_lumi_text          = True
@@ -233,15 +223,10 @@ class plotter():
     def _Add_legend(self, axis):
         self.legend_x = 0.95
         if self.style == 'Cool':
-            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
-                self.legend_y         = 0.9
+            if self.add_plots[0] == '':
+                self.legend_y = 0.9
             else:
-                if self.ratio_pos == 0:
-                    self.legend_y     = 0.9 - (0.8 * self.ratio_height / 100.)
-                elif self.diff_pos == 0:
-                    self.legend_y     = 0.9 - (0.8 * self.diff_height / 100.)
-                elif self.signi_pos == 0:
-                    self.legend_y     = 0.9 - (0.8 * self.signi_height / 100.)
+                self.legend_y = 0.9 - (0.8 * self.add_plots_height[0] / 100.)
         else:
             self.legend_y = self.cms_text_y - 0.02
         handle_list = []
@@ -263,57 +248,14 @@ class plotter():
         for text in leg.get_texts():
             text.set_color(self.annotation_text_color)
 
-    def _Check_Consistency(self):
-        if self.ratio and self.signi and not self.diff:
-            if self.ratio_pos == self.signi_pos:
-                print('Can not put Ratio and Significance plot at the same position, sorry!')
-                return False
-        if self.ratio and not self.signi and self.diff:
-            if self.ratio_pos == self.diff_pos:
-                print('Can not put Ratio and Difference plot at the same position, sorry!')
-                return False
-        if not self.ratio and self.signi and self.diff:
-            if self.diff_pos == self.signi_pos:
-                print('Can not put Difference and Significance plot at the same position, sorry!')
-                return False
-        if self.ratio and self.signi and self.diff:
-            if self.ratio_pos == self.signi_pos:
-                print('Can not put Ratio and Significance plot at the same position, sorry!')
-                return False
-            if self.ratio_pos == self.diff_pos:
-                print('Can not put Ratio and Difference plot at the same position, sorry!')
-                return False
-            if self.diff_pos == self.signi_pos:
-                print('Can not put Difference and Significance plot at the same position, sorry!')
-                return False
-        return True
-
     def _Compiler(self):
-        consi = self._Check_Consistency()
-        if consi:
-            if self.ratio and self.ratio_pos == 0:
-                self.hist_start = self.ratio_height
-                self.hist_height -= self.ratio_height
-            elif self.diff and self.diff_pos == 0:
-                self.hist_start = self.diff_height
-                self.hist_height -= self.diff_height
-            elif self.signi and self.signi_pos == 0:
-                self.hist_start = self.signi_height
-                self.hist_height -= self.signi_height
-            if self.ratio and self.ratio_pos == 1:
-                self.hist_height -= self.ratio_height
-            elif self.diff and self.diff_pos == 1:
-                self.hist_height -= self.diff_height
-            elif self.signi and self.signi_pos == 1:
-                self.hist_height -= self.signi_height
-            if self.ratio and self.ratio_pos == 2:
-                self.hist_height -= self.ratio_height
-            elif self.diff and self.diff_pos == 2:
-                self.hist_height -= self.diff_height
-            elif self.signi and self.signi_pos == 2:
-                self.hist_height -= self.signi_height
-        else:
-            print('Can not cpmpile the plot: see previous error messages')
+        if self.add_plots[0] != '':
+            self.hist_start = self.add_plots_height[0]
+            self.hist_height -= self.add_plots_height[0]
+        if self.add_plots[1] != '':
+            self.hist_height -= self.add_plots_height[1]
+        if self.add_plots[2] != '':
+            self.hist_height -= self.add_plots_height[2]
 
     def _Calc_ratio(self):
         sum_hist = self.hist[0].Clone('sum_hist')
@@ -342,7 +284,7 @@ class plotter():
 
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
-        if (self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0):
+        if self.add_plots[0] != '':
             ax0 = plt.subplot2grid((100,1), (0,0), rowspan=self.hist_start, colspan=1, sharex = axis1, axisbg = self.bg_color)
             ax0.spines['bottom'].set_color(self.spine_color)
             ax0.spines['top'].set_color(self.spine_color)
@@ -350,52 +292,25 @@ class plotter():
             ax0.spines['right'].set_color(self.spine_color)
             ax0.tick_params(axis='y', colors=self.tick_color)
             ax0.tick_params(axis='x', colors=self.tick_color)
-            if (self.ratio and self.ratio_pos == 0):
-                ratio_hist = self._Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax0,
-                              markersize=self.marker_size,
-                              label=self.ratio_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax0.axhline(1, color=self.ref_line_color)
-                ax0.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
-                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.diff and self.diff_pos == 0):
-                diff_hist = self._Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax0,
-                              markersize=self.marker_size,
-                              label=self.diff_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax0.axhline(0, color=self.ref_line_color)
-                ax0.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
-                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.signi and self.signi_pos == 0):
-                signi_hist = self._Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax0,
-                              markersize=self.marker_size,
-                              label=self.signi_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax0.axhline(0, color=self.ref_line_color)
-                ax0.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
-                ax0.yaxis.set_label_coords(self.y_label_offset,1.)
+            add_hist = self._Calc_additional_plot(self.add_plots[0],0)
+            rplt.errorbar(add_hist, xerr=False, emptybins=False, axes=ax0,
+                          markersize=self.marker_size,
+                          label=self.add_plots_labels[0],
+                          marker = self.marker_style,
+                          ecolor = self.marker_color,
+                          markerfacecolor = self.marker_color,
+                          markeredgecolor = self.marker_color,
+                          capthick = self.marker_error_cap_width)
+            ax0.axhline(self.add_plots_ref_line[0], color=self.ref_line_color)
+            ax0.set_ylabel(self.add_plots_labels[0], color=self.label_text_color, va='top', ha='left')
+            ax0.yaxis.set_label_coords(self.y_label_offset,1.)
             ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-            #plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
             plt.setp(ax0.get_xticklabels(), visible=False)
             return ax0
         return None
 
     def _Draw_main(self):
+        self.fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self.bg_color)
         ## Plot the main distribution on axis 1
         ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1, axisbg = self.bg_color)
         if len(self.hist) == 1:
@@ -421,7 +336,7 @@ class plotter():
         ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self.y_label_offset,0.9)
         self._Add_legend(ax1)
-        if not ((self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1) or (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2)):
+        if not (self.add_plots[1] != '' or self.add_plots[2] != ''):
             plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
         ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
         ax1.spines['bottom'].set_color(self.spine_color)
@@ -434,56 +349,27 @@ class plotter():
 
     def _Draw_2(self, axis1):
         ## Plot a derived distribution below the main distribution on axis 2
-        if (self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1):
-            if (self.ratio and self.ratio_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.ratio_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                ratio_hist = self._Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax2,
-                              markersize=self.marker_size,
-                              label=self.ratio_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax2.axhline(1, color=self.ref_line_color)
-                ax2.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
-                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.diff and self.diff_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.diff_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                diff_hist = self._Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax2,
-                              markersize=self.marker_size,
-                              label=self.diff_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax2.axhline(0, color=self.ref_line_color)
-                ax2.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
-                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.signi and self.signi_pos == 1):
-                ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.signi_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                signi_hist = self._Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax2,
-                              markersize=self.marker_size,
-                              label=self.signi_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax2.axhline(0, color=self.ref_line_color)
-                ax2.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
-                ax2.yaxis.set_label_coords(self.y_label_offset,1.)
+        if self.add_plots[1] != '':
+            ax2 = plt.subplot2grid((100,1), (self.hist_start+self.hist_height,0), rowspan=self.add_plots_height[1], colspan=1, sharex = axis1, axisbg = self.bg_color)
+            add_hist = self._Calc_additional_plot(self.add_plots[1],1)
+            rplt.errorbar(add_hist, xerr=False, emptybins=False, axes=ax2,
+                          markersize=self.marker_size,
+                          label=self.add_plots_labels[1],
+                          marker = self.marker_style,
+                          ecolor = self.marker_color,
+                          markerfacecolor = self.marker_color,
+                          markeredgecolor = self.marker_color,
+                          capthick = self.marker_error_cap_width)
+            ax2.axhline(self.add_plots_ref_line[1], color=self.ref_line_color)
+            ax2.set_ylabel(self.add_plots_labels[1], color=self.label_text_color, va='top', ha='left')
+            ax2.yaxis.set_label_coords(self.y_label_offset,1.)
             ax2.spines['bottom'].set_color(self.spine_color)
             ax2.spines['top'].set_color(self.spine_color)
             ax2.spines['left'].set_color(self.spine_color)
             ax2.spines['right'].set_color(self.spine_color)
             ax2.tick_params(axis='y', colors=self.tick_color)
             ax2.tick_params(axis='x', colors=self.tick_color)
-            if (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2):
+            if self.add_plots[2] != '':
                 plt.setp(ax2.get_xticklabels(), visible=False)
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
@@ -496,49 +382,20 @@ class plotter():
 
     def _Draw_3(self, axis1):
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
-        if (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2):
-            if (self.ratio and self.ratio_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.ratio_height,0), rowspan=self.ratio_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                ratio_hist = self._Calc_ratio()
-                rplt.errorbar(ratio_hist, xerr=False, emptybins=False, axes=ax3,
-                              markersize=self.marker_size,
-                              label=self.ratio_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax3.axhline(1, color=self.ref_line_color)
-                ax3.set_ylabel(self.ratio_text, color=self.label_text_color, va='top', ha='left')
-                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.diff and self.diff_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.diff_height,0), rowspan=self.diff_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                diff_hist = self._Calc_diff()
-                rplt.errorbar(diff_hist, xerr=False, emptybins=False, axes=ax3,
-                              markersize=self.marker_size,
-                              label=self.diff_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax3.axhline(0, color=self.ref_line_color)
-                ax3.set_ylabel(self.diff_text, color=self.label_text_color, va='top', ha='left')
-                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
-            if (self.signi and self.signi_pos == 2):
-                ax3 = plt.subplot2grid((100,1), (100-self.signi_height,0), rowspan=self.signi_height, colspan=1, sharex = axis1, axisbg = self.bg_color)
-                signi_hist = self._Calc_signi()
-                rplt.errorbar(signi_hist, xerr=False, emptybins=False, axes=ax3,
-                              markersize=self.marker_size,
-                              label=self.signi_text,
-                              marker = self.marker_style,
-                              ecolor = self.marker_color,
-                              markerfacecolor = self.marker_color,
-                              markeredgecolor = self.marker_color,
-                              capthick = self.marker_error_cap_width)
-                ax3.axhline(0, color=self.ref_line_color)
-                ax3.set_ylabel(self.signi_text, color=self.label_text_color, va='top', ha='left')
-                ax3.yaxis.set_label_coords(self.y_label_offset,1.)
+        if self.add_plots[2] != '':
+            ax3 = plt.subplot2grid((100,1), (100-self.add_plots_height[2],0), rowspan=self.add_plots_height[2], colspan=1, sharex = axis1, axisbg = self.bg_color)
+            add_hist = self._Calc_additional_plot(self.add_plots[2],2)
+            rplt.errorbar(add_hist, xerr=False, emptybins=False, axes=ax3,
+                          markersize=self.marker_size,
+                          label=self.add_plots_labels[2],
+                          marker = self.marker_style,
+                          ecolor = self.marker_color,
+                          markerfacecolor = self.marker_color,
+                          markeredgecolor = self.marker_color,
+                          capthick = self.marker_error_cap_width)
+            ax3.axhline(self.add_plots_ref_line[2], color=self.ref_line_color)
+            ax3.set_ylabel(self.add_plots_labels[2], color=self.label_text_color, va='top', ha='left')
+            ax3.yaxis.set_label_coords(self.y_label_offset,1.)
             ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             ax3.spines['bottom'].set_color(self.spine_color)
             ax3.spines['top'].set_color(self.spine_color)
@@ -552,7 +409,6 @@ class plotter():
         return None
 
     def _Draw(self):
-        self.fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self.bg_color)
 
         ax1 = self._Draw_main()
 
@@ -574,8 +430,5 @@ class plotter():
         except AttributeError:
             print('No histogram added')
         print('with height: ' + str(self.hist_height) + ' and start: ' + str(self.hist_start))
-        print('Do ratio: ' + str(self.ratio) + ' with height: ' + str(self.ratio_height) + ' and pos: ' + str(self.ratio_pos))
-        print('Do signi: ' + str(self.signi) + ' with height: ' + str(self.signi_height) + ' and pos: ' + str(self.signi_pos))
-        print('Do diff: ' + str(self.diff) + ' with height: ' + str(self.diff_height) + ' and pos: ' + str(self.diff_pos))
 
 main()
