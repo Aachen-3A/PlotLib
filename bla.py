@@ -39,16 +39,16 @@ def create_test_histos():
     # set the random seed
     ROOT.gRandom.SetSeed(42)
     np.random.seed(42)
-    
+
     # signal distribution
     signal = 126 + 10 * np.random.randn(1000)
     signal_obs = 126 + 10 * np.random.randn(1000)
-    
+
     # create histograms
     h1 = Hist(30, 40, 200, title='Background', markersize=0)
     h2 = h1.Clone(title='Signal')
     h3 = h1.Clone(title='Data')
-  
+
     # fill the histograms with our distributions
     h1.FillRandom('landau', 10000)
     map(h2.Fill, signal)
@@ -58,115 +58,40 @@ def create_test_histos():
     return h1, h2, h3
 
 class plotter():
+    ## Constructor:
     def __init__(self, style = 'Plain', hist = [], data_hist = None, data = False, doRatio = False, doSigni = False, doDiff = False):
         ## style variables
-        self.style = style
+        self.style                = style
         ## BG histograms
-        self.hist = hist
-        self.hist_height = 100
-        self.hist_start = 0
+        self.hist                 = hist
+        self.hist_height          = 100
+        self.hist_start           = 0
         ## Data histograms
-        self.data = data
-        self.data_hist = data_hist
+        self.data                 = data
+        self.data_hist            = data_hist
         ## Ratio variables
-        self.ratio = doRatio
-        self.ratio_height = 20
-        self.ratio_pos = 1
+        self.ratio                = doRatio
+        self.ratio_height         = 20
+        self.ratio_pos            = 1
         ## Significance variables
-        self.signi = doSigni
-        self.signi_height = 20
-        self.signi_pos = 0
+        self.signi                = doSigni
+        self.signi_height         = 20
+        self.signi_pos            = 0
         ## Difference variables
-        self.diff = doDiff
-        self.diff_height = 20
-        self.diff_pos = 2
+        self.diff                 = doDiff
+        self.diff_height          = 20
+        self.diff_pos             = 2
         self.annotations_modified = False
         self._Set_style()
 
+    ##------------------------------------------------------------------
+    ## Public functions
+    ##------------------------------------------------------------------
     def make_plot(self,out_name):
         self._Compiler()
         self._checker()
         self._Draw()
         self._SavePlot(out_name)
-
-    def _Set_style(self):
-        matplotlib.rcParams.update({'font.size': 10})
-        rc('text', usetex=True)
-        self.xaxis_title     = self.hist[0].xaxis.GetTitle()
-        self.yaxis_title     = self.hist[0].yaxis.GetTitle()
-        self.signi_text      = 'Significance'
-        self.ratio_text      = 'Data/MC'
-        self.diff_text       = 'Data - MC'
-        self.lumi_val        = 42000
-        self.cms_val         = 13
-        self.additional_text = '$Preliminary$'
-        self.y_label_offset  = -0.1
-        if self.style == 'CMS':
-            self.add_cms_text = True
-            self.add_lumi_text = True
-            self.label_text_color = 'black'
-            self.annotation_text_color = 'black'
-            self.bg_color = 'w'
-            self.ref_line_color = 'blue'
-            self.spine_color = 'black'
-            self.tick_color = 'black'
-            self.marker_style = 'o'
-            self.marker_size = 3
-            self.marker_color = 'black'
-            self.marker_error_cap_width = 0
-            self.cms_text_alignment = 'row'
-            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
-                self.cms_text_x      = 0.8
-                self.cms_text_y      = 0.9
-            else:
-                self.cms_text_x      = 0.8
-                if self.ratio_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.ratio_height / 100.)
-                elif self.diff_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.diff_height / 100.)
-                elif self.signi_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.signi_height / 100.)
-        elif self.style == 'Plain':
-            self.add_cms_text = False
-            self.add_lumi_text = False
-            self.label_text_color = 'black'
-            self.annotation_text_color = 'black'
-            self.bg_color = 'w'
-            self.ref_line_color = 'blue'
-            self.spine_color = 'black'
-            self.tick_color = 'black'
-            self.marker_style = 'o'
-            self.marker_size = 4
-            self.marker_color = 'black'
-            self.marker_error_cap_width = 1
-            self.cms_text_alignment = 'row'
-            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
-                self.cms_text_x      = 0.8
-                self.cms_text_y      = 0.9
-            else:
-                self.cms_text_x      = 0.8
-                if self.ratio_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.ratio_height / 100.)
-                elif self.diff_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.diff_height / 100.)
-                elif self.signi_pos == 0:
-                    self.cms_text_y      = 0.9 - (0.8 * self.dsigni_height / 100.)
-        elif self.style == 'Cool':
-            self.add_cms_text = True
-            self.add_lumi_text = True
-            self.label_text_color = 'white'
-            self.annotation_text_color = 'white'
-            self.bg_color = '#07000d'
-            self.ref_line_color = 'y'
-            self.spine_color = '#5998ff'
-            self.tick_color = 'w'
-            self.marker_style = 'o'
-            self.marker_size = 3
-            self.marker_color = 'lightgray'
-            self.marker_error_cap_width = 0
-            self.cms_text_alignment = 'column'
-            self.cms_text_x      = 0.1
-            self.cms_text_y      = 0.955
 
 #    def Modify_annotations(self, lumi = self.lumi_val, cms = self.cms_val, AddText = self.additional_text, posx = self.cms_text_x, posy = self.cms_text_y, AddAlign = self.cms_text_alignment):
 #        self.annotations_modified = True
@@ -176,22 +101,6 @@ class plotter():
 #        self.cms_text_x         = posx
 #        self.cms_text_y         = posy
 #        self.cms_text_alignment = AddAlign
-
-    def _Write_additional_text(self):
-        if self.add_lumi_text:
-            if self.lumi_val > 1000:
-                self.fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self.lumi_val/1000,self.cms_val), va='bottom', ha='right', color=self.annotation_text_color, size=12)
-            else:
-                self.fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self.lumi_val,self.cms_val), va='bottom', ha='right', color=self.annotation_text_color, size=12)
-        if self.add_cms_text:
-            if self.cms_text_alignment == 'row':
-                self.fig.text(self.cms_text_x, self.cms_text_y, 'CMS', va='bottom', ha='left', color=self.annotation_text_color, size=14, weight='bold')
-                self.fig.text(self.cms_text_x, self.cms_text_y-0.03, self.additional_text, va='bottom', ha='left', color=self.annotation_text_color, size=10)
-            elif self.cms_text_alignment == 'column':
-                self.fig.text(self.cms_text_x, self.cms_text_y, 'CMS', va='bottom', ha='left', color=self.annotation_text_color, size=14, weight='bold')
-                self.fig.text(self.cms_text_x + 0.08, self.cms_text_y, self.additional_text, va='bottom', ha='left', color=self.annotation_text_color, size=10)
-            else:
-                print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
     def Add_data(self, data_hist):
         self.data = True
@@ -220,6 +129,104 @@ class plotter():
         self.diff_height = height
         self.diff_pos = pos
         self._Set_style()
+
+    ##------------------------------------------------------------------
+    ## Private functions
+    ##------------------------------------------------------------------
+    def _Set_style(self):
+        matplotlib.rcParams.update({'font.size': 10})
+        rc('text', usetex=True)
+        self.xaxis_title     = self.hist[0].xaxis.GetTitle()
+        self.yaxis_title     = self.hist[0].yaxis.GetTitle()
+        self.signi_text      = 'Significance'
+        self.ratio_text      = 'Data/MC'
+        self.diff_text       = 'Data - MC'
+        self.lumi_val        = 42000
+        self.cms_val         = 13
+        self.additional_text = '$Preliminary$'
+        self.y_label_offset  = -0.1
+        if self.style == 'CMS':
+            self.add_cms_text           = True
+            self.add_lumi_text          = True
+            self.label_text_color       = 'black'
+            self.annotation_text_color  = 'black'
+            self.bg_color               = 'w'
+            self.ref_line_color         = 'blue'
+            self.spine_color            = 'black'
+            self.tick_color             = 'black'
+            self.marker_style           = 'o'
+            self.marker_size            = 3
+            self.marker_color           = 'black'
+            self.marker_error_cap_width = 0
+            self.cms_text_alignment     = 'row'
+            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
+                self.cms_text_x         = 0.8
+                self.cms_text_y         = 0.9
+            else:
+                self.cms_text_x         = 0.8
+                if self.ratio_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.ratio_height / 100.)
+                elif self.diff_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.diff_height / 100.)
+                elif self.signi_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.signi_height / 100.)
+        elif self.style == 'Plain':
+            self.add_cms_text           = False
+            self.add_lumi_text          = False
+            self.label_text_color       = 'black'
+            self.annotation_text_color  = 'black'
+            self.bg_color               = 'w'
+            self.ref_line_color         = 'blue'
+            self.spine_color            = 'black'
+            self.tick_color             = 'black'
+            self.marker_style           = 'o'
+            self.marker_size            = 4
+            self.marker_color           = 'black'
+            self.marker_error_cap_width = 1
+            self.cms_text_alignment     = 'row'
+            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
+                self.cms_text_x         = 0.8
+                self.cms_text_y         = 0.9
+            else:
+                self.cms_text_x         = 0.8
+                if self.ratio_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.ratio_height / 100.)
+                elif self.diff_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.diff_height / 100.)
+                elif self.signi_pos == 0:
+                    self.cms_text_y     = 0.9 - (0.8 * self.dsigni_height / 100.)
+        elif self.style == 'Cool':
+            self.add_cms_text           = True
+            self.add_lumi_text          = True
+            self.label_text_color       = 'white'
+            self.annotation_text_color  = 'white'
+            self.bg_color               = '#07000d'
+            self.ref_line_color         = 'y'
+            self.spine_color            = '#5998ff'
+            self.tick_color             = 'w'
+            self.marker_style           = 'o'
+            self.marker_size            = 3
+            self.marker_color           = 'lightgray'
+            self.marker_error_cap_width = 0
+            self.cms_text_alignment     = 'column'
+            self.cms_text_x             = 0.1
+            self.cms_text_y             = 0.955
+
+    def _Write_additional_text(self):
+        if self.add_lumi_text:
+            if self.lumi_val > 1000:
+                self.fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self.lumi_val/1000,self.cms_val), va='bottom', ha='right', color=self.annotation_text_color, size=12)
+            else:
+                self.fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self.lumi_val,self.cms_val), va='bottom', ha='right', color=self.annotation_text_color, size=12)
+        if self.add_cms_text:
+            if self.cms_text_alignment == 'row':
+                self.fig.text(self.cms_text_x, self.cms_text_y, 'CMS', va='bottom', ha='left', color=self.annotation_text_color, size=14, weight='bold')
+                self.fig.text(self.cms_text_x, self.cms_text_y-0.03, self.additional_text, va='bottom', ha='left', color=self.annotation_text_color, size=10)
+            elif self.cms_text_alignment == 'column':
+                self.fig.text(self.cms_text_x, self.cms_text_y, 'CMS', va='bottom', ha='left', color=self.annotation_text_color, size=14, weight='bold')
+                self.fig.text(self.cms_text_x + 0.08, self.cms_text_y, self.additional_text, va='bottom', ha='left', color=self.annotation_text_color, size=10)
+            else:
+                print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
     def _Check_Consistency(self):
         if self.ratio and self.signi and not self.diff:
