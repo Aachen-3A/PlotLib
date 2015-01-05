@@ -9,6 +9,8 @@ import matplotlib.ticker as mticker
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 
 def main():
     bag_hist, sig_hist, dat_hist = create_test_histos()
@@ -228,6 +230,39 @@ class plotter():
             else:
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
+    def _Add_legend(self, axis):
+        self.legend_x = 0.95
+        if self.style == 'Cool':
+            if not ((self.ratio and self.ratio_pos == 0) or (self.diff and self.diff_pos == 0) or (self.signi and self.signi_pos == 0)):
+                self.legend_y         = 0.9
+            else:
+                if self.ratio_pos == 0:
+                    self.legend_y     = 0.9 - (0.8 * self.ratio_height / 100.)
+                elif self.diff_pos == 0:
+                    self.legend_y     = 0.9 - (0.8 * self.diff_height / 100.)
+                elif self.signi_pos == 0:
+                    self.legend_y     = 0.9 - (0.8 * self.signi_height / 100.)
+        else:
+            self.legend_y = self.cms_text_y - 0.02
+        handle_list = []
+        label_list = []
+        for item in self.hist:
+            col_patch = mpatches.Patch(color=item.GetFillColor())
+            handle_list.append(col_patch)
+            label_list.append(item.GetTitle())
+        if self.data:
+            dat_line = mlines.Line2D([], [], color=self.marker_color, marker=self.marker_style, markersize=self.marker_size)
+            handle_list.append(dat_line)
+            label_list.append(self.data_hist.GetTitle())
+        leg = axis.legend(handle_list, label_list,
+                    loc = 'upper right',
+                    bbox_to_anchor=(self.legend_x, self.legend_y),
+                    bbox_transform=plt.gcf().transFigure,
+                    numpoints = 1,
+                    frameon = False)
+        for text in leg.get_texts():
+            text.set_color(self.annotation_text_color)
+
     def _Check_Consistency(self):
         if self.ratio and self.signi and not self.diff:
             if self.ratio_pos == self.signi_pos:
@@ -311,9 +346,9 @@ class plotter():
         ## Plot the main distribution on axis 1
         ax1 = plt.subplot2grid((100,1), (self.hist_start,0), rowspan=self.hist_height, colspan=1, axisbg = self.bg_color)
         if len(self.hist) == 1:
-            rplt.hist(self.hist[0], stacked=False, axes=ax1, zorder=2)
+            hist_handle = rplt.hist(self.hist[0], stacked=False, axes=ax1, zorder=2)
             if self.data:
-                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, 
+                data_handle = rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1, 
                               markersize=self.marker_size,
                               marker = self.marker_style,
                               ecolor = self.marker_color,
@@ -321,9 +356,9 @@ class plotter():
                               markeredgecolor = self.marker_color,
                               capthick = self.marker_error_cap_width)
         else:
-            rplt.hist(self.hist, stacked=True, axes=ax1, zorder=2)
+            hist_handle = rplt.hist(self.hist, stacked=True, axes=ax1, zorder=2)
             if self.data:
-                rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1,
+                data_handle = rplt.errorbar(self.data_hist, xerr=False, emptybins=False, axes=ax1,
                               markersize=self.marker_size,
                               marker = self.marker_style,
                               ecolor = self.marker_color,
@@ -332,6 +367,7 @@ class plotter():
                               capthick = self.marker_error_cap_width)
         ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self.y_label_offset,0.9)
+        self._Add_legend(ax1)
         if not ((self.ratio and self.ratio_pos == 1) or (self.diff and self.diff_pos == 1) or (self.signi and self.signi_pos == 1) or (self.ratio and self.ratio_pos == 2) or (self.diff and self.diff_pos == 2) or (self.signi and self.signi_pos == 2)):
             plt.xlabel(self.xaxis_title, color=self.label_text_color, position=(1., -0.1), va='top', ha='right')
         ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
