@@ -131,6 +131,20 @@ class plotter():
         self._add_error_bands = True
         self._error_hist = histo
 
+    ## Function to set properties of the plotting axis
+    #
+    # This function sets axis properties like the y-range or
+    # if any axis should be logarithmic.
+    # @param[in] logx Boolean if the x-axis should be logarithmic (Default = False)
+    # @param[in] logy Boolean if the y-axis should be logarithmic (Default = True)
+    # @param[in] ymin Minimum plotting range for the y-axis (Default = -1 automatic values)
+    # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1):
+        self._logx = logx
+        self._logy = logy
+        self._ymin = ymin
+        self._ymax = ymax
+
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
@@ -149,6 +163,10 @@ class plotter():
         self._error_bands_alph = 0.7
         self._error_bands_labl = 'Sys. uncert.'
         self._spine_line_width = 0.5
+        self._logx = False
+        self._logy = True
+        self._ymin = -1
+        self._ymax = -1
         if self._style == 'CMS':
             self._add_cms_text           = True
             self._add_lumi_text          = True
@@ -163,6 +181,7 @@ class plotter():
             self._marker_color           = 'black'
             self._marker_error_cap_width = 0
             self._cms_text_alignment     = 'row'
+            self._show_minor_tick_labels = False
             if self._add_plots[0] == '':
                 self._cms_text_x         = 0.8
                 self._cms_text_y         = 0.9
@@ -183,6 +202,7 @@ class plotter():
             self._marker_color           = 'black'
             self._marker_error_cap_width = 1
             self._cms_text_alignment     = 'row'
+            self._show_minor_tick_labels = True
             if self._add_plots[0] == '':
                 self._cms_text_x         = 0.8
                 self._cms_text_y         = 0.9
@@ -205,6 +225,7 @@ class plotter():
             self._cms_text_alignment     = 'column'
             self._cms_text_x             = 0.1
             self._cms_text_y             = 0.955
+            self._show_minor_tick_labels = False
 
     def _Write_additional_text(self):
         if self._add_lumi_text:
@@ -322,6 +343,12 @@ class plotter():
             signi.SetBinError(i,1)
         return signi
 
+    def _show_only_some(self, x, pos):
+        s = str(int(x))
+        if s[0] in ('4'):
+            return s
+        return ''
+
     def _Draw_Error_Bands(self, axis1):
         sum_hist = self._hist[0].Clone('sum_hist')
         for i in range(1,len(self._hist)):
@@ -377,6 +404,10 @@ class plotter():
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._bg_color)
         ## Plot the main distribution on axis 1
         ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._bg_color)
+        if self._logy:
+            ax1.set_yscale('log')
+        if self._logx:
+            ax1.set_xscale('log')
         if len(self._hist) == 1:
             hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
             if self._data:
@@ -401,12 +432,17 @@ class plotter():
             self._Draw_Error_Bands(ax1)
         if len(self._sig_hist) > 0:
             rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        if self._ymin != -1 and self._ymax != -1:
+            print('resetting axis range')
+            ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
         ax1.set_ylabel(self._yaxis_title, color=self._label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self._y_label_offset,0.9)
         self._Add_legend(ax1)
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
-        ax1.yaxis.set_major_locator(mticker.MaxNLocator(prune='lower'))
+        if self._show_minor_tick_labels:
+            ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
+            ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
         ax1.spines['bottom'].set_color(self._spine_color)
         ax1.spines['bottom'].set_linewidth(self._spine_line_width)
         ax1.spines['top'].set_color(self._spine_color)
