@@ -3,7 +3,7 @@
 from lib.DukePlotALot import *
 
 def main():
-    bag_hist, sig_hist, dat_hist = create_test_histos()
+    bag_hist, sig_hist, dat_hist, sys_hist = create_test_histos()
 
     bag_hist.fillstyle = 'solid'
     bag_hist.fillcolor = 'green'
@@ -24,6 +24,7 @@ def main():
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)
     test.Add_plot('DiffRatio',pos=2, height=15)
+    test.Add_error_hist(sys_hist)
     test.make_plot('bla_plt.pdf')
     return 42
 
@@ -40,13 +41,18 @@ def create_test_histos():
     h1 = Hist(30, 40, 200, title='Background', markersize=0)
     h2 = h1.Clone(title='Signal')
     h3 = h1.Clone(title='Data')
+    h4 = h1.Clone(title='Systematics')
 
     # fill the histograms with our distributions
     h1.FillRandom('landau', 10000)
+    h4.FillRandom('landau', 10000)
+    h4.Scale(1.1)
+    h4.Add(h1,-1)
+    h4.Divide(h1)
     map(h2.Fill, signal)
     h3.FillRandom('landau', 10000)
     map(h3.Fill, signal_obs)
 
-    return h1, h2, h3
+    return h1, h2, h3, h4
 
 main()
