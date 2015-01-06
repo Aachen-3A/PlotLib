@@ -12,8 +12,25 @@ import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
+##@class plotter
+# Class to collect matplotlib functions
+#
+# To use the various matplotlib functions to produce the standard
+# plots (with data[optional], signal[optional], background and
+# uncertainties[optional]). Also different analysis distributions
+# like ratio or siginficance can be added.
+#
+# written by Soeren Erdweg 2014-2015
 class plotter():
-    ## Constructor:
+    ## Init function
+    #
+    # In this function the default variables are set. Also the style can
+    # be defined and the histogram input can be given.
+    # @param[in] style String of which style should be used (default = 'Plain')
+    # @param[in] hist List of background histograms (default = [])
+    # @param[in] sig List of signal histograms (default = [])
+    # @param[in] data_hist Data histogram (default = None)
+    # @param[in] data Bool if data should be plotted (default = False)
     def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False):
         ## style variables
         self.style                = style
@@ -32,11 +49,17 @@ class plotter():
         self.add_plots_labels     = ['', '', '']
         self.add_plots_ref_line   = [0, 0, 0]
         self.annotations_modified = False
+        self.add_error_bands      = False
         self._Set_style()
 
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
+    ## Function to make the complete plot, after all definitions are set 
+    #
+    # This function calls the different sub functions used to produce the
+    # final plots and save it.
+    # @param[in] out_name Name of the output file that should be produced
     def make_plot(self,out_name):
         self._Compiler()
         self._checker()
@@ -52,13 +75,34 @@ class plotter():
 #        self.cms_text_y         = posy
 #        self.cms_text_alignment = AddAlign
 
-    def Add_data(self, data_hist):
-        self.data = True
+    ## Function to add the data histogram
+    #
+    # This function is used to add a data histogram and set the bool to
+    # plot the data
+    # @param[in] data_hist Data histogram that should be added
+    # @param[in] doData Boolean if the data should be drawn (default = True)
+    def Add_data(self, data_hist, doData = True):
+        self.data = doData
         self.data_hist = data_hist
 
+    ## Function to decide if you want to draw the data
+    #
+    # This function is used to set the bool to plot the data
+    # @param[in] doData Boolean if the data should be drawn (default = True)
     def Draw_data(self, doData = True):
         self.data = doData
 
+    ## Function to add a analysis plot to the figure
+    #
+    # This function is called to add an additional plot to the figure and
+    # define its properties, like where it should be placed and how much
+    # space of the figure should be taken by this plot.
+    # At the moment 'Ratio', 'Diff', 'Signi' and 'DiffRatio' are available
+    # as additional plots.
+    # @param[in] plot String of the plot name that should be added (default = 'Ratio')
+    # @param[in] pos Position where the plot should be added, 0 is on top of the main plot, 1 and 2 at the bottom (default = 0)
+    # @param[in] height Height of the Plot from the whole plotting range in percent (default = 15)
+    # @param[in] label Label of the y-axis for this additional plot (default = ''[Use the default of this specific analysis plot])
     def Add_plot(self, plot = 'Ratio', pos = 0, height = 15, label = ''):
         if self.add_plots[pos] == '':
             self.add_plots[pos] = plot
@@ -71,8 +115,21 @@ class plotter():
         else:
             print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
 
+    ## Function to add a histogram to the background list
+    #
+    # This function is used to add an additional histogram to the list of
+    # background histogram.
+    # @param[in] histo Histogram that should be added
     def Add_histo(self, histo):
         self.hist.append(histo)
+
+    ## Function to set the uncertainty histogram
+    #
+    # This function is used to add the systematic uncertainty histogram.
+    # @param[in] histo Histogram that contains as bin content the relativ systematic uncertainty.
+    def Add_error_hist(self, histo):
+        self.add_error_bands = True
+        self.error_hist = histo
 
     ##------------------------------------------------------------------
     ## Private functions
@@ -80,12 +137,16 @@ class plotter():
     def _Set_style(self):
         matplotlib.rcParams.update({'font.size': 10})
         #rc('text', usetex=True)
-        self.xaxis_title     = self.hist[0].xaxis.GetTitle()
-        self.yaxis_title     = self.hist[0].yaxis.GetTitle()
-        self.lumi_val        = 42000
-        self.cms_val         = 13
-        self.additional_text = '$Preliminary$'
-        self.y_label_offset  = -0.11
+        self.xaxis_title      = self.hist[0].xaxis.GetTitle()
+        self.yaxis_title      = self.hist[0].yaxis.GetTitle()
+        self.lumi_val         = 42000
+        self.cms_val          = 13
+        self.additional_text  = '$Preliminary$'
+        self.y_label_offset   = -0.11
+        self.error_bands_ecol = 'gray'
+        self.error_bands_fcol = 'lightgray'
+        self.error_bands_alph = 0.7
+        self.error_bands_labl = 'Sys. uncert.'
         if self.style == 'CMS':
             self.add_cms_text           = True
             self.add_lumi_text          = True
@@ -178,6 +239,10 @@ class plotter():
             col_patch = mlines.Line2D([], [], color=item.GetLineColor(), markersize=0)
             handle_list.append(col_patch)
             label_list.append(item.GetTitle())
+        if self.add_error_bands:
+            col_patch = mpatches.Patch(facecolor=self.error_bands_fcol,edgecolor=self.error_bands_ecol,alpha=self.error_bands_alph,lw=0.7)
+            handle_list.append(col_patch)
+            label_list.append(self.error_bands_labl)
         if self.data:
             dat_line = mlines.Line2D([], [], color=self.marker_color, marker=self.marker_style, markersize=self.marker_size)
             handle_list.append(dat_line)
@@ -255,6 +320,22 @@ class plotter():
             signi.SetBinError(i,1)
         return signi
 
+    def _Draw_Error_Bands(self, axis1):
+        sum_hist = self.hist[0].Clone('sum_hist')
+        for i in range(1,len(self.hist)):
+            sum_hist.Add(self.hist[i])
+        x = []
+        y = []
+        error = []
+        for i in range(sum_hist.GetNbinsX()+1):
+            x.append(sum_hist.GetBinLowEdge(i))
+            y.append(sum_hist.GetBinContent(i))
+            x.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+            y.append(sum_hist.GetBinContent(i))
+            error.append(sum_hist.GetBinContent(i)*abs(self.error_hist.GetBinContent(i)))
+            error.append(sum_hist.GetBinContent(i)*abs(self.error_hist.GetBinContent(i)))
+        plt.fill_between(np.array(x), np.array(y)-np.array(error), np.array(y)+np.array(error), alpha = self.error_bands_alph, edgecolor=self.error_bands_ecol, facecolor=self.error_bands_fcol, lw = 0.7, axes = axis1, zorder=2.1)
+
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
         if self.add_plots[0] != '':
@@ -306,6 +387,8 @@ class plotter():
                               markerfacecolor = self.marker_color,
                               markeredgecolor = self.marker_color,
                               capthick = self.marker_error_cap_width)
+        if self.add_error_bands:
+            self._Draw_Error_Bands(ax1)
         if len(self.sig_hist) > 0:
             rplt.hist(self.sig_hist, stacked = False, axes = ax1)
         ax1.set_ylabel(self.yaxis_title, color=self.label_text_color, va='top', ha='left')
