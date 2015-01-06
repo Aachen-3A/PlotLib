@@ -314,13 +314,41 @@ class plotter():
             sum_hist.Add(self._hist[i])
         ratio = self._data_hist.Clone('ratio')
         ratio.Divide(sum_hist)
-        return ratio
+        x_i = []
+        y_i = []
+        err_i = []
+        for i in range(sum_hist.GetNbinsX()+1):
+            x_i.append(sum_hist.GetBinLowEdge(i))
+            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+            y_i.append(1.)
+            y_i.append(1.)
+            err_i.append(ratio.GetBinContent(i) * self._error_hist.GetBinContent(i))
+            err_i.append(ratio.GetBinContent(i) * self._error_hist.GetBinContent(i))
+        x = np.array(x_i)
+        y = np.array(y_i)
+        err = np.array(err_i)
+        return ratio, x, y, err
 
     def _Calc_diff(self):
+        sum_hist = self._hist[0].Clone('sum_hist')
+        for i in range(1,len(self._hist)):
+            sum_hist.Add(self._hist[i])
         diff = self._data_hist.Clone('diff')
-        for item in self._hist:
-            diff.Add(item,-1)
-        return diff
+        diff.Add(sum_hist,-1)
+        x_i = []
+        y_i = []
+        err_i = []
+        for i in range(sum_hist.GetNbinsX()+1):
+            x_i.append(sum_hist.GetBinLowEdge(i))
+            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+            y_i.append(0.)
+            y_i.append(0.)
+            err_i.append(sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
+            err_i.append(sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
+        x = np.array(x_i)
+        y = np.array(y_i)
+        err = np.array(err_i)
+        return diff, x, y, err
 
     def _Calc_diffratio(self):
         diff = self._data_hist.Clone('diffratio')
@@ -330,18 +358,49 @@ class plotter():
         for i in range(1,len(self._hist)):
             sum_hist.Add(self._hist[i])
         diff.Divide(sum_hist)
-        return diff
+        x_i = []
+        y_i = []
+        err_i = []
+        for i in range(sum_hist.GetNbinsX()+1):
+            x_i.append(sum_hist.GetBinLowEdge(i))
+            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+            y_i.append(0.)
+            y_i.append(0.)
+            if sum_hist.GetBinContent(i) > 0:
+                err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
+                err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
+            else:
+                err_i.append(0)
+                err_i.append(0)
+        x = np.array(x_i)
+        y = np.array(y_i)
+        err = np.array(err_i)
+        return diff, x, y, err
 
     def _Calc_signi(self):
         sum_hist = self._hist[0].Clone('sum_hist')
         for i in range(1,len(self._hist)):
             sum_hist.Add(self._hist[i])
         signi = self._data_hist.Clone('signi')
+        x_i = []
+        y_i = []
+        err_i = []
         for i in range(signi.GetNbinsX()+1):
-            value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))/np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
+            value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
+            denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
+            value /= denominator
             signi.SetBinContent(i,value)
             signi.SetBinError(i,1)
-        return signi
+            x_i.append(sum_hist.GetBinLowEdge(i))
+            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+            y_i.append(0.)
+            y_i.append(0.)
+            err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist.GetBinContent(i))
+            err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist.GetBinContent(i))
+        x = np.array(x_i)
+        y = np.array(y_i)
+        err = np.array(err_i)
+        return signi, x, y, err
 
     def _show_only_some(self, x, pos):
         s = str(int(x))
@@ -363,11 +422,15 @@ class plotter():
             y.append(sum_hist.GetBinContent(i))
             error.append(sum_hist.GetBinContent(i)*abs(self._error_hist.GetBinContent(i)))
             error.append(sum_hist.GetBinContent(i)*abs(self._error_hist.GetBinContent(i)))
-        plt.fill_between(np.array(x), np.array(y)-np.array(error), np.array(y)+np.array(error),
+        self._Draw_Any_uncertainty_band(axis1, np.array(x), np.array(y), np.array(error))
+
+
+    def _Draw_Any_uncertainty_band(self, axis, x, y, err):
+        plt.fill_between(x, y - err, y + err,
                          alpha = self._error_bands_alph,
                          edgecolor = self._error_bands_ecol,
                          facecolor = self._error_bands_fcol,
-                         lw = 0.7, axes = axis1, zorder = 2.1)
+                         lw = 0.7, axes = axis, zorder = 2.1)
 
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
@@ -383,7 +446,7 @@ class plotter():
             ax0.spines['right'].set_linewidth(self._spine_line_width)
             ax0.tick_params(axis='y', colors = self._tick_color)
             ax0.tick_params(axis='x', colors = self._tick_color)
-            add_hist = self._Calc_additional_plot(self._add_plots[0],0)
+            add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
             rplt.errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[0],
@@ -391,7 +454,10 @@ class plotter():
                           ecolor = self._marker_color,
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width)
+                          capthick = self._marker_error_cap_width,
+                          zorder = 2.2)
+            if self._add_error_bands:
+                self._Draw_Any_uncertainty_band(ax0, x, y, err)
             ax0.axhline(self._add_plots_ref_line[0], color = self._ref_line_color)
             ax0.set_ylabel(self._add_plots_labels[0], color = self._label_text_color, va='top', ha='left')
             ax0.yaxis.set_label_coords(self._y_label_offset,1.)
@@ -459,7 +525,7 @@ class plotter():
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
             ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._bg_color)
-            add_hist = self._Calc_additional_plot(self._add_plots[1],1)
+            add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
             rplt.errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[1],
@@ -467,7 +533,10 @@ class plotter():
                           ecolor = self._marker_color,
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width)
+                          capthick = self._marker_error_cap_width,
+                          zorder = 2.2)
+            if self._add_error_bands:
+                self._Draw_Any_uncertainty_band(ax2, x, y, err)
             ax2.axhline(self._add_plots_ref_line[1], color = self._ref_line_color)
             ax2.set_ylabel(self._add_plots_labels[1], color = self._label_text_color, va='top', ha='left')
             ax2.yaxis.set_label_coords(self._y_label_offset,1.)
@@ -496,7 +565,7 @@ class plotter():
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if self._add_plots[2] != '':
             ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._bg_color)
-            add_hist = self._Calc_additional_plot(self._add_plots[2],2)
+            add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
             rplt.errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[2],
@@ -504,7 +573,10 @@ class plotter():
                           ecolor = self._marker_color,
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width)
+                          capthick = self._marker_error_cap_width,
+                          zorder = 2.2)
+            if self._add_error_bands:
+                self._Draw_Any_uncertainty_band(ax3, x, y, err)
             ax3.axhline(self._add_plots_ref_line[2], color = self._ref_line_color)
             ax3.set_ylabel(self._add_plots_labels[2], color = self._label_text_color, va = 'top', ha = 'left')
             ax3.yaxis.set_label_coords(self._y_label_offset,1.)
