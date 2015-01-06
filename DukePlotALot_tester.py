@@ -11,7 +11,7 @@ def main():
     bag_hist.linewidth = 0
     bag_hist.yaxis.SetTitle('Events')
     bag_hist.xaxis.SetTitle('Mass (GeV)')
-    
+
     sig_hist.fillstyle = '0'
     sig_hist.fillcolor = 'red'
     sig_hist.linecolor = 'red'
@@ -19,7 +19,12 @@ def main():
     sig_hist.yaxis.SetTitle('Events')
     sig_hist.xaxis.SetTitle('Mass (GeV)')
 
-    test = plotter(hist=[bag_hist], sig = [sig_hist],style='CMS')
+    bag_hist.Scale(0.5)
+    bag_hist_2 = bag_hist.Clone(title='Background 2')
+    bag_hist_2.fillcolor = 'y'
+    bag_hist_2.linecolor = 'y'
+
+    test = plotter(hist=[bag_hist_2,bag_hist], sig = [sig_hist],style='CMS')
     test.Add_data(dat_hist)
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)
