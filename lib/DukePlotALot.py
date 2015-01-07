@@ -123,13 +123,18 @@ class plotter():
     def Add_histo(self, histo):
         self._hist.append(histo)
 
-    ## Function to set the uncertainty histogram
+    ## Function to set the uncertainty histograms
     #
-    # This function is used to add the systematic uncertainty histogram.
-    # @param[in] histo Histogram that contains as bin content the relativ systematic uncertainty.
-    def Add_error_hist(self, histo):
+    # This function is used to add the systematic uncertainty histograms.
+    # @param[in] histo List of histograms that contain as bin content the relativ systematic uncertainties.
+    # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
+    #                        or 'val' around the e.g. ratio value) (default = 'ref') 
+    def Add_error_hist(self, histo = [], labels = [], band_center = 'ref'):
         self._add_error_bands = True
         self._error_hist = histo
+        if labels != []:
+            self._error_bands_labl = labels
+        self._error_bands_center = band_center
 
     ## Function to set properties of the plotting axis
     #
@@ -158,10 +163,11 @@ class plotter():
         self._cms_val          = 13
         self._additional_text  = 'Preliminary'
         self._y_label_offset   = -0.11
-        self._error_bands_ecol = 'gray'
-        self._error_bands_fcol = 'lightgray'
+        self._error_bands_ecol = ['darkmagenta','darkcyan']
+        self._error_bands_fcol = ['m','cyan']
         self._error_bands_alph = 0.7
-        self._error_bands_labl = 'Sys. uncert.'
+        self._error_bands_labl = ['Sys. uncert. 1','Sys. uncert. 2']
+        self._error_bands_center = 'ref'
         self._spine_line_width = 0.5
         self._logx = False
         self._logy = True
@@ -182,6 +188,7 @@ class plotter():
             self._marker_error_cap_width = 0
             self._cms_text_alignment     = 'row'
             self._show_minor_tick_labels = False
+            self._legend_font_size       = 9
             if self._add_plots[0] == '':
                 self._cms_text_x         = 0.8
                 self._cms_text_y         = 0.9
@@ -203,6 +210,7 @@ class plotter():
             self._marker_error_cap_width = 1
             self._cms_text_alignment     = 'row'
             self._show_minor_tick_labels = True
+            self._legend_font_size       = 10
             if self._add_plots[0] == '':
                 self._cms_text_x         = 0.8
                 self._cms_text_y         = 0.9
@@ -226,6 +234,7 @@ class plotter():
             self._cms_text_x             = 0.1
             self._cms_text_y             = 0.955
             self._show_minor_tick_labels = False
+            self._legend_font_size       = 9
 
     def _Write_additional_text(self):
         if self._add_lumi_text:
@@ -263,9 +272,10 @@ class plotter():
             handle_list.append(col_patch)
             label_list.append(item.GetTitle())
         if self._add_error_bands:
-            col_patch = mpatches.Patch(facecolor = self._error_bands_fcol, edgecolor = self._error_bands_ecol , alpha = self._error_bands_alph , lw = 0.7)
-            handle_list.append(col_patch)
-            label_list.append(self._error_bands_labl)
+            for i in range(0,len(self._error_hist)):
+                col_patch = mpatches.Patch(facecolor = self._error_bands_fcol[i], edgecolor = self._error_bands_ecol[i] , alpha = self._error_bands_alph , lw = 0.7)
+                handle_list.append(col_patch)
+                label_list.append(self._error_bands_labl[i])
         if self._data:
             dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
@@ -275,7 +285,8 @@ class plotter():
                     bbox_to_anchor=(self._legend_x, self._legend_y),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
-                    frameon = False)
+                    frameon = False,
+                    fontsize = self._legend_font_size)
         for text in leg.get_texts():
             text.set_color(self._annotation_text_color)
 
@@ -314,19 +325,27 @@ class plotter():
             sum_hist.Add(self._hist[i])
         ratio = self._data_hist.Clone('ratio')
         ratio.Divide(sum_hist)
-        x_i = []
-        y_i = []
-        err_i = []
-        for i in range(sum_hist.GetNbinsX()+1):
-            x_i.append(sum_hist.GetBinLowEdge(i))
-            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-            y_i.append(1.)
-            y_i.append(1.)
-            err_i.append(ratio.GetBinContent(i) * self._error_hist.GetBinContent(i))
-            err_i.append(ratio.GetBinContent(i) * self._error_hist.GetBinContent(i))
-        x = np.array(x_i)
-        y = np.array(y_i)
-        err = np.array(err_i)
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(sum_hist.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._error_bands_center == 'ref':
+                    y_i.append(1.)
+                    y_i.append(1.)
+                elif self._error_bands_center == 'val':
+                    y_i.append(ratio.GetBinContent(i))
+                    y_i.append(ratio.GetBinContent(i))
+                err_i.append(ratio.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                err_i.append(ratio.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
         return ratio, x, y, err
 
     def _Calc_diff(self):
@@ -335,19 +354,27 @@ class plotter():
             sum_hist.Add(self._hist[i])
         diff = self._data_hist.Clone('diff')
         diff.Add(sum_hist,-1)
-        x_i = []
-        y_i = []
-        err_i = []
-        for i in range(sum_hist.GetNbinsX()+1):
-            x_i.append(sum_hist.GetBinLowEdge(i))
-            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-            y_i.append(0.)
-            y_i.append(0.)
-            err_i.append(sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
-            err_i.append(sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
-        x = np.array(x_i)
-        y = np.array(y_i)
-        err = np.array(err_i)
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(sum_hist.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._error_bands_center == 'ref':
+                    y_i.append(0.)
+                    y_i.append(0.)
+                elif self._error_bands_center == 'val':
+                    y_i.append(diff.GetBinContent(i))
+                    y_i.append(diff.GetBinContent(i))
+                err_i.append(sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                err_i.append(sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
         return diff, x, y, err
 
     def _Calc_diffratio(self):
@@ -358,23 +385,31 @@ class plotter():
         for i in range(1,len(self._hist)):
             sum_hist.Add(self._hist[i])
         diff.Divide(sum_hist)
-        x_i = []
-        y_i = []
-        err_i = []
-        for i in range(sum_hist.GetNbinsX()+1):
-            x_i.append(sum_hist.GetBinLowEdge(i))
-            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-            y_i.append(0.)
-            y_i.append(0.)
-            if sum_hist.GetBinContent(i) > 0:
-                err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
-                err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist.GetBinContent(i))
-            else:
-                err_i.append(0)
-                err_i.append(0)
-        x = np.array(x_i)
-        y = np.array(y_i)
-        err = np.array(err_i)
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(sum_hist.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._error_bands_center == 'ref':
+                    y_i.append(0.)
+                    y_i.append(0.)
+                elif self._error_bands_center == 'val':
+                    y_i.append(diff.GetBinContent(i))
+                    y_i.append(diff.GetBinContent(i))
+                if sum_hist.GetBinContent(i) > 0:
+                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                else:
+                    err_i.append(0)
+                    err_i.append(0)
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
         return diff, x, y, err
 
     def _Calc_signi(self):
@@ -382,24 +417,34 @@ class plotter():
         for i in range(1,len(self._hist)):
             sum_hist.Add(self._hist[i])
         signi = self._data_hist.Clone('signi')
-        x_i = []
-        y_i = []
-        err_i = []
         for i in range(signi.GetNbinsX()+1):
             value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
             denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
             value /= denominator
             signi.SetBinContent(i,value)
             signi.SetBinError(i,1)
-            x_i.append(sum_hist.GetBinLowEdge(i))
-            x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-            y_i.append(0.)
-            y_i.append(0.)
-            err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist.GetBinContent(i))
-            err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist.GetBinContent(i))
-        x = np.array(x_i)
-        y = np.array(y_i)
-        err = np.array(err_i)
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(signi.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._error_bands_center == 'ref':
+                    y_i.append(0.)
+                    y_i.append(0.)
+                elif self._error_bands_center == 'val':
+                    y_i.append(signi.GetBinContent(i))
+                    y_i.append(signi.GetBinContent(i))
+                denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
+                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
         return signi, x, y, err
 
     def _show_only_some(self, x, pos):
@@ -414,23 +459,47 @@ class plotter():
             sum_hist.Add(self._hist[i])
         x = []
         y = []
-        error = []
-        for i in range(sum_hist.GetNbinsX()+1):
-            x.append(sum_hist.GetBinLowEdge(i))
-            y.append(sum_hist.GetBinContent(i))
-            x.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-            y.append(sum_hist.GetBinContent(i))
-            error.append(sum_hist.GetBinContent(i)*abs(self._error_hist.GetBinContent(i)))
-            error.append(sum_hist.GetBinContent(i)*abs(self._error_hist.GetBinContent(i)))
-        self._Draw_Any_uncertainty_band(axis1, np.array(x), np.array(y), np.array(error))
-
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(sum_hist.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                y_i.append(sum_hist.GetBinContent(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                y_i.append(sum_hist.GetBinContent(i))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(i)))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(i)))
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
+        self._Draw_Any_uncertainty_band(axis1, x, y, err)
 
     def _Draw_Any_uncertainty_band(self, axis, x, y, err):
-        plt.fill_between(x, y - err, y + err,
+        x_vals = x[0]
+        plt.fill_between(x_vals, y[0] - err[0], y[0] + err[0],
                          alpha = self._error_bands_alph,
-                         edgecolor = self._error_bands_ecol,
-                         facecolor = self._error_bands_fcol,
+                         edgecolor = self._error_bands_ecol[0],
+                         facecolor = self._error_bands_fcol[0],
                          lw = 0.7, axes = axis, zorder = 2.1)
+        dummy_y_p = np.copy(y[0])
+        dummy_y_p = np.add(dummy_y_p, err[0])
+        dummy_y_m = np.copy(y[0])
+        dummy_y_m = np.subtract(dummy_y_m, err[0])
+        for i in range(1,len(self._error_hist)):
+            plt.fill_between(x_vals, dummy_y_p, dummy_y_p + err[i],
+                             alpha = self._error_bands_alph,
+                             edgecolor = self._error_bands_ecol[i],
+                             facecolor = self._error_bands_fcol[i],
+                             lw = 0.7, axes = axis, zorder = 2.1)
+            plt.fill_between(x_vals, dummy_y_m - err[i], dummy_y_m,
+                             alpha = self._error_bands_alph,
+                             edgecolor = self._error_bands_ecol[i],
+                             facecolor = self._error_bands_fcol[i],
+                             lw = 0.7, axes = axis, zorder = 2.1)
+            dummy_y_p = np.add(dummy_y_p, err[i])
+            dummy_y_m = np.subtract(dummy_y_m, err[i])
 
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
