@@ -29,6 +29,7 @@ from operator import methodcaller
 # @TODO Handling of the data error bars
 # @TODO Include file reading functionallity
 # @TODO Include hist reweighting
+#
 # written by Soeren Erdweg 2014-2015
 class plotter():
     ## Init function
@@ -327,7 +328,6 @@ class plotter():
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
-        self._Add_legend()
 
     def _Calc_additional_plot(self, plot, pos):
         if plot == 'Ratio':
@@ -629,6 +629,7 @@ class plotter():
         ax1.spines['right'].set_linewidth(self._spine_line_width)
         ax1.tick_params(axis = 'y', colors = self._tick_color)
         ax1.tick_params(axis = 'x', colors = self._tick_color)
+        self._Add_legend()
         return ax1
 
     def _Draw_2(self, axis1):
