@@ -12,6 +12,8 @@ import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
+from operator import methodcaller
+
 ##@class plotter
 # Class to collect matplotlib functions
 #
@@ -20,6 +22,13 @@ import matplotlib.lines as mlines
 # uncertainties[optional]). Also different analysis distributions
 # like ratio or siginficance can be added.
 #
+# @TODO Include handling of overflow bins
+# @TODO Include cumulative distributions
+# @TODO Functionallity for rebinning/variable binning
+# @TODO Handling of asymetric errors (systematics)
+# @TODO Handling of the data error bars
+# @TODO Include file reading functionallity
+# @TODO Include hist reweighting
 # written by Soeren Erdweg 2014-2015
 class plotter():
     ## Init function
@@ -71,11 +80,11 @@ class plotter():
     # This function calls the different sub functions used to produce the
     # final plotsbut does not save it.
     # @param[out] _fig Created plot, to do your own custemization
-    def make_plot(self,out_name):
-        self._Compiler()
-        self._checker()
-        self._Draw()
-        return self._fig
+    #def make_plot(self,out_name):
+        #self._Compiler()
+        #self._checker()
+        #self._Draw()
+        #return self._fig
 
 #    def Modify_annotations(self, lumi = self.lumi_val, cms = self.cms_val, AddText = self.additional_text, posx = self.cms_text_x, posy = self.cms_text_y, AddAlign = self.cms_text_alignment):
 #        self.annotations_modified = True
@@ -139,13 +148,16 @@ class plotter():
     # This function is used to add the systematic uncertainty histograms.
     # @param[in] histo List of histograms that contain as bin content the relativ systematic uncertainties.
     # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
-    #                        or 'val' around the e.g. ratio value) (default = 'ref') 
-    def Add_error_hist(self, histo = [], labels = [], band_center = 'ref'):
+    #                        or 'val' around the e.g. ratio value) (default = 'ref')
+    # @param[in] stacking String to identify how to stack different systematic uncertainties ('No' stacking,
+    #                     'linear' stacking) (Default = 'No')
+    def Add_error_hist(self, histo = [], labels = [], band_center = 'ref', stacking = 'No'):
         self._add_error_bands = True
         self._error_hist = histo
         if labels != []:
             self._error_bands_labl = labels
         self._error_bands_center = band_center
+        self._error_stacking = stacking
 
     ## Function to set properties of the plotting axis
     #
@@ -179,6 +191,7 @@ class plotter():
         self._error_bands_alph = 0.7
         self._error_bands_labl = ['Sys. uncert. 1','Sys. uncert. 2']
         self._error_bands_center = 'ref'
+        self._error_stacking = 'No'
         self._spine_line_width = 0.5
         self._logx = False
         self._logy = True
@@ -246,7 +259,6 @@ class plotter():
             self._cms_text_y             = 0.955
             self._show_minor_tick_labels = False
             self._legend_font_size       = 9
-        self._Add_legend()
 
     def _Write_additional_text(self):
         if self._add_lumi_text:
@@ -288,6 +300,10 @@ class plotter():
                 col_patch = mpatches.Patch(facecolor = self._error_bands_fcol[i], edgecolor = self._error_bands_ecol[i] , alpha = self._error_bands_alph , lw = 0.7)
                 handle_list.append(col_patch)
                 label_list.append(self._error_bands_labl[i])
+            if self._error_stacking == 'No':
+                col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                handle_list.append(col_patch)
+                label_list.append('syst. sum')
         if self._data:
             dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
@@ -310,6 +326,8 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
+        self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
+        self._Add_legend()
 
     def _Calc_additional_plot(self, plot, pos):
         if plot == 'Ratio':
@@ -490,28 +508,40 @@ class plotter():
 
     def _Draw_Any_uncertainty_band(self, axis, x, y, err):
         x_vals = x[0]
-        plt.fill_between(x_vals, y[0] - err[0], y[0] + err[0],
+        plt.fill_between(x_vals, y[0] - np.absolute(err[0]), y[0] + np.absolute(err[0]),
                          alpha = self._error_bands_alph,
                          edgecolor = self._error_bands_ecol[0],
                          facecolor = self._error_bands_fcol[0],
                          lw = 0.7, axes = axis, zorder = 2.1)
         dummy_y_p = np.copy(y[0])
-        dummy_y_p = np.add(dummy_y_p, err[0])
         dummy_y_m = np.copy(y[0])
-        dummy_y_m = np.subtract(dummy_y_m, err[0])
+        dummy_err_sum = np.copy(np.square(err[0]))
+        if self._error_stacking == 'linear':
+            dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
+            dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
-            plt.fill_between(x_vals, dummy_y_p, dummy_y_p + err[i],
+            plt.fill_between(x_vals, dummy_y_p, dummy_y_p + np.absolute(err[i]),
                              alpha = self._error_bands_alph,
                              edgecolor = self._error_bands_ecol[i],
                              facecolor = self._error_bands_fcol[i],
                              lw = 0.7, axes = axis, zorder = 2.1)
-            plt.fill_between(x_vals, dummy_y_m - err[i], dummy_y_m,
+            plt.fill_between(x_vals, dummy_y_m - np.absolute(err[i]), dummy_y_m,
                              alpha = self._error_bands_alph,
                              edgecolor = self._error_bands_ecol[i],
                              facecolor = self._error_bands_fcol[i],
                              lw = 0.7, axes = axis, zorder = 2.1)
-            dummy_y_p = np.add(dummy_y_p, err[i])
-            dummy_y_m = np.subtract(dummy_y_m, err[i])
+            if self._error_stacking == 'linear':
+                dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
+                dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
+            elif self._error_stacking == 'No':
+                dummy_err_sum = np.add(dummy_err_sum,np.square(err[i]))
+        if self._error_stacking == 'No':
+            dummy_err_sum = np.sqrt(dummy_err_sum)
+            plt.fill_between(x_vals, dummy_y_p - dummy_err_sum, dummy_y_p + dummy_err_sum,
+                             alpha = 0.4,
+                             edgecolor = 'black',
+                             facecolor = 'grey',
+                             lw = 0.7, axes = axis, zorder = 2.2)
 
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
