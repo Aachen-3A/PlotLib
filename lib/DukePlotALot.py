@@ -55,7 +55,7 @@ class plotter():
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
-    ## Function to make the complete plot, after all definitions are set 
+    ## Function to make the complete plot, after all definitions are set
     #
     # This function calls the different sub functions used to produce the
     # final plots and save it.
@@ -66,12 +66,12 @@ class plotter():
         self._Draw()
         self._SavePlot(out_name)
 
-    ## Function to create the complete plot, after all definitions are set 
+    ## Function to create the complete plot, after all definitions are set
     #
     # This function calls the different sub functions used to produce the
     # final plotsbut does not save it.
     # @param[out] _fig Created plot, to do your own custemization
-    def make_plot(self,out_name):
+    def create_plot(self):
         self._Compiler()
         self._checker()
         self._Draw()
@@ -139,7 +139,7 @@ class plotter():
     # This function is used to add the systematic uncertainty histograms.
     # @param[in] histo List of histograms that contain as bin content the relativ systematic uncertainties.
     # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
-    #                        or 'val' around the e.g. ratio value) (default = 'ref') 
+    #                        or 'val' around the e.g. ratio value) (default = 'ref')
     def Add_error_hist(self, histo = [], labels = [], band_center = 'ref'):
         self._add_error_bands = True
         self._error_hist = histo
@@ -155,11 +155,20 @@ class plotter():
     # @param[in] logy Boolean if the y-axis should be logarithmic (Default = True)
     # @param[in] ymin Minimum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
+        self._xmin = xmin
+        self._xmax = xmax
+
+    ## Function to save the complete plot
+    #
+    # This function saves the plot you which is stored in the object so create it first
+    # @param[out] _fig Created plot, to do your own custemization
+    def SavePlot(self, out_name):
+        self._SavePlot(out_name)
 
     ##------------------------------------------------------------------
     ## Private functions
@@ -184,6 +193,8 @@ class plotter():
         self._logy = True
         self._ymin = -1
         self._ymax = -1
+        self._xmin = -1
+        self._xmax = -1
         if self._style == 'CMS':
             self._add_cms_text           = True
             self._add_lumi_text          = True
@@ -292,14 +303,16 @@ class plotter():
             dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
-        leg = plt.legend(handle_list, label_list,
+
+        self.leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
                     bbox_to_anchor=(self._legend_x, self._legend_y),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
                     frameon = False,
                     fontsize = self._legend_font_size)
-        for text in leg.get_texts():
+
+        for text in self.leg.get_texts():
             text.set_color(self._annotation_text_color)
 
     def _Compiler(self):
@@ -432,9 +445,10 @@ class plotter():
         for i in range(signi.GetNbinsX()+1):
             value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
             denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
-            value /= denominator
-            signi.SetBinContent(i,value)
-            signi.SetBinError(i,1)
+            if denominator!=0:
+                value /= denominator
+                signi.SetBinContent(i,value)
+                signi.SetBinError(i,1)
         x = []
         y = []
         err = []
@@ -452,8 +466,12 @@ class plotter():
                     y_i.append(signi.GetBinContent(i))
                     y_i.append(signi.GetBinContent(i))
                 denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
-                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                if denominator!=0:
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                else:
+                    err_i.append(0.)
+                    err_i.append(0.)
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -558,7 +576,7 @@ class plotter():
         if len(self._hist) == 1:
             hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
             if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1, 
+                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
                               markersize = self._marker_size,
                               marker = self._marker_style,
                               ecolor = self._marker_color,
@@ -582,6 +600,9 @@ class plotter():
         if self._ymin != -1 and self._ymax != -1:
             print('resetting axis range')
             ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
+        if self._xmin != -1 and self._xmax != -1:
+            print('resetting axis range')
+            ax1.set_xlim(xmin = self._xmin, xmax = self._xmax)
         ax1.set_ylabel(self._yaxis_title, color=self._label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self._y_label_offset,0.9)
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
@@ -599,6 +620,8 @@ class plotter():
         ax1.spines['right'].set_linewidth(self._spine_line_width)
         ax1.tick_params(axis = 'y', colors = self._tick_color)
         ax1.tick_params(axis = 'x', colors = self._tick_color)
+        #ax1.legend()
+        self._Add_legend()
         return ax1
 
     def _Draw_2(self, axis1):
@@ -691,6 +714,7 @@ class plotter():
 
     def _SavePlot(self, out_name):
         plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+
 
     def _checker(self):
         try:
