@@ -24,12 +24,15 @@ def main():
     bag_hist_2.fillcolor = 'y'
     bag_hist_2.linecolor = 'y'
 
+    sys_hist_2 = sys_hist.Clone(title='sys2')
+    sys_hist_2.Scale(0.5)
+
     test = plotter(hist=[bag_hist_2,bag_hist], sig = [sig_hist],style='CMS')
     test.Add_data(dat_hist)
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)
     test.Add_plot('DiffRatio',pos=2, height=15)
-    test.Add_error_hist(sys_hist)
+    test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
     test.Set_axis(ymin = 20, ymax = 5*1e3)
     test.make_plot('bla_plt.pdf')
     return 42
