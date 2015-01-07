@@ -66,6 +66,17 @@ class plotter():
         self._Draw()
         self._SavePlot(out_name)
 
+    ## Function to create the complete plot, after all definitions are set 
+    #
+    # This function calls the different sub functions used to produce the
+    # final plotsbut does not save it.
+    # @param[out] _fig Created plot, to do your own custemization
+    def make_plot(self,out_name):
+        self._Compiler()
+        self._checker()
+        self._Draw()
+        return self._fig
+
 #    def Modify_annotations(self, lumi = self.lumi_val, cms = self.cms_val, AddText = self.additional_text, posx = self.cms_text_x, posy = self.cms_text_y, AddAlign = self.cms_text_alignment):
 #        self.annotations_modified = True
 #        self.lumi_val           = lumi
@@ -235,6 +246,7 @@ class plotter():
             self._cms_text_y             = 0.955
             self._show_minor_tick_labels = False
             self._legend_font_size       = 9
+        self._Add_legend()
 
     def _Write_additional_text(self):
         if self._add_lumi_text:
@@ -252,7 +264,7 @@ class plotter():
             else:
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
-    def _Add_legend(self, axis):
+    def _Add_legend(self):
         self._legend_x = 0.95
         if self._style == 'Cool':
             if self._add_plots[0] == '':
@@ -280,7 +292,7 @@ class plotter():
             dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
-        leg = axis.legend(handle_list, label_list,
+        leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
                     bbox_to_anchor=(self._legend_x, self._legend_y),
                     bbox_transform=plt.gcf().transFigure,
@@ -572,7 +584,6 @@ class plotter():
             ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
         ax1.set_ylabel(self._yaxis_title, color=self._label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self._y_label_offset,0.9)
-        self._Add_legend(ax1)
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
         if self._show_minor_tick_labels:
