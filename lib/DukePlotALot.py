@@ -56,7 +56,7 @@ class plotter():
         self._Set_style()
 
     def __del__(self):
-        matplotlib.pyplot.close()
+        plt.close()
         del self._hist
         del self._sig_hist
         del self._data_hist

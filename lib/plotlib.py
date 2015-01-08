@@ -196,134 +196,9 @@ class HistSorage(object):
         self.isData=isData
         self._joinList=False
 
-    def addAllFiles(self,tag="",veto=None):
-        if self.basepath==None:
-            raise RuntimeError("You must set a basepath to add all files from one directory!")
-        import glob
-        fileList=glob.glob(self.basepath+"/*"+tag+"*.root")
-        for file in fileList:
-            if veto is not None:
-                vetoed=False
-                for v in veto:
-                    if v.lower() in file.split("/")[-1].lower():
-                        vetoed=True
-                if vetoed:
-                    continue
-            name=file.split("/")[-1].replace(".root","")
-            self.files[name]=File(file, "read")
-        self._getGenNumbers()
-        self._addToScaledView()
-
-    def addFileList(self,fileList):
-        if type(fileList)==type(list()):
-            for file in fileList:
-                self.files[file]=File(self.basepath+"/"+file+".root", "read")
-        if isinstance(fileList,dict):
-            import itertools
-            useList=list(itertools.chain.from_iterable(fileList.values()))
-            for file in useList:
-                self.files[file]=File(self.basepath+"/"+file+".root", "read")
-            self._joinList=fileList
-        self._getGenNumbers()
-        self._addToScaledView()
-
-
-    def addFile(self,name):
-        self.files[name]=File(self.basepath+"/"+name+".root", "read")
-        self._getGenNumbers()
-        self._addToScaledView()
-
-    def addJoinList(self,joinList):
-        self._joinList=joinList
-
-    def getHist(self,hist):
-        for f in self.views:
-            self.hists[f]=self.views[f].Get(hist)
-            self.hists[f].Sumw2()
-        if self._joinList is not False:
-            self.joinList(self._joinList)
-
-    def scale_cfg(self):
-        if self._scaled==True:
-            raise RuntimeError("Histograms already scaled!")
-        for name in self.hists:
-            if name==self.datadrivenHist:
-                continue
-            weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
-            self.hists[name].Scale(weight)
-        self._scaled=True
-
-    def rebin(self,width=0,factor=0):
-        if width!=0:
-            factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
-        for name in self.hists:
-            self.hists[name].Rebin(factor)
-
-    def clearHists(self):
-        self.hists={}
-
-    def getAllAdded(self,ignoreScale=False):
-        if not self._scaled and not ignoreScale:
-            raise RuntimeError("Add all histograms without scaling. I think not!")
-        return sum(self.hists.values())
-
-    def joinList(self,joinList):
-        for name in joinList:
-            self.hists[name]=self.hists[joinList[name][0]]
-            self.hists.pop(joinList[name][0])
-            for h in joinList[name][1:]:
-                self.hists[name]+=self.hists[h]
-                self.hists.pop(h)
-
-    def join(self,name,label):
-        if name == "*" or name == "":
-            # join all bg:
-            joined = self.getAllAdded()
-            self.hists=OrderedDict()
-            self.hists[label]=joined
-        else:
-            # join hist filtered by name:
-            joined = self.getAdded(name)
-            for key in self.hists:
-                if name in key:
-                    self.hists.pop(key)
-            self.hists[label]=joined
-
-    def getAdded(self,name):
-        temp = []
-        for key in self.hists:
-            if name in key:
-                temp.append( self.hists[key] )
-        return sum(temp)
-
-    def setStyle(self,style="bg",colors=None):
-        if style=="bg":
-            for key in self.hists:
-                self.hists[key].fillstyle = 'solid'
-                self.hists[key].linewidth = 0
-
-        if style=="sg":
-            for key in self.hists:
-                self.hists[key].fillstyle = '0'
-                self.hists[key].linewidth = 1
-        for key in self.hists:
-            self.hists[key].xaxis.SetTitle("$\mathsf{"+self.hists[key].xaxis.GetTitle()+"}$")
-            self.hists[key].yaxis.SetTitle("Events/%.f GeV"%(self.hists.values()[-1].xwidth(1)))
-            self.hists[key].SetTitle(key)
-            if colors!=None:
-                if isinstance(colors, (list)):
-                    usecolor=colors.pop()
-                    self.hists[key].fillcolor = usecolor
-                    self.hists[key].linecolor = usecolor
-                if isinstance(colors, (dict)):
-                    self.hists[key].fillcolor = colors[key]
-                    self.hists[key].linecolor = colors[key]
-
-    def setDataDriven(self,ddhist):
-        self.datadrivenHist=ddhist
-
-    def getHistList(self):
-        return self.hists.values()
+    def __del__(self):
+        for name in  self.files:
+            self.files[name].Close()
 
     def _getGenNumbers(self):
         for name in self.files:
@@ -349,6 +224,136 @@ class HistSorage(object):
                 weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
             self.views[name]=ScaleView(self.files[name],weight)
             self._scaled=True
+
+    def addAllFiles(self,tag="",veto=None):
+        if self.basepath==None:
+            raise RuntimeError("You must set a basepath to add all files from one directory!")
+        import glob
+        fileList=glob.glob(self.basepath+"/*"+tag+"*.root")
+        for file in fileList:
+            if veto is not None:
+                vetoed=False
+                for v in veto:
+                    if v.lower() in file.split("/")[-1].lower():
+                        vetoed=True
+                if vetoed:
+                    continue
+            name=file.split("/")[-1].replace(".root","")
+            self.files[name]=File(file, "read")
+        self._getGenNumbers()
+        self._addToScaledView()
+
+    def addFile(self,name):
+        self.files[name]=File(self.basepath+"/"+name+".root", "read")
+        self._getGenNumbers()
+        self._addToScaledView()
+
+    def addFileList(self,fileList):
+        if type(fileList)==type(list()):
+            for file in fileList:
+                self.files[file]=File(self.basepath+"/"+file+".root", "read")
+        if isinstance(fileList,dict):
+            import itertools
+            useList=list(itertools.chain.from_iterable(fileList.values()))
+            for file in useList:
+                self.files[file]=File(self.basepath+"/"+file+".root", "read")
+            self._joinList=fileList
+        self._getGenNumbers()
+        self._addToScaledView()
+
+
+    def addJoinList(self,joinList):
+        self._joinList=joinList
+
+    def clearHists(self):
+        self.hists={}
+
+    def getAdded(self,name):
+        temp = []
+        for key in self.hists:
+            if name in key:
+                temp.append( self.hists[key] )
+        return sum(temp)
+
+    def getAllAdded(self,ignoreScale=False):
+        if not self._scaled and not ignoreScale:
+            raise RuntimeError("Add all histograms without scaling. I think not!")
+        return sum(self.hists.values())
+
+    def getHist(self,hist):
+        for f in self.views:
+            self.hists[f]=self.views[f].Get(hist)
+            self.hists[f].Sumw2()
+        if self._joinList is not False:
+            self.joinList(self._joinList)
+
+    def join(self,name,label):
+        if name == "*" or name == "":
+            # join all bg:
+            joined = self.getAllAdded()
+            self.hists=OrderedDict()
+            self.hists[label]=joined
+        else:
+            # join hist filtered by name:
+            joined = self.getAdded(name)
+            for key in self.hists:
+                if name in key:
+                    self.hists.pop(key)
+            self.hists[label]=joined
+
+    def joinList(self,joinList):
+        for name in joinList:
+            self.hists[name]=self.hists[joinList[name][0]]
+            self.hists.pop(joinList[name][0])
+            for h in joinList[name][1:]:
+                self.hists[name]+=self.hists[h]
+                self.hists.pop(h)
+
+    def rebin(self,width=0,factor=0):
+        if width!=0:
+            factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
+        for name in self.hists:
+            self.hists[name].Rebin(factor)
+
+    def scale_cfg(self):
+        if self._scaled==True:
+            raise RuntimeError("Histograms already scaled!")
+        for name in self.hists:
+            if name==self.datadrivenHist:
+                continue
+            weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+            self.hists[name].Scale(weight)
+        self._scaled=True
+
+    def setStyle(self,style="bg",colors=None):
+        if style=="bg":
+            for key in self.hists:
+                self.hists[key].fillstyle = 'solid'
+                self.hists[key].linewidth = 0
+        if style=="sg":
+            for key in self.hists:
+                self.hists[key].fillstyle = '0'
+                self.hists[key].linewidth = 1
+        for key in self.hists:
+            self.hists[key].xaxis.SetTitle("$\mathsf{"+self.hists[key].xaxis.GetTitle()+"}$")
+            self.hists[key].yaxis.SetTitle("Events/%.f GeV"%(self.hists.values()[-1].xwidth(1)))
+            self.hists[key].SetTitle(key)
+            if colors!=None:
+                if isinstance(colors, (list)):
+                    usecolor=colors.pop()
+                    self.hists[key].fillcolor = usecolor
+                    self.hists[key].linecolor = usecolor
+                if isinstance(colors, (dict)):
+                    self.hists[key].fillcolor = colors[key]
+                    self.hists[key].linecolor = colors[key]
+
+    def setDataDriven(self,ddhist):
+        self.datadrivenHist=ddhist
+
+    def getHistList(self):
+        return self.hists.values()
+
+
 
 
 
