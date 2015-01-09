@@ -25,6 +25,13 @@ def getColorList(ncolors):
         colors.append(hls_to_rgb(i, random() , random() ))
     return colors
 
+def getDictValue(hist,parmDict):
+    for par in parmDict:
+        if par in hist:
+            return parmDict[par]
+    return None
+
+
 def duke_errorbar(hists,
              xerr=True, yerr=True,
              xpadding=0, ypadding=.1,
@@ -178,14 +185,23 @@ def _duke__errorbar(h, xerr, yerr, axes=None, emptybins=True, ignore_binns=None,
 ##@class HistSorage
 # Class to hangle histograms functions
 #
-#
+# To store a list of hists, which are scaled, joined, rebinned and otherwise
+# manipulated.
 #
 # written by Klaas Padeken 2015
 class HistSorage(object):
+    ## Init function
+    #
+    # In this function the default variables are set and initialized.
+    # @param[in] xs is a xs ConfigObj needed for scaling
+    # @param[in] lumi is the lumi in pb
+    # @param[in] path is the default path of the files (default=None)
+    # @param[in] isData is a switch  (default=None)
     def __init__(self,xs, lumi, path=None,isData=False):
         self.views=OrderedDict()
         self.hists=OrderedDict()
         self.files=OrderedDict()
+        self.colorList={}
         self.genNumber={}
         self.basepath=path
         self.verbosity=3
@@ -196,10 +212,18 @@ class HistSorage(object):
         self.isData=isData
         self._joinList=False
 
+    ## del function
+    #
+    # This deletes the main objects nedded to not get a crash at the end!
     def __del__(self):
         for name in  self.files:
             self.files[name].Close()
-
+    ##------------------------------------------------------------------
+    ## Private functions
+    ##------------------------------------------------------------------
+    ## Function to get the event numbers from h_counter in file!
+    #
+    # The function fills the dict genNumber with the event numbers.
     def _getGenNumbers(self):
         for name in self.files:
             if name in self.genNumber or self.datadrivenHist==name:
@@ -214,6 +238,9 @@ class HistSorage(object):
                 Nev=1
             self.genNumber[name]=Nev
 
+    ## Function to add files to a scaled view.
+    #
+    # The scaled view dict "views" now retruns all histograms scaled!
     def _addToScaledView(self):
         for name in self.files:
             if name in self.views:
@@ -221,15 +248,31 @@ class HistSorage(object):
             if name==self.datadrivenHist or self.isData:
                 weight=1.
             else:
-                weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                if "weight" in self.xs[name]:
+                    weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                else:
+                    weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
             self.views[name]=ScaleView(self.files[name],weight)
             self._scaled=True
 
-    def addAllFiles(self,tag="",veto=None):
+    ## Function to add all files in the given path
+    #
+    # Use setPath(path) to set the path if did not in the init.
+    # @param[in] tag if regexpr is not used all *.root files containing the tag are added
+    # @param[in] veto define a !list!! of veto strings not case sensitive
+    # @param[in] regexpr use a regular expression to find the file names (need .root at the end if
+    # you want to use root files!!
+    # @param[in] joinName if specified all files matching the expressions above will be added to the list of files that should be joined.
+    def addAllFiles(self,tag="",veto=None, regexpr=None, joinName=None):
         if self.basepath==None:
             raise RuntimeError("You must set a basepath to add all files from one directory!")
-        import glob
-        fileList=glob.glob(self.basepath+"/*"+tag+"*.root")
+        if regexpr is not None:
+            import re,os
+            fileList = [f for f in os.listdir(self.basepath+"/") if re.search(r'%s'%(regexpr), f)]
+        else:
+            import glob
+            fileList=glob.glob(self.basepath+"/*"+tag+"*.root")
+        tmpList=[]
         for file in fileList:
             if veto is not None:
                 vetoed=False
@@ -240,14 +283,31 @@ class HistSorage(object):
                     continue
             name=file.split("/")[-1].replace(".root","")
             self.files[name]=File(file, "read")
+            tmpList.append(self.files[name])
         self._getGenNumbers()
         self._addToScaledView()
+        if joinName is not None:
+            if self._joinList is not False:
+                self._joinList[joinName]=tmpList
+            else:
+                self._joinList=OrderedDict()
+                self._joinList[joinName]=tmpList
 
+
+    ## Function to add a single file
+    #
+    # Use setPath(path) to set the path if did not in the init.
+    # @param[in] name the name of the file that should be added!
     def addFile(self,name):
         self.files[name]=File(self.basepath+"/"+name+".root", "read")
         self._getGenNumbers()
         self._addToScaledView()
 
+    ## Function to add files specified as a list or (ordered)dict
+    #
+    # Use setPath(path) to set the path if did not in the init.
+    # @param[in] fileList list or dict of the files you want to add
+    # if the dict is used the files are joined to a single hist with this key
     def addFileList(self,fileList):
         if type(fileList)==type(list()):
             for file in fileList:
@@ -261,25 +321,48 @@ class HistSorage(object):
         self._getGenNumbers()
         self._addToScaledView()
 
-
+    ## Function to add a dict to join files
+    #
+    # @param[in] joinList wich should be a (ordered)dict
     def addJoinList(self,joinList):
         self._joinList=joinList
 
+    ## Function to clear hists
+    #
+    # use this if you want to plot a new set of hists
     def clearHists(self):
-        self.hists={}
+        self.hists=OrderedDict()
 
-    def getAdded(self,name):
+    ## Function to get a hist that is the sum of hists in the storage
+    #
+    # handy if you want only a subgroup as a hist
+    # @param[in] name add only files that contain the name (default="")
+    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
+    # @param[out] Hist
+    def getAdded(self,name="",ignoreScale=False):
+        if not self._scaled and not ignoreScale:
+            raise RuntimeError("Add all histograms without scaling. I think not!")
         temp = []
         for key in self.hists:
             if name in key:
                 temp.append( self.hists[key] )
         return sum(temp)
 
+    ## Function to get a hist that is the sum of all hists in the storage
+    #
+    # same as getAdded() perhaps faster
+    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
+    # @param[out] Hist
     def getAllAdded(self,ignoreScale=False):
         if not self._scaled and not ignoreScale:
             raise RuntimeError("Add all histograms without scaling. I think not!")
         return sum(self.hists.values())
 
+    ## Function get hists from files
+    #
+    # the hists ate added to .hists and joined if a joinList exist
+    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
+    # @param[out] Hist
     def getHist(self,hist):
         for f in self.views:
             self.hists[f]=self.views[f].Get(hist)
@@ -287,6 +370,10 @@ class HistSorage(object):
         if self._joinList is not False:
             self.joinList(self._joinList)
 
+    ## Function join files containing name to one nameed label
+    #
+    # @param[in] name add all files containing name
+    # @param[in] label name of the resulting new hist
     def join(self,name,label):
         if name == "*" or name == "":
             # join all bg:
@@ -301,6 +388,9 @@ class HistSorage(object):
                     self.hists.pop(key)
             self.hists[label]=joined
 
+    ## Function join files via a (ordered)dict
+    #
+    # @param[in] joinList add all files that are in the (ordered)dict to one hist with the name of the key
     def joinList(self,joinList):
         for name in joinList:
             self.hists[name]=self.hists[joinList[name][0]]
@@ -309,21 +399,34 @@ class HistSorage(object):
                 self.hists[name]+=self.hists[h]
                 self.hists.pop(h)
 
+    ## Function rebin the all hists
+    #
+    # @param[in] width try to rebin to a specific width
+    # @param[in] factor rebin to with a factor
+    # if both are given the width is used
     def rebin(self,width=0,factor=0):
         if width!=0:
             factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
         for name in self.hists:
             self.hists[name].Rebin(factor)
 
-    def scale_cfg(self):
-        if self._scaled==True:
-            raise RuntimeError("Histograms already scaled!")
-        for name in self.hists:
-            if name==self.datadrivenHist:
-                continue
-            weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
-            self.hists[name].Scale(weight)
-        self._scaled=True
+    ## Function to set the datadiven name flag
+    #
+    # @param[in] ddhist the name of the datadriven hist
+    def setDataDriven(self,ddhist):
+        self.datadrivenHist=ddhist
+
+    ## Function to set path of the hists
+    #
+    # @param[in] path
+    def setPath(self,path):
+        self.basepath=path
+
+    ## Function to set the style of the histograms
+    #
+    # @param[in] style "bg" and "sg" posible (default="bg")
+    # @param[in] colors a list/dict of colors that the hists should have
+    # if colors is not specified the internal colorListis used if set
 
     def setStyle(self,style="bg",colors=None):
         if style=="bg":
@@ -344,292 +447,17 @@ class HistSorage(object):
                     self.hists[key].fillcolor = usecolor
                     self.hists[key].linecolor = usecolor
                 if isinstance(colors, (dict)):
-                    self.hists[key].fillcolor = colors[key]
-                    self.hists[key].linecolor = colors[key]
+                    if key in colors:
+                        self.hists[key].fillcolor = colors[key]
+                        self.hists[key].linecolor = colors[key]
+            elif len(self.colorList)>0:
+                if key in self.colorList:
+                    self.hists[key].fillcolor = self.colorList[key]
+                    self.hists[key].linecolor = self.colorList[key]
 
-    def setDataDriven(self,ddhist):
-        self.datadrivenHist=ddhist
-
+    ## Function to get the hists as a list
+    #
+    # @param[out] list of all stored hists
     def getHistList(self):
         return self.hists.values()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#class Hist(object):
-    #def __init__(self,h,name=""):
-        #if name=="":
-            #self.name=h.GetName()
-        #else:
-            #self.name=name
-        #self.hist=h
-        #self.fcolor=1
-        #self.lcolor=1
-        #self.lstyle=1
-        #self.lwidth=3
-        #self.fstyle=0
-        #self.label=""
-        #self.noLine=False
-
-        #self.scale=1.
-        #self._scaled=False
-        #self._EventNumber=0
-        #uniqueName(h)
-
-    #def update(self):
-        #self.hist.UseCurrentStyle()
-        ##lines
-        #self.hist.SetLineStyle(self.lstyle)
-        #self.hist.SetLineColor(self.lcolor)
-        #self.hist.SetLineWidth(self.lwidth)
-
-        ##fill
-        #self.hist.SetFillStyle(self.fstyle)
-        #self.hist.SetFillColor(self.fcolor)
-        #if self.noLine:
-            #self.hist.SetLineColor(self.fcolor)
-
-    #def scale(self,force=False,sf=None):
-        #if sf is None:
-            #sf=self.scale
-        #if self._scaled and not forced:
-            #raise RuntimeError("You can not scale a already scaled hist!\n Use forced=True if you must!!")
-        #self.hist.Scale(sf)
-        #self._scaled=True
-
-    #def Scale(self,sf):
-        #scale(sf=sf)
-
-    #def setEventNumber(self,n):
-        #self._EventNumber=n
-
-    #def add(self,other):
-        #h=Hist(self.hist,name=self.name+"_"+other.name)
-        #h.hist.Add(other.hist)
-        #return h
-
-    #def __add__(self,other):
-        #return self.add(other)
-
-    #def Add(self,other):
-        #return self.add(other)
-
-    #def __str__(self):
-        #return str(self.fcolor)+" "+str(self.lcolor)+" "+str(self.lstyle)+" "+str(self.lwidth)+" "+str(self.fstyle)+" "+str(self.scale)
-
-
-
-#class Plot(object):
-    #def __init__(self,name):
-        ##public
-        #self.bg, self.sg = [], []
-        #self.bgDict,self.sgDict = {}, {}
-        #self.data=None
-        #self.name=name
-        #self.fileName=""
-        #self.rangex=[]
-        #self.rangey=[]
-        #self.rebin=1
-        #self.variable=False
-        #self.binning=[]
-        #self.useFixedWidth=0
-        #self.smallestBinWidth=-1
-        #self.yAxisLabel="Events / %s "
-        #self.yAxisUnit=""
-        ##self.legend=Legend()
-
-        #self.canvas=canvas=ROOT.TCanvas("c","c",1050,1050)
-        #self.legend=rootplotlib.Legend(pad=ROOT.gPad)
-        #rootplotlib.init()
-        #self.canvas.UseCurrentStyle()
-
-        ##private
-        #self._knownUnits=["GeV","TeV","rad"]
-
-    #def draw(self,pad=None):
-        #"""draw the standard stacked hist plot"""
-        #if pad is None:
-            #pad=self.canvas
-
-        #first=None
-        ##make bg if there
-
-        #hs=None
-        #if len(self.bg)>0:
-            #hs=ROOT.THStack("hs","hs")
-            #for b in self.bg:
-                #hs.Add(b.hist)
-            #if first is None:
-                #first=hs
-                #hs.Draw("hist")
-            #else:
-                #hs.Draw("hist same")
-            #hs.GetXaxis().SetTitle(self.bg[-1].hist.GetXaxis().GetTitle())
-            #hs.GetYaxis().SetTitle(self.bg[-1].hist.GetYaxis().GetTitle())
-
-        #if len(self.sg)>0:
-            #for s in self.sg:
-                #if first is None:
-                    #first=s
-                    #s.hist.Draw("hist")
-                #else:
-                    #s.hist.Draw("same hist")
-
-        #if self.data is not None:
-            #if first is None:
-                #first=self.data.hist
-                #self.data.hist.Draw("EP")
-            #else:
-                #self.data.hist.Draw("EP same")
-        #ROOT.gPad.RedrawAxis("g")
-        #ROOT.gPad.Update()
-        #pad.SaveAs("test.png")
-        #raw_input("Nnk")
-
-
-    #def applyStyle(self):
-        #"""apply all the plot styles one can set on every hist"""
-
-        ##fist the hists itself
-        #all_histsW=[i for i in (self.bg+self.sg)]
-        #all_histsW+=[self.data]
-
-        #for h in all_histsW:
-            #h.update()
-
-        ##now the plot
-        #all_hists=[i.hist for i in all_histsW]
-        #for h in all_hists:
-            #if len(self.rangex)==2:
-                #h.GetXaxis().SetRangeUser(self.rangex[0],self.rangex[1])
-            #if len(self.rangey)==2:
-                #h.GetYaxis().SetRangeUser(self.rangey[0],self.rangey[1])
-            #if self.variable:
-                #h=self.variableBinning(h)
-            #else:
-                #h.Rebin(self.rebin)
-            #self.setYaxisLabel(h)
-
-        #for b in self.bg:
-            #self.legend.add( b.hist, b.label, "f")
-        #for s in self.sg:
-            #self.legend.add( s.hist, s.label, "l")
-
-
-
-    #def variableBinning(self, h):
-        #if self.variable==False or len(self.binning)==0:
-            #raise ValueError('varible binning is not se')
-
-        #smallestBinW=-1
-        #for i in self.binning:
-            #if self.useFixedWidth:
-                #smallestBinW = self.smallestBinWidth
-            #elif i[0]<smallestBinW or smallestBinW<0:
-                #smallestBinW=i[0]
-            #for ibin in xfrange(i[1],i[2],i[0]):
-                #binVector.append(ibin)
-        #binVector.append(binVector[-1]+binning[-1][0])
-        #htmp=h.Rebin(len(binVector)-1,h.GetName()+str(id(h)),array("d",binVector))
-
-        #self.smallestBinWidth=smallestBinW
-
-        #for i in range(htmp.GetNbinsX()+1):
-            #sf = smallestBinW/(htmp.GetBinWidth(i))
-            #htmp.SetBinContent(i, sf*(htmp.GetBinContent(i)))
-            #htmp.SetBinError(i, sf*(htmp.GetBinError(i)))
-        #return  htmp
-
-    #def setYaxisLabel(self, h):
-        #from rounding import rounding
-        #if self.variable:
-            #binWidth=self.smallestBinWidth
-        #else:
-            ##wtf why does this not work root version??
-            #binWidth=h.GetXaxis().GetBinWidth(1)
-        #roundObj=rounding()
-        #yax=self.yAxisLabel%(roundObj.latex(binWidth))
-        #if self.yAxisUnit!="":
-            #yax+=self.yAxisUnit
-        #else:
-            #xax=h.GetXaxis().GetTitle()
-            #for unit in self._knownUnits:
-                #if unit in xax:
-                    #yax+=unit
-        #h.GetYaxis().SetTitle(yax)
-
-    #def addBG(self,h,name):
-        #h.fstyle=1001
-        #h.noLine=True
-
-        #self.bgDict.update({name:h})
-        #self.bg.append(h)
-
-    #def addSG(self,h,name):
-        #self.sgDict.update({name:h})
-        #self.sg.append(h)
-
-    #def addData(self,h):
-        #self.data=h
-
-    #def getAllBGAdded(self):
-        #addedBG=self.bg[0]
-        #for i in self.bg[1:]:
-            #addedBG += i
-        #addedBG.name="allbg"
-        #return addedBG
-
-    #def getBG(self,name):
-        #for b in self.bg:
-            #if b.name==name:
-                #return b
-        #return None
-
-    #def getBGAdded(self,name,label):
-        #temp = []
-        #for key in self.bgDict.keys():
-            #if name in key:
-                #temp.append( self.bgDict[key] )
-        #addedBG = temp[0]
-        #for i in temp[1:]:
-            #addedBG += i
-        #addedBG.name=label
-        #return addedBG
-
-    #def getSG(self,name):
-        #for s in self.sg:
-            #if s.name==name:
-                #return s
-        #print "SG not found"
-        #return None
-
-    #def joinBG(self,name,label):
-        #if name == "*" or name == "":
-            ## join all bg:
-            #joined = self.getAllBGAdded()
-            #self.bg = []
-            #self.bgDict = {}
-            #self.addBG(joined, label)
-        #else:
-            ## join bg filtered by name:
-            #joined = self.getBGAdded(name,label)
-
-            ## delete bg from plot dictionary (todo: also delete from bg list):
-            #for key in self.bgDict.keys():
-                #if name in key:
-                    #self.bgDict.pop(key,0)
-
-            #self.addBG(joined, label)
 

@@ -1,7 +1,7 @@
 #!/bin/env python
 
 from lib.DukePlotALot import *
-from lib.plotlib import HistSorage,getColorList
+from lib.plotlib import HistSorage,getColorList,getDictValue
 import matplotlib.pyplot as plt
 from lib.configobj import ConfigObj
 try:
@@ -19,6 +19,12 @@ def main():
     bghists.setDataDriven("dataDrivenQCD")
 
     bglist=OrderedDict()
+    bglist["Diboson"]=['WW_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
+     'ZZ_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
+     'WZtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
+     'ZZtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v2SIM',
+     'WWtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
+     'WZ_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM']
     bglist["DY"]=['DYToTauTau_M_10To20_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
      'DYToTauTau_M_20_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
      'DYToTauTau_M-100to200_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
@@ -28,12 +34,6 @@ def main():
      'DYJetsToLL_PtZ-70To100_TuneZ2star_8TeV-madgraph-tarball_Summer12_DR53X-PU_S10_START53_V7A-v2SIM',
      'DYJetsToLL_PtZ-100_TuneZ2star_8TeV-madgraph_Summer12_DR53X-PU_S10_START53_V7A-v2SIM',
      'DYJetsToLL_PtZ-180_TuneZ2star_8TeV-madgraph-tarball_Summer12_DR53X-PU_S10_START53_V7C-v1SIM']
-    bglist["Diboson"]=['WW_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
-     'ZZ_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
-     'WZtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
-     'ZZtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v2SIM',
-     'WWtoAnything_ptmin500_TuneZ2Star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
-     'WZ_TuneZ2star_8TeV_pythia6_tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM']
     bglist["Top"]=['Tbar_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
      'T_tW-channel-DR_TuneZ2star_8TeV-powheg-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
      'T_t-channel_TuneZ2star_8TeV-powheg-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM',
@@ -61,7 +61,7 @@ def main():
     colorList["Diboson"]="green"
     colorList["DY"]="red"
 
-
+    #print bglist
     bghists.addFileList(bglist)
 
 
@@ -73,14 +73,28 @@ def main():
     "byLooseCombinedIsolationDeltaBetaCorr3Hits/h1_5_byLooseCombinedIsolationDeltaBetaCorr3Hits_tau_pt",
     "byLooseCombinedIsolationDeltaBetaCorr3Hits/h1_5_byLooseCombinedIsolationDeltaBetaCorr3Hits_met_et",
     ]
+
+    binning={
+            "_pt":10,
+            "_MT":20,
+            "_met_et":30,
+    }
+
+    xranges={
+            "_pt":[0,900],
+            "_MT":[200,1500],
+            #"_met_et":[0,900],
+    }
     for hist in hists:
         print hist
         bghists.clearHists()
         dat_hist.clearHists()
         bghists.getHist(hist)
         dat_hist.getHist(hist)
-        dat_hist.rebin(width=10)
-        bghists.rebin(width=10)
+        binf=getDictValue(hist,binning)
+        if binf is not None:
+            dat_hist.rebin(width=binf)
+            bghists.rebin(width=binf)
         bghists.setStyle(colors=colorList)
         dat_hist.getHistList()[0].SetTitle("data")
 
@@ -91,7 +105,9 @@ def main():
         #test.Add_plot('Diff',pos=2, height=15)
         #test.Add_plot('Ratio',pos=2, height=15)
         #test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
-        test.Set_axis(xmin=200,xmax=1500)
+        mxrange=getDictValue(hist,xranges)
+        if mxrange is not None:
+            test.Set_axis(xmin=mxrange[0],xmax=mxrange[1])
         name=hist.replace("/","")
         test.make_plot('%s.pdf'%(name))
     return 42

@@ -65,6 +65,9 @@ class plotter():
         self._fig                  = None
         self._Set_style()
 
+    ## del function
+    #
+    # This deletes the main objects nedded to not get a crash at the end!
     def __del__(self):
         plt.close()
         del self._hist
