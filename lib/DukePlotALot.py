@@ -12,7 +12,6 @@ import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from plotlib import duke_errorbar
-
 from operator import methodcaller
 
 ##@class plotter
@@ -354,6 +353,8 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
+        # why do we need this??
+        self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
         #matplotlib draws no errorbars in logy when the lower error = 0
         if self._logy and self._data:
             for ibin in self._data_hist.bins():
