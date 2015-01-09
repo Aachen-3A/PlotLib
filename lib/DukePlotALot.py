@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+from plotlib import duke_errorbar
 
 from operator import methodcaller
 
@@ -60,12 +61,22 @@ class plotter():
         self._add_plots_ref_line   = [0, 0, 0]
         self._annotations_modified = False
         self._add_error_bands      = False
+        self._error_hist           = []
+        self._fig                  = None
         self._Set_style()
+
+    def __del__(self):
+        plt.close()
+        del self._hist
+        del self._sig_hist
+        del self._data_hist
+        del self._fig
+
 
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
-    ## Function to make the complete plot, after all definitions are set 
+    ## Function to make the complete plot, after all definitions are set
     #
     # This function calls the different sub functions used to produce the
     # final plots and save it.
@@ -76,7 +87,7 @@ class plotter():
         self._Draw()
         self._SavePlot(out_name)
 
-    ## Function to create the complete plot, after all definitions are set 
+    ## Function to create the complete plot, after all definitions are set
     #
     # This function calls the different sub functions used to produce the
     # final plotsbut does not save it.
@@ -168,11 +179,20 @@ class plotter():
     # @param[in] logy Boolean if the y-axis should be logarithmic (Default = True)
     # @param[in] ymin Minimum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
+        self._xmin = xmin
+        self._xmax = xmax
+
+    ## Function to save the complete plot
+    #
+    # This function saves the plot you which is stored in the object so create it first
+    # @param[out] _fig Created plot, to do your own custemization
+    def SavePlot(self, out_name):
+        self._SavePlot(out_name)
 
     ##------------------------------------------------------------------
     ## Private functions
@@ -198,6 +218,8 @@ class plotter():
         self._logy = True
         self._ymin = -1
         self._ymax = -1
+        self._xmin = -1
+        self._xmax = -1
         if self._style == 'CMS':
             self._add_cms_text           = True
             self._add_lumi_text          = True
@@ -309,14 +331,16 @@ class plotter():
             dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
-        leg = plt.legend(handle_list, label_list,
+
+        self.leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
                     bbox_to_anchor=(self._legend_x, self._legend_y),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
                     frameon = False,
                     fontsize = self._legend_font_size)
-        for text in leg.get_texts():
+
+        for text in self.leg.get_texts():
             text.set_color(self._annotation_text_color)
 
     def _Compiler(self):
@@ -327,7 +351,11 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
-        self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
+        #matplotlib draws no errorbars in logy when the lower error = 0
+        if self._logy and self._data:
+            for ibin in self._data_hist.bins():
+                if ibin.error==1:
+                    ibin.error=1.-1e-12
 
     def _Calc_additional_plot(self, plot, pos):
         if plot == 'Ratio':
@@ -409,12 +437,11 @@ class plotter():
 
     def _Calc_diffratio(self):
         diff = self._data_hist.Clone('diffratio')
-        for item in self._hist:
-            diff.Add(item,-1)
-        sum_hist = self._hist[0].Clone('sum_hist')
-        for i in range(1,len(self._hist)):
-            sum_hist.Add(self._hist[i])
+
+        sum_hist = sum(self._hist)
+        diff.Add(sum_hist,-1)
         diff.Divide(sum_hist)
+
         x = []
         y = []
         err = []
@@ -437,6 +464,7 @@ class plotter():
                 else:
                     err_i.append(0)
                     err_i.append(0)
+
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -450,9 +478,10 @@ class plotter():
         for i in range(signi.GetNbinsX()+1):
             value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
             denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
-            value /= denominator
-            signi.SetBinContent(i,value)
-            signi.SetBinError(i,1)
+            if denominator!=0:
+                value /= denominator
+                signi.SetBinContent(i,value)
+                signi.SetBinError(i,1)
         x = []
         y = []
         err = []
@@ -470,8 +499,12 @@ class plotter():
                     y_i.append(signi.GetBinContent(i))
                     y_i.append(signi.GetBinContent(i))
                 denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
-                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                if denominator!=0:
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                else:
+                    err_i.append(0.)
+                    err_i.append(0.)
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -558,7 +591,7 @@ class plotter():
             ax0.tick_params(axis='y', colors = self._tick_color)
             ax0.tick_params(axis='x', colors = self._tick_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
-            rplt.errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[0],
                           marker = self._marker_style,
@@ -566,9 +599,13 @@ class plotter():
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
                           capthick = self._marker_error_cap_width,
+                          ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax0, x, y, err)
+            ax0.axis('auto')
+            if self._xmin != -1 and self._xmax != -1:
+                ax0.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax0.axhline(self._add_plots_ref_line[0], color = self._ref_line_color)
             ax0.set_ylabel(self._add_plots_labels[0], color = self._label_text_color, va='top', ha='left')
             ax0.yaxis.set_label_coords(self._y_label_offset,1.)
@@ -588,7 +625,7 @@ class plotter():
         if len(self._hist) == 1:
             hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
             if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1, 
+                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
                               markersize = self._marker_size,
                               marker = self._marker_style,
                               ecolor = self._marker_color,
@@ -610,8 +647,9 @@ class plotter():
         if len(self._sig_hist) > 0:
             rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         if self._ymin != -1 and self._ymax != -1:
-            print('resetting axis range')
             ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
+        if self._xmin != -1 and self._xmax != -1:
+            ax1.set_xlim(xmin = self._xmin, xmax = self._xmax)
         ax1.set_ylabel(self._yaxis_title, color=self._label_text_color, va='top', ha='left')
         ax1.yaxis.set_label_coords(self._y_label_offset,0.9)
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
@@ -637,7 +675,7 @@ class plotter():
         if self._add_plots[1] != '':
             ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._bg_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
-            rplt.errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[1],
                           marker = self._marker_style,
@@ -645,9 +683,13 @@ class plotter():
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
                           capthick = self._marker_error_cap_width,
+                          ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax2, x, y, err)
+            ax2.axis('auto')
+            if self._xmin != -1 and self._xmax != -1:
+                ax2.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax2.axhline(self._add_plots_ref_line[1], color = self._ref_line_color)
             ax2.set_ylabel(self._add_plots_labels[1], color = self._label_text_color, va='top', ha='left')
             ax2.yaxis.set_label_coords(self._y_label_offset,1.)
@@ -677,7 +719,7 @@ class plotter():
         if self._add_plots[2] != '':
             ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._bg_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
-            rplt.errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
                           markersize = self._marker_size,
                           label = self._add_plots_labels[2],
                           marker = self._marker_style,
@@ -685,9 +727,13 @@ class plotter():
                           markerfacecolor = self._marker_color,
                           markeredgecolor = self._marker_color,
                           capthick = self._marker_error_cap_width,
+                          ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax3, x, y, err)
+            ax3.axis('auto')
+            if self._xmin != -1 and self._xmax != -1:
+                ax3.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax3.axhline(self._add_plots_ref_line[2], color = self._ref_line_color)
             ax3.set_ylabel(self._add_plots_labels[2], color = self._label_text_color, va = 'top', ha = 'left')
             ax3.yaxis.set_label_coords(self._y_label_offset,1.)
@@ -723,9 +769,13 @@ class plotter():
     def _SavePlot(self, out_name):
         plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
+
     def _checker(self):
-        try:
-            print('histo with name:' + self._hist[0].GetName())
-        except AttributeError:
-            print('No histogram added')
-        print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
+        pass
+        #try:
+            #print('histo with name:' + self._hist[0].GetName())
+        #except AttributeError:
+            #print('No histogram added')
+        #print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
+
+
