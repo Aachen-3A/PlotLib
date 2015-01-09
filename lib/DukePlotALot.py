@@ -81,11 +81,11 @@ class plotter():
     # This function calls the different sub functions used to produce the
     # final plotsbut does not save it.
     # @param[out] _fig Created plot, to do your own custemization
-    #def make_plot(self,out_name):
-        #self._Compiler()
-        #self._checker()
-        #self._Draw()
-        #return self._fig
+    def create_plot(self):
+        self._Compiler()
+        self._checker()
+        self._Draw()
+        return self._fig
 
 #    def Modify_annotations(self, lumi = self.lumi_val, cms = self.cms_val, AddText = self.additional_text, posx = self.cms_text_x, posy = self.cms_text_y, AddAlign = self.cms_text_alignment):
 #        self.annotations_modified = True
