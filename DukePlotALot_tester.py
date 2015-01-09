@@ -32,7 +32,7 @@ def main():
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)
     test.Add_plot('DiffRatio',pos=2, height=15)
-    test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
+    test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref', stacking = 'No')
     test.Set_axis(ymin = 20, ymax = 5*1e3)
     test.make_plot('bla_plt.pdf')
     return 42
