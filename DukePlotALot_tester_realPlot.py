@@ -1,7 +1,7 @@
 #!/bin/env python
 
 from lib.DukePlotALot import *
-from lib.plotlib import HistSorage,getColorList,getDictValue
+from lib.plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer
 import matplotlib.pyplot as plt
 from lib.configobj import ConfigObj
 try:
@@ -9,13 +9,15 @@ try:
 except ImportError:
     from lib.ordered import OrderedDict
 
+from rootpy.plotting.views import ScaleView
+
 def main():
 
     basedir="/user/padeken/out/output2014_12_16_14_49/merged"
     lumi=19712
 
     xs= ConfigObj("/home/home1/institut_3a/padeken/Analysis/SirPlotAlot/xsv100.cfg")
-    bghists=HistSorage(xs,lumi,basedir)
+    bghists=HistStorage(xs,lumi,basedir)
     bghists.setDataDriven("dataDrivenQCD")
 
     bglist=OrderedDict()
@@ -64,51 +66,89 @@ def main():
     #print bglist
     bghists.addFileList(bglist)
 
+    bghists.views["dataDrivenQCD"]=ScaleView(bghists.files["dataDrivenQCD"],0.63)
+    bghists.colorList=colorList
+
+    sghist=HistStorage(xs,lumi,basedir)
+    sgName="$\mathsf{W' \, M=2.3\,TeV \cdot 0.02}$"
+    sghist.additionalWeight={"WprimeToTauNu_M-2300_TuneZ2star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM":0.02}
+    sghist.addAllFiles(tag="WprimeToTauNu_M-2300",joinName=sgName)
+    sghist.colorList={sgName :"darkred"}
 
 
-    dat_hist=HistSorage(xs,lumi,basedir,isData=True)
+    dat_hist=HistStorage(xs,lumi,basedir,isData=True)
     dat_hist.addFile("allDataMET")
+
+
 
     hists=["byLooseCombinedIsolationDeltaBetaCorr3Hits/h1_5_byLooseCombinedIsolationDeltaBetaCorr3Hits_MT",
     "byLooseCombinedIsolationDeltaBetaCorr3Hits/h1_5_byLooseCombinedIsolationDeltaBetaCorr3Hits_tau_pt",
     "byLooseCombinedIsolationDeltaBetaCorr3Hits/h1_5_byLooseCombinedIsolationDeltaBetaCorr3Hits_met_et",
     ]
 
+    histContainer=HistStorageContainer(bg=bghists,data=dat_hist,sg=sghist)
+
     binning={
             "_pt":10,
-            "_MT":20,
+            "_MT":range(200,300,20)+range(300,400,50)+range(400,1600,100)+range(1600,2000,200),
+            #"_MT":20,
             "_met_et":30,
     }
 
     xranges={
-            "_pt":[0,900],
-            "_MT":[200,1500],
-            #"_met_et":[0,900],
+            "_pt":[70,1400],
+            #"_MT":[200,1500],
+            "_met_et":[120,1000],
     }
+
+    #cumulative=["_MT"]
+
+    bghists.initStyle(style="bg")
+    sghist.initStyle(style="sg")
+
     for hist in hists:
-        print hist
-        bghists.clearHists()
-        dat_hist.clearHists()
-        bghists.getHist(hist)
-        dat_hist.getHist(hist)
+        histContainer.getHist(hist)
+
+
+
         binf=getDictValue(hist,binning)
         if binf is not None:
-            dat_hist.rebin(width=binf)
-            bghists.rebin(width=binf)
-        bghists.setStyle(colors=colorList)
-        dat_hist.getHistList()[0].SetTitle("data")
+            if isinstance(binf,list):
+                histContainer.rebin(vector=binf)
+            else:
+                histContainer.rebin(width=binf)
+        #if getDictValue(hist,cumulative):
+            ##histContainer.makeCumulative(width=2)
+            #histContainer.makeCumulative()
+        sgPbghist=histContainer.bg.getAllAdded()+histContainer.sg.getAllAdded()
+        fakeData=sgPbghist.empty_clone()
+        fakeData.SetTitle("pseudo data")
+        fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
 
-        test = plotter(hist=bghists.getHistList(),style='CMS')
-        test.Add_data(dat_hist.getHistList()[0])
-        test.Add_plot('Signi',pos=1, height=15)
-        #test.Add_plot('DiffRatio',pos=1, height=15)
+        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style='CMS',cmsPositon="upper left")
+
+
+
+        #test.Add_data(histContainer.getData())
+        test.Add_data(fakeData)
+        test.Add_plot('DiffRatio',pos=1, height=15)
+        test.Add_plot('Signi',pos=2, height=15)
         #test.Add_plot('Diff',pos=2, height=15)
-        #test.Add_plot('Ratio',pos=2, height=15)
+        test.Add_plot('Ratio',pos=0, height=15)
         #test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
+
+        test._cms_val=8
+        test._lumi_val=19700
+        test._cms_text_x         = 0.12
+        test._cms_text_y         = 0.91
+
         mxrange=getDictValue(hist,xranges)
         if mxrange is not None:
-            test.Set_axis(xmin=mxrange[0],xmax=mxrange[1])
+            test.Set_axis(xmin=mxrange[0],xmax=mxrange[1],ymin=1.01e-1,ymax=0.5e4)
+        else:
+            test.Set_axis(ymin=1.01e-1,ymax=.5e4)
         name=hist.replace("/","")
+
         test.make_plot('%s.pdf'%(name))
     return 42
 

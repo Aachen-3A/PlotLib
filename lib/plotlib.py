@@ -1,18 +1,34 @@
 
 from rootpy.plotting import Hist
-from rootpy.plotting.views import ScaleView
+from rootpy.plotting.views import ScaleView,StyleView
 from rootpy.io import File
 try:
     from collections import OrderedDict
 except ImportError:
     from ordered import OrderedDict
+import logging; logging.basicConfig(level=logging.DEBUG)
+from rootpy import log
+from rounding import rounding
+import re
 
-##helper classes
+log.basic_config_colorized()
+class NoDictMessagesFilter(logging.Filter):
+    def filter(self, record):
+        #return "is not an exact divider of nbins=" not in record.msg
+        return " is not an exact divider of nbins=" not in record.msg
+log["/ROOT.TH1D.Rebin"].addFilter(NoDictMessagesFilter())
+
+rnd=rounding()
+
+## helper methods
+#
+# some times one needs float lists
 def xfrange(start, stop, step):
     while start < stop:
         yield start
         start += step
 
+# get n random colors (via hls)
 def getColorList(ncolors):
     from colorsys import hls_to_rgb,rgb_to_hls
     from math import pi
@@ -20,18 +36,24 @@ def getColorList(ncolors):
     from random import random
     colors=[]
     for i in xfrange(0,2.*pi,(2.*pi)/ncolors):
-        #colorsys.hls_to_rgb(h, l, s)
-        #colors.append(hls_to_rgb(i, random() , pi/2. + random() ))
         colors.append(hls_to_rgb(i, random() , random() ))
     return colors
 
+# helper to search if a hist contains a key
 def getDictValue(hist,parmDict):
-    for par in parmDict:
-        if par in hist:
-            return parmDict[par]
-    return None
+    if isinstance(parmDict,dict):
+        for par in parmDict:
+            if par in hist:
+                return parmDict[par]
+        return None
+    if isinstance(parmDict,list):
+        for par in parmDict:
+            if par in hist:
+                return True
+        return False
 
-
+# stolen from rootpy
+# ignore_binns are hist if the bin values=0 the bins will be ignored
 def duke_errorbar(hists,
              xerr=True, yerr=True,
              xpadding=0, ypadding=.1,
@@ -137,7 +159,8 @@ def duke_errorbar(hists,
                 **kwargs))
     return returns
 
-
+# stolen from rootpy
+# ignore_binns are hist if the bin values=0 the bins will be ignored
 def _duke__errorbar(h, xerr, yerr, axes=None, emptybins=True, ignore_binns=None, zorder=None, **kwargs):
     from rootpy.plotting.root2matplotlib import _set_defaults
     import numpy as np
@@ -180,16 +203,110 @@ def _duke__errorbar(h, xerr, yerr, axes=None, emptybins=True, ignore_binns=None,
 
 
 
+##@class HistSorageContainer Class to handle data, bg and sg HistStorages
+#
+# written by Klaas Padeken 2015
+class HistStorageContainer():
+    ## Init function
+    #
+    # In this function the default variables are set and initialized.
+    # @param[in] bg HistSorage for bg (default=False)
+    # @param[in] sg HistSorage for sg (default=False)
+    # @param[in] data HistSorage for data (default=False)
+    def __init__(self,bg=False,sg=False,data=False):
+        self.bg=bg
+        self.sg=sg
+        self.data=data
+        self.allStored=[]
+        if bg is not False:
+            self.allStored.append(self.bg)
+        if sg is not False:
+            self.allStored.append(self.sg)
+        if data is not False:
+            self.allStored.append(self.data)
+
+    ## Function to clear hists
+    #
+    # use this if you want to plot a new set of hists
+    #def clearHists(self):
+        #for stored in self.allStored:
+            #stored.clearHists()
+
+    ## Function get hists from files
+    #
+    # the hists ate added to .hists and joined if a joinList exist
+    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
+    # @param[out] Hist
+    def getHist(self,hist):
+        for stored in self.allStored:
+            stored.getHist(hist)
+
+    ## Function rebin the all hists
+    #
+    # @param[in] width try to rebin to a specific width
+    # @param[in] factor rebin to with a factor
+    # if both are given the width is used
+    def rebin(self,width=0,factor=0,vector=None):
+        for stored in self.allStored:
+            stored.rebin(width=width,factor=factor,vector=vector)
+
+    ## Function to set the style of the histograms
+    #
+    # @param[in] bgcolors a list/dict of colors that the hists should have
+    # if colors is not specified the internal colorListis used if set
+    # @param[in] sgcolors a list/dict of colors that the hists should have
+    # if colors is not specified the internal colorListis used if set
+    def setStyle(self,bgcolors=None,sgcolors=None):
+        if self.bg is not False:
+            #self.bg.setStyle(style="bg",colors=bgcolors)
+            self.bg.setStyle()
+        if self.sg is not False:
+            #self.sg.setStyle(style="sg",colors=sgcolors)
+            self.sg.setStyle()
+        if self.data is not False:
+            #self.data.setStyle(style="data")
+            self.data.setStyle()
+
+    ## Function getbg
+    #
+    # @param[out] list of bg hists
+    def getBGList(self):
+        return self.bg.getHistList()
+
+    ## Function getsg
+    #
+    # @param[out] list of sg hists
+    def getSGList(self):
+        return self.sg.getHistList()
+
+    ## Function getData
+    #
+    # @param[out] data hist
+    def getData(self):
+        return self.data.getHistList()[0]
+
+    ## Function makeCumulative
+    #
+    # make the distribution cumulative
+    def makeCumulative(self,width=False):
+        for h in self.allStored:
+            h.makeCumulative(width=width)
 
 
-##@class HistSorage
-# Class to hangle histograms functions
+
+
+
+
+
+
+##@class HistStorage
+# Class to handle histograms functions
 #
 # To store a list of hists, which are scaled, joined, rebinned and otherwise
 # manipulated.
 #
 # written by Klaas Padeken 2015
-class HistSorage(object):
+class HistStorage(object):
     ## Init function
     #
     # In this function the default variables are set and initialized.
@@ -211,6 +328,12 @@ class HistSorage(object):
         self.lumi=lumi
         self.isData=isData
         self._joinList=False
+        self.style={}
+        self._style_changed=False
+        self.isCumulative=False
+        self.forcedWidth=False
+        self.Unit=""
+        self.additionalWeight={}
 
     ## del function
     #
@@ -238,6 +361,25 @@ class HistSorage(object):
                 Nev=1
             self.genNumber[name]=Nev
 
+    ## Function get the unit from xaxis.
+    #
+    # returns the unit of the hist
+    def _getUnit(self):
+        if self.Unit!="":
+            return self.Unit
+        xtitle=self.hists.values()[0].GetXaxis().GetTitle()
+        t=""
+        # this should cover all the usual cases, like [unit] /unit or *eV.
+        prossibleUnits=['[\[\(]\S*[\]\)]','/\S*\}','\SeV']
+        for unit in prossibleUnits:
+            m = re.search(unit, xtitle)
+            if m != None:
+                break
+        if m != None:
+            t=m.group(0).translate(None,"[\[\(\]\)]/\}")
+        self.Unit=t
+        return t
+
     ## Function to add files to a scaled view.
     #
     # The scaled view dict "views" now retruns all histograms scaled!
@@ -252,6 +394,8 @@ class HistSorage(object):
                     weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
                 else:
                     weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
+            if name in self.additionalWeight:
+                weight*=self.additionalWeight[name]
             self.views[name]=ScaleView(self.files[name],weight)
             self._scaled=True
 
@@ -283,7 +427,7 @@ class HistSorage(object):
                     continue
             name=file.split("/")[-1].replace(".root","")
             self.files[name]=File(file, "read")
-            tmpList.append(self.files[name])
+            tmpList.append(name)
         self._getGenNumbers()
         self._addToScaledView()
         if joinName is not None:
@@ -292,7 +436,6 @@ class HistSorage(object):
             else:
                 self._joinList=OrderedDict()
                 self._joinList[joinName]=tmpList
-
 
     ## Function to add a single file
     #
@@ -327,10 +470,36 @@ class HistSorage(object):
     def addJoinList(self,joinList):
         self._joinList=joinList
 
+    ## Function to apply a style to a single histogram
+    #
+    # @param[in] kwargs all the styles can be set like fillstyle = 'solid'
+    def applyStyle(self, name, **kwargs):
+        if name in self.style:
+            self.style[name].update(kwargs)
+        else:
+            self.style[name]=kwargs.copy()
+
+    ## Function to apply a style to all histograms
+    #
+    # @param[in] kwargs all the styles can be set like fillstyle = 'solid'
+    def applyStyleAll(self, **kwargs):
+        iteratorList=self.views
+        if self._joinList is not False:
+            iteratorList=self._joinList
+
+        for view in iteratorList:
+            if view in self.style:
+                self.style[view].update(kwargs)
+            else:
+                self.style[view]=kwargs.copy()
+
     ## Function to clear hists
     #
     # use this if you want to plot a new set of hists
     def clearHists(self):
+        self.Unit=""
+        self.forcedWidth=False
+        self.isCumulative=False
         self.hists=OrderedDict()
 
     ## Function to get a hist that is the sum of hists in the storage
@@ -346,6 +515,7 @@ class HistSorage(object):
         for key in self.hists:
             if name in key:
                 temp.append( self.hists[key] )
+        self.setStyle()
         return sum(temp)
 
     ## Function to get a hist that is the sum of all hists in the storage
@@ -356,6 +526,7 @@ class HistSorage(object):
     def getAllAdded(self,ignoreScale=False):
         if not self._scaled and not ignoreScale:
             raise RuntimeError("Add all histograms without scaling. I think not!")
+        self.setStyle()
         return sum(self.hists.values())
 
     ## Function get hists from files
@@ -363,12 +534,23 @@ class HistSorage(object):
     # the hists ate added to .hists and joined if a joinList exist
     # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
     # @param[out] Hist
-    def getHist(self,hist):
+    def getHist(self,hist,):
+        self.clearHists()
         for f in self.views:
             self.hists[f]=self.views[f].Get(hist)
             self.hists[f].Sumw2()
         if self._joinList is not False:
             self.joinList(self._joinList)
+        for hist in self.hists:
+            if hist in self.style:
+                self.hists[hist].decorate(**self.style[hist])
+
+    ## Function to get the hists as a list
+    #
+    # @param[out] list of all stored hists
+    def getHistList(self):
+        self.setStyle()
+        return self.hists.values()
 
     ## Function join files containing name to one nameed label
     #
@@ -404,11 +586,35 @@ class HistSorage(object):
     # @param[in] width try to rebin to a specific width
     # @param[in] factor rebin to with a factor
     # if both are given the width is used
-    def rebin(self,width=0,factor=0):
-        if width!=0:
-            factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
-        for name in self.hists:
-            self.hists[name].Rebin(factor)
+    def rebin(self,width=0,factor=0,vector=None):
+        if vector != None:
+            for name in self.hists:
+                rebinnedHist=self.hists[name].rebinned(vector)
+                rebinnedHist.xaxis.SetTitle(self.hists[name].xaxis.GetTitle())
+                self.hists[name]=rebinnedHist
+                if name in self.style:
+                    self.hists[name].decorate(**self.style[name])
+        else:
+            if width!=0:
+                factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
+            for name in self.hists:
+                self.hists[name].Rebin(factor)
+
+    ## Function to make the hist cumulative
+    #
+    # @param[in] width if specified the bins are specified the bins are corrected for the width
+    def makeCumulative(self,width=False):
+        for hist in self.hists:
+            for ibin in self.hists[hist].bins():
+                if width is not False:
+                    #hmm does one realy want this I think the error is wrong
+                    ibin.value,ibin.error=self.hists[hist].integral(xbin1=ibin.idx, error=True)
+                    ibin.value/=(float(width)/self.hists[hist].xwidth(ibin.idx))
+                    ibin.error/=(float(width)/self.hists[hist].xwidth(ibin.idx))
+                else:
+                    ibin.value,ibin.error=self.hists[hist].integral(xbin1=ibin.idx, error=True)
+        self.isCumulative=True
+        self.forcedWidth=width
 
     ## Function to set the datadiven name flag
     #
@@ -424,40 +630,56 @@ class HistSorage(object):
 
     ## Function to set the style of the histograms
     #
+    # sets the axis labels and titles
+    def setStyle(self):
+        for key in self.hists:
+            if "$" not in self.hists[key].xaxis.GetTitle():
+                self.hists[key].xaxis.SetTitle("$\mathsf{"+self.hists[key].xaxis.GetTitle()+"}$")
+            eventString="Events"
+            if self.isCumulative:
+                eventString="Events>%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
+            if self.forcedWidth is not False:
+                width=self.forcedWidth
+            else:
+                width=self.hists.values()[-1].xwidth(2)
+            self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(eventString,rnd.latex(width),self._getUnit()))
+            if self.isData:
+                self.hists[key].SetTitle("data")
+            else:
+                self.hists[key].SetTitle(key)
+
+    ## Function to init the style of the histograms
+    #
     # @param[in] style "bg" and "sg" posible (default="bg")
     # @param[in] colors a list/dict of colors that the hists should have
     # if colors is not specified the internal colorListis used if set
-
-    def setStyle(self,style="bg",colors=None):
+    def initStyle(self,style="bg",colors=None):
         if style=="bg":
-            for key in self.hists:
-                self.hists[key].fillstyle = 'solid'
-                self.hists[key].linewidth = 0
+            self.applyStyleAll(fillstyle = 'solid',linewidth = 0)
+            #for key in self.hists:
+                #self.hists[key].fillstyle = 'solid'
+                #self.hists[key].linewidth = 0
         if style=="sg":
-            for key in self.hists:
-                self.hists[key].fillstyle = '0'
-                self.hists[key].linewidth = 1
-        for key in self.hists:
-            self.hists[key].xaxis.SetTitle("$\mathsf{"+self.hists[key].xaxis.GetTitle()+"}$")
-            self.hists[key].yaxis.SetTitle("Events/%.f GeV"%(self.hists.values()[-1].xwidth(1)))
-            self.hists[key].SetTitle(key)
+            self.applyStyleAll(fillstyle = '0',linewidth = 1)
+        #nothing to do here yet
+        if style=="data":
+            pass
+
+        iteratorList=self.views
+        if self._joinList is not False:
+            iteratorList=self._joinList
+
+        for key in iteratorList:
             if colors!=None:
                 if isinstance(colors, (list)):
                     usecolor=colors.pop()
-                    self.hists[key].fillcolor = usecolor
-                    self.hists[key].linecolor = usecolor
+                    self.applyStyle(key,fillcolor = usecolor,linecolor = usecolor)
+                    #self.applyStyle(linecolor = usecolor)
                 if isinstance(colors, (dict)):
                     if key in colors:
-                        self.hists[key].fillcolor = colors[key]
-                        self.hists[key].linecolor = colors[key]
-            elif len(self.colorList)>0:
-                if key in self.colorList:
-                    self.hists[key].fillcolor = self.colorList[key]
-                    self.hists[key].linecolor = self.colorList[key]
+                        self.applyStyle(key,fillcolor = colors[key],linecolor = colors[key])
+                        #self.applyStyle(linecolor = colors[key])
+            elif key in self.colorList:
+                self.applyStyle(key,  fillcolor = self.colorList[key],linecolor = self.colorList[key] )
 
-    ## Function to get the hists as a list
-    #
-    # @param[out] list of all stored hists
-    def getHistList(self):
-        return self.hists.values()
 

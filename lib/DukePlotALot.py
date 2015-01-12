@@ -41,7 +41,7 @@ class plotter():
     # @param[in] sig List of signal histograms (default = [])
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
-    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False):
+    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, **kwargs):
         ## style variables
         self._style                = style
         ## BG histograms
@@ -62,7 +62,7 @@ class plotter():
         self._add_error_bands      = False
         self._error_hist           = []
         self._fig                  = None
-        self._Set_style()
+        self._Set_style(**kwargs)
 
     ## del function
     #
@@ -145,7 +145,7 @@ class plotter():
                 self._add_plots_labels[pos] = plot
             else:
                 self._add_plots_labels[pos] = label
-            self._Set_style()
+            self._Set_style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
         else:
             print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
 
@@ -199,7 +199,7 @@ class plotter():
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
-    def _Set_style(self):
+    def _Set_style(self,cmsPositon="upper right",legendPosition="upper right"):
         matplotlib.rcParams.update({'font.size': 10})
         matplotlib.rcParams.update({'lines.linewidth' : 1})
         #rc('text', usetex=True)
@@ -222,6 +222,11 @@ class plotter():
         self._ymax = -1
         self._xmin = -1
         self._xmax = -1
+        self.cmsTextPosition=position(cmsPositon,isText=True)
+        #take the text size into acount:
+        #self.cmsTextPosition.addXspace(-0.15)
+        #self.cmsTextPosition.addYspace(-0.05)
+        self.LegendPosition=position(legendPosition)
         if self._style == 'CMS':
             self._add_cms_text           = True
             self._add_lumi_text          = True
@@ -238,12 +243,12 @@ class plotter():
             self._cms_text_alignment     = 'row'
             self._show_minor_tick_labels = False
             self._legend_font_size       = 9
-            if self._add_plots[0] == '':
-                self._cms_text_x         = 0.8
-                self._cms_text_y         = 0.9
-            else:
-                self._cms_text_x         = 0.8
-                self._cms_text_y         = 0.9 - (0.8 * self._add_plots_height[0] / 100.)
+            if self._add_plots[0] != '':
+                self.cmsTextPosition.addYspace(  -0.9 * self._add_plots_height[0] / 100.)
+            if self._add_plots[1] != '':
+                self.cmsTextPosition.addYspace(  0.9 * self._add_plots_height[1] / 100.)
+            if self._add_plots[2] != '':
+                self.cmsTextPosition.addYspace(  0.9 * self._add_plots_height[2] / 100.)
         elif self._style == 'Plain':
             self._add_cms_text           = False
             self._add_lumi_text          = False
@@ -260,12 +265,12 @@ class plotter():
             self._cms_text_alignment     = 'row'
             self._show_minor_tick_labels = True
             self._legend_font_size       = 10
-            if self._add_plots[0] == '':
-                self._cms_text_x         = 0.8
-                self._cms_text_y         = 0.9
-            else:
-                self._cms_text_x         = 0.8
-                self._cms_text_y         = 0.9 - (0.8 * self._add_plots_height[0] / 100.)
+            if self._add_plots[0] != '':
+                self.cmsTextPosition.addYspace(  -0.8 * self._add_plots_height[0] / 100.)
+            if self._add_plots[1] != '':
+                self.cmsTextPosition.addYspace(  0.8 * self._add_plots_height[1] / 100.)
+            if self._add_plots[2] != '':
+                self.cmsTextPosition.addYspace(  0.8 * self._add_plots_height[2] / 100.)
         elif self._style == 'Cool':
             self._add_cms_text           = True
             self._add_lumi_text          = True
@@ -280,36 +285,36 @@ class plotter():
             self._marker_color           = 'lightgray'
             self._marker_error_cap_width = 0
             self._cms_text_alignment     = 'column'
-            self._cms_text_x             = 0.1
-            self._cms_text_y             = 0.955
             self._show_minor_tick_labels = False
             self._legend_font_size       = 9
 
     def _Write_additional_text(self):
         if self._add_lumi_text:
+            self._lumi_val=float(self._lumi_val)
             if self._lumi_val > 1000:
                 self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._annotation_text_color, size=12)
             else:
                 self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._annotation_text_color, size=12)
         if self._add_cms_text:
             if self._cms_text_alignment == 'row':
-                self._fig.text(self._cms_text_x, self._cms_text_y, 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
-                self._fig.text(self._cms_text_x, self._cms_text_y-0.03, self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
+                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
+                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY()-0.03, self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
             elif self._cms_text_alignment == 'column':
-                self._fig.text(self._cms_text_x, self._cms_text_y, 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
-                self._fig.text(self._cms_text_x + 0.08, self._cms_text_y, self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
+                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
+                self._fig.text(self.cmsTextPosition.getX() + 0.08, self.cmsTextPosition.getY(), self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
             else:
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
     def _Add_legend(self):
-        self._legend_x = 0.95
-        if self._style == 'Cool':
-            if self._add_plots[0] == '':
-                self._legend_y = 0.9
-            else:
-                self._legend_y = 0.9 - (0.8 * self._add_plots_height[0] / 100.)
-        else:
-            self._legend_y = self._cms_text_y - 0.02
+        if self._add_plots[0] != '':
+            self.LegendPosition.addYspace(-(0.85 * self._add_plots_height[0] / 100.))
+        if self._add_plots[1] != '':
+            self.LegendPosition.addYspace(  0.8 * self._add_plots_height[1] / 100.)
+        if self._add_plots[2] != '':
+            self.LegendPosition.addYspace(  0.8 * self._add_plots_height[2] / 100.)
+
+        if self.LegendPosition==self.cmsTextPosition:
+            self.LegendPosition.addYspace(self.cmsTextPosition.getY()-self.LegendPosition.getY()-0.02)
         handle_list = []
         label_list = []
         for item in self._hist:
@@ -330,13 +335,17 @@ class plotter():
                 handle_list.append(col_patch)
                 label_list.append('syst. sum')
         if self._data:
-            dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
+            dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._marker_size,
+                              marker = self._marker_style,
+                              color = self._marker_color,
+                              capthick = self._marker_error_cap_width)
+            #dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
 
         self.leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
-                    bbox_to_anchor=(self._legend_x, self._legend_y),
+                    bbox_to_anchor=(self.LegendPosition.getX(),self.LegendPosition.getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
                     frameon = False,
@@ -353,13 +362,25 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
-        # why do we need this??
+        # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
         #matplotlib draws no errorbars in logy when the lower error = 0
         if self._logy and self._data:
             for ibin in self._data_hist.bins():
                 if ibin.error==1:
                     ibin.error=1.-1e-12
+
+    def cleanUnwantedBins(self,hist,toCleanHists):
+        #remove=[]
+        if toCleanHists is not None:
+            for i in hist.bins():
+                ignore=False
+                for ihist in toCleanHists:
+                    if ihist[i.idx].value==0:
+                        ignore=True
+                if ignore:
+                    i.value=0
+                    i.error=0
 
     def _Calc_additional_plot(self, plot, pos):
         if plot == 'Ratio':
@@ -375,7 +396,7 @@ class plotter():
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_signi()
         elif plot == 'DiffRatio':
-            self._add_plots_labels[pos] = '(Data - MC)/MC'
+            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio()
         else:
@@ -387,6 +408,7 @@ class plotter():
             sum_hist.Add(self._hist[i])
         ratio = self._data_hist.Clone('ratio')
         ratio.Divide(sum_hist)
+        self.cleanUnwantedBins(ratio,[sum_hist,self._data_hist])
         x = []
         y = []
         err = []
@@ -416,6 +438,7 @@ class plotter():
             sum_hist.Add(self._hist[i])
         diff = self._data_hist.Clone('diff')
         diff.Add(sum_hist,-1)
+        self.cleanUnwantedBins(diff,[sum_hist,self._data_hist])
         x = []
         y = []
         err = []
@@ -445,6 +468,7 @@ class plotter():
         sum_hist = sum(self._hist)
         diff.Add(sum_hist,-1)
         diff.Divide(sum_hist)
+        self.cleanUnwantedBins(diff,[sum_hist,self._data_hist])
 
         x = []
         y = []
@@ -480,12 +504,13 @@ class plotter():
             sum_hist.Add(self._hist[i])
         signi = self._data_hist.Clone('signi')
         for i in range(signi.GetNbinsX()+1):
-            value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
-            denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
-            if denominator!=0:
-                value /= denominator
-                signi.SetBinContent(i,value)
-                signi.SetBinError(i,1)
+            if self._data_hist.GetBinContent(i)!=0 and sum_hist.GetBinContent(i)!=0:
+                value = float(self._data_hist.GetBinContent(i) - sum_hist.GetBinContent(i))
+                denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
+                if denominator!=0:
+                    value /= denominator
+                    signi.SetBinContent(i,value)
+                    signi.SetBinError(i,1)
         x = []
         y = []
         err = []
@@ -607,7 +632,7 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax0, x, y, err)
-            ax0.axis('auto')
+            ax0.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._xmin != -1 and self._xmax != -1:
                 ax0.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax0.axhline(self._add_plots_ref_line[0], color = self._ref_line_color)
@@ -661,6 +686,7 @@ class plotter():
         if self._show_minor_tick_labels:
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
             ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
+        #ax1.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
         ax1.spines['bottom'].set_color(self._spine_color)
         ax1.spines['bottom'].set_linewidth(self._spine_line_width)
         ax1.spines['top'].set_color(self._spine_color)
@@ -691,7 +717,7 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax2, x, y, err)
-            ax2.axis('auto')
+            ax2.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._xmin != -1 and self._xmax != -1:
                 ax2.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax2.axhline(self._add_plots_ref_line[1], color = self._ref_line_color)
@@ -712,7 +738,9 @@ class plotter():
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
             else:
-                ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+                #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+                ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
+                #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
                 plt.xlabel(self._xaxis_title, color=self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
             plt.setp(axis1.get_xticklabels(), visible = False)
             return ax2
@@ -735,13 +763,14 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax3, x, y, err)
-            ax3.axis('auto')
+            ax3.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._xmin != -1 and self._xmax != -1:
                 ax3.set_xlim(xmin = self._xmin, xmax = self._xmax)
             ax3.axhline(self._add_plots_ref_line[2], color = self._ref_line_color)
             ax3.set_ylabel(self._add_plots_labels[2], color = self._label_text_color, va = 'top', ha = 'left')
             ax3.yaxis.set_label_coords(self._y_label_offset,1.)
-            ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+            #ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+            ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
             ax3.spines['bottom'].set_color(self._spine_color)
             ax3.spines['bottom'].set_linewidth(self._spine_line_width)
             ax3.spines['top'].set_color(self._spine_color)
@@ -781,5 +810,73 @@ class plotter():
         #except AttributeError:
             #print('No histogram added')
         #print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
+
+class position():
+    def __init__(self,positiontext="upper right", refference="", isText=False):
+        self._positiontext=positiontext
+        self._valign=self._positiontext.split(" ")[0]
+        self._align=self._positiontext.split(" ")[1]
+        self.addY=0
+        self.addX=0
+        self._isText=isText
+        self._correctcms={"left":0.,
+                    "middle":0.,
+                    "right":-0.15,
+                    "upper":-0.04,
+                    "center":0.,
+                    "lower":0.,
+        }
+
+    def __eq__(self,other):
+        return (self._positiontext==other._positiontext)
+
+    def addYspace(self,y):
+        if self._valign=="upper" and y<0.:
+            self.addY+=y
+        elif self._valign!="upper" and self.getY()+y>0.1:
+            self.addY+=y
+
+    def addXspace(self,x):
+        self.addX+=x
+
+
+
+    def setPosition(self,positiontext):
+        self._positiontext=positiontext
+        self.valign=self._positiontext.split(" ")[0]
+        self.align=self._positiontext.split(" ")[1]
+
+    def getText(self):
+        return self._positiontext
+
+    def getX(self):
+        alignDict={
+                    "left":0.12,
+                    "middle":0.5,
+                    "right":0.95,
+        }
+        if self._isText:
+            return self.addX+alignDict[self._align]+self._correctcms[self._align]
+        return self.addX+alignDict[self._align]
+
+    def getY(self):
+        alignDict={
+                    "upper":0.95,
+                    "center":0.5,
+                    "lower":0.12,
+        }
+        if self._isText:
+            return self.addY+alignDict[self._valign]+self._correctcms[self._valign]
+        return self.addY+alignDict[self._valign]
+
+
+
+
+
+
+
+
+
+
 
 
