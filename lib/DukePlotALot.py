@@ -41,6 +41,7 @@ class plotter():
     # @param[in] sig List of signal histograms (default = [])
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
+    # @param[in] kwargs dict of key word arguments that will be passed to style
     def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, **kwargs):
         ## style variables
         self._style                = style
@@ -161,6 +162,7 @@ class plotter():
     #
     # This function is used to add the systematic uncertainty histograms.
     # @param[in] histo List of histograms that contain as bin content the relativ systematic uncertainties.
+    # @param[in] labels List of labels for the systematic uncertainties.
     # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
     #                        or 'val' around the e.g. ratio value) (default = 'ref')
     # @param[in] stacking String to identify how to stack different systematic uncertainties ('No' stacking,
@@ -181,6 +183,8 @@ class plotter():
     # @param[in] logy Boolean if the y-axis should be logarithmic (Default = True)
     # @param[in] ymin Minimum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
+    # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
+    # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
         self._logx = logx
         self._logy = logy
@@ -192,7 +196,7 @@ class plotter():
     ## Function to save the complete plot
     #
     # This function saves the plot you which is stored in the object so create it first
-    # @param[out] _fig Created plot, to do your own custemization
+    # @param[in] out_name name of the output file
     def SavePlot(self, out_name):
         self._SavePlot(out_name)
 
@@ -339,7 +343,6 @@ class plotter():
                               marker = self._marker_style,
                               color = self._marker_color,
                               capthick = self._marker_error_cap_width)
-            #dat_line = mlines.Line2D([], [], color = self._marker_color, marker = self._marker_style, markersize = self._marker_size)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
 

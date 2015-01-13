@@ -1,9 +1,0 @@
-__init__.py
-argparse.py
-core.py
-root2matplotlib.py
-rootinfo.py
-rootmath.py
-tree2hists.py
-utilities.py
-version.py

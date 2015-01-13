@@ -101,7 +101,7 @@ def main():
             "_met_et":[120,1000],
     }
 
-    #cumulative=["_MT"]
+    cumulative=["_pt"]
 
     bghists.initStyle(style="bg")
     sghist.initStyle(style="sg")
@@ -117,9 +117,9 @@ def main():
                 histContainer.rebin(vector=binf)
             else:
                 histContainer.rebin(width=binf)
-        #if getDictValue(hist,cumulative):
+        if getDictValue(hist,cumulative):
             ##histContainer.makeCumulative(width=2)
-            #histContainer.makeCumulative()
+            histContainer.makeCumulative()
         sgPbghist=histContainer.bg.getAllAdded()+histContainer.sg.getAllAdded()
         fakeData=sgPbghist.empty_clone()
         fakeData.SetTitle("pseudo data")
@@ -131,10 +131,10 @@ def main():
 
         #test.Add_data(histContainer.getData())
         test.Add_data(fakeData)
-        test.Add_plot('DiffRatio',pos=1, height=15)
-        test.Add_plot('Signi',pos=2, height=15)
+        #test.Add_plot('DiffRatio',pos=1, height=15)
+        #test.Add_plot('Signi',pos=2, height=15)
         #test.Add_plot('Diff',pos=2, height=15)
-        test.Add_plot('Ratio',pos=0, height=15)
+        #test.Add_plot('Ratio',pos=0, height=15)
         #test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
 
         test._cms_val=8

@@ -235,8 +235,8 @@ class HistStorageContainer():
     ## Function get hists from files
     #
     # the hists ate added to .hists and joined if a joinList exist
-    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
-    # @param[out] Hist
+    # the hist will be put in the corresponding HistStorage class
+    # @param[in] hist string name of the hist
     def getHist(self,hist):
         for stored in self.allStored:
             stored.getHist(hist)
@@ -269,19 +269,19 @@ class HistStorageContainer():
 
     ## Function getbg
     #
-    # @param[out] list of bg hists
+    # @param[out] bg.getHistList() list of bg hists
     def getBGList(self):
         return self.bg.getHistList()
 
     ## Function getsg
     #
-    # @param[out] list of sg hists
+    # @param[out] sg.getHistList() list of sg hists
     def getSGList(self):
         return self.sg.getHistList()
 
     ## Function getData
     #
-    # @param[out] data hist
+    # @param[out] data.getHistList()[0] hist of Data
     def getData(self):
         return self.data.getHistList()[0]
 
@@ -472,7 +472,8 @@ class HistStorage(object):
 
     ## Function to apply a style to a single histogram
     #
-    # @param[in] kwargs all the styles can be set like fillstyle = 'solid'
+    # @param[in] name string of the file
+    # @param[in] kwargs dict all the styles can be set like fillstyle = 'solid'
     def applyStyle(self, name, **kwargs):
         if name in self.style:
             self.style[name].update(kwargs)
@@ -532,9 +533,8 @@ class HistStorage(object):
     ## Function get hists from files
     #
     # the hists ate added to .hists and joined if a joinList exist
-    # @param[in] ignoreScale if you want to add hists that are not scaled (default=False)
-    # @param[out] Hist
-    def getHist(self,hist,):
+    # @param[in] hist string of the hist in the files
+    def getHist(self,hist):
         self.clearHists()
         for f in self.views:
             self.hists[f]=self.views[f].Get(hist)
@@ -583,8 +583,9 @@ class HistStorage(object):
 
     ## Function rebin the all hists
     #
-    # @param[in] width try to rebin to a specific width
-    # @param[in] factor rebin to with a factor
+    # @param[in] width float try to rebin to a specific width
+    # @param[in] factor float rebin to with a factor
+    # @param[in] vector list of all binns
     # if both are given the width is used
     def rebin(self,width=0,factor=0,vector=None):
         if vector != None:
