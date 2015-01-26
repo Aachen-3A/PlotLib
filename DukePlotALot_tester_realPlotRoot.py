@@ -19,7 +19,7 @@ def main():
     xs= ConfigObj("/home/home1/institut_3a/padeken/Analysis/SirPlotAlot/xsv100.cfg")
 
 
-    bghists=HistStorage(xs,lumi,path=basedir)
+    bghists=HistStorage(xs,lumi,path=basedir,matplotlibStyle=False)
 
 
 
@@ -74,15 +74,16 @@ def main():
     bghists.views["dataDrivenQCD"]=ScaleView(bghists.files["dataDrivenQCD"],0.63)
     bghists.colorList=colorList
 
-    sghist=HistStorage(xs,lumi,path=basedir)
+    sghist=HistStorage(xs,lumi,path=basedir,matplotlibStyle=False)
     #sgName="$\mathsf{W' \, M=2.3\,TeV \cdot 0.02}$"
-    sgName="W' M=2.3TeV $\cdot$ 0.02"
+    #sgName="W' M=2.3TeV $\cdot$ 0.02"
+    sgName="W' M=2.3TeV 0.02"
     sghist.additionalWeight={"WprimeToTauNu_M-2300_TuneZ2star_8TeV-pythia6-tauola_Summer12_DR53X-PU_S10_START53_V7A-v1SIM":0.02}
     sghist.addAllFiles(tag="WprimeToTauNu_M-2300",joinName=sgName)
     sghist.colorList={sgName :"darkred"}
 
 
-    dat_hist=HistStorage(xs,lumi,path=basedir,isData=True)
+    dat_hist=HistStorage(xs,lumi,path=basedir,isData=True,matplotlibStyle=False)
     dat_hist.addFile("allDataMET")
 
 
@@ -108,7 +109,6 @@ def main():
     }
 
     cumulative=[]
-    #cumulative=["_pt"]
 
     bghists.initStyle(style="bg")
     sghist.initStyle(style="sg")
@@ -124,15 +124,15 @@ def main():
                 histContainer.rebin(vector=binf)
             else:
                 histContainer.rebin(width=binf)
-        if getDictValue(hist,cumulative):
-            ##histContainer.makeCumulative(width=2)
-            histContainer.makeCumulative()
+        #if getDictValue(hist,cumulative):
+            ###histContainer.makeCumulative(width=2)
+            #histContainer.makeCumulative()
         sgPbghist=histContainer.bg.getAllAdded()+histContainer.sg.getAllAdded()
         fakeData=sgPbghist.empty_clone()
         fakeData.SetTitle("pseudo data")
         fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
 
-        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style='CMS',cmsPositon="upper left")
+        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style='CMS',cmsPositon="upper left",useRoot=True)
 
 
 

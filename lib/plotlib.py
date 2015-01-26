@@ -10,6 +10,7 @@ import logging; logging.basicConfig(level=logging.DEBUG)
 from rootpy import log
 from rounding import rounding
 import re
+from lib.configobj import ConfigObj
 
 log.basic_config_colorized()
 class NoDictMessagesFilter(logging.Filter):
@@ -220,10 +221,13 @@ class HistStorageContainer():
         self.allStored=[]
         if bg is not False:
             self.allStored.append(self.bg)
+            self.bg.initStyle(style="bg")
         if sg is not False:
             self.allStored.append(self.sg)
+            self.sg.initStyle(style="sg")
         if data is not False:
             self.allStored.append(self.data)
+            self.data.initStyle(style="data")
 
     ## Function to clear hists
     #
@@ -240,6 +244,10 @@ class HistStorageContainer():
     def getHist(self,hist):
         for stored in self.allStored:
             stored.getHist(hist)
+
+    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree):
+        for stored in self.allStored:
+            stored.getHistFromTree(binns,xmin,xmax,xtitle,cut,value,tree)
 
     ## Function rebin the all hists
     #
@@ -258,13 +266,14 @@ class HistStorageContainer():
     # if colors is not specified the internal colorListis used if set
     def setStyle(self,bgcolors=None,sgcolors=None):
         if self.bg is not False:
-            #self.bg.setStyle(style="bg",colors=bgcolors)
             self.bg.setStyle()
+            if bgcolors!=None:
+                self.bg.colorList=bgcolors
         if self.sg is not False:
-            #self.sg.setStyle(style="sg",colors=sgcolors)
             self.sg.setStyle()
+            if sgcolors!=None:
+                self.sg.colorList=sgcolors
         if self.data is not False:
-            #self.data.setStyle(style="data")
             self.data.setStyle()
 
     ## Function getbg
@@ -314,17 +323,19 @@ class HistStorage(object):
     # @param[in] lumi is the lumi in pb
     # @param[in] path is the default path of the files (default=None)
     # @param[in] isData is a switch  (default=None)
-    def __init__(self,xs, lumi, path=None,isData=False):
+    def __init__(self,xs, lumi,xstype="pythonConfig", path=None,isData=False,matplotlibStyle=True):
         self.views=OrderedDict()
         self.hists=OrderedDict()
         self.files=OrderedDict()
         self.colorList={}
         self.genNumber={}
+        self.weight={}
         self.basepath=path
         self.verbosity=3
         self._scaled=False
         self.datadrivenHist=""
         self.xs=xs
+        self.configxs=xstype
         self.lumi=lumi
         self.isData=isData
         self._joinList=False
@@ -333,7 +344,9 @@ class HistStorage(object):
         self.isCumulative=False
         self.forcedWidth=False
         self.Unit=""
+        self.matplotlibStyle=matplotlibStyle
         self.additionalWeight={}
+        self.eventString="Events"
 
     ## del function
     #
@@ -387,17 +400,31 @@ class HistStorage(object):
         for name in self.files:
             if name in self.views:
                 continue
+            weight=self._getWeight(name)
+            self.views[name]=ScaleView(self.files[name],weight)
+            self._scaled=True
+
+    def _getWeight(self,name):
+        if name in self.weight:
+            return self.weight[name]
+        else:
             if name==self.datadrivenHist or self.isData:
                 weight=1.
             else:
-                if "weight" in self.xs[name]:
-                    weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
-                else:
-                    weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
+                if self.configxs=="pythonConfig":
+                    if "weight" in self.xs[name]:
+                        weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                    else:
+                        weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
+                if self.configxs=="music":
+                    weight=self.xs.as_float("%s.XSec"%(name))*self.xs.as_float("%s.FilterEff"%(name))*self.xs.as_float("%s.kFactor"%(name))*self.xs.as_float("Lumi")/self.genNumber[name]
+                if self.configxs==None:
+                    weight=1.
             if name in self.additionalWeight:
                 weight*=self.additionalWeight[name]
-            self.views[name]=ScaleView(self.files[name],weight)
-            self._scaled=True
+            self.weight[name]=weight
+            return weight
+
 
     ## Function to add all files in the given path
     #
@@ -424,6 +451,7 @@ class HistStorage(object):
                     if v.lower() in file.split("/")[-1].lower():
                         vetoed=True
                 if vetoed:
+                    print("vetoed file: %s"%file)
                     continue
             name=file.split("/")[-1].replace(".root","")
             self.files[name]=File(file, "read")
@@ -484,7 +512,7 @@ class HistStorage(object):
     #
     # @param[in] kwargs all the styles can be set like fillstyle = 'solid'
     def applyStyleAll(self, **kwargs):
-        iteratorList=self.views
+        iteratorList=self.files
         if self._joinList is not False:
             iteratorList=self._joinList
 
@@ -538,6 +566,37 @@ class HistStorage(object):
         self.clearHists()
         for f in self.views:
             self.hists[f]=self.views[f].Get(hist)
+            self.hists[f].Sumw2()
+        if self._joinList is not False:
+            self.joinList(self._joinList)
+        for hist in self.hists:
+            if hist in self.style:
+                self.hists[hist].decorate(**self.style[hist])
+
+    ## Function get hists via trees from files
+    #
+    # the hists ate added to .hists and joined if a joinList exist
+    # @param[in] hist string of the hist in the files
+    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree):
+        self.clearHists()
+        for f in self.files:
+            try:
+                _tree=self.files[f].Get(tree)
+            except:
+                print "No %s in %s"%(tree,f)
+                print "Will try without %s, and add an empty hist."%f
+                self.hists[f]=Hist(binns,xmin,xmax)
+                continue
+            self.hists[f]=Hist(binns,xmin,xmax)
+            self.hists[f].GetXaxis().SetTitle(xtitle)
+            try:
+                _tree.Draw(value,selection=cut,hist=self.hists[f])
+            except:
+                print "Perhaps try this one:"
+                for i in _tree.glob("*"):
+                    print i
+                raise RuntimeError("Will stop here!")
+            self.hists[f].Scale(self._getWeight(f))
             self.hists[f].Sumw2()
         if self._joinList is not False:
             self.joinList(self._joinList)
@@ -634,16 +693,16 @@ class HistStorage(object):
     # sets the axis labels and titles
     def setStyle(self):
         for key in self.hists:
-            if "$" not in self.hists[key].xaxis.GetTitle():
-                self.hists[key].xaxis.SetTitle("$\mathsf{"+self.hists[key].xaxis.GetTitle()+"}$")
-            eventString="Events"
-            if self.isCumulative:
-                eventString="Events>%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
+            if self.matplotlibStyle:
+                if "$" not in self.hists[key].xaxis.GetTitle():
+                    self.hists[key].xaxis.SetTitle("$\\mathsf{"+self.hists[key].xaxis.GetTitle().replace("#","\\")+"}$")
+            if self.isCumulative and ">" not in self.eventString:
+                self.eventString+=">%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
             if self.forcedWidth is not False:
                 width=self.forcedWidth
             else:
                 width=self.hists.values()[-1].xwidth(2)
-            self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(eventString,rnd.latex(width),self._getUnit()))
+            self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(self.eventString,rnd.latex(width),self._getUnit()))
             if self.isData:
                 self.hists[key].SetTitle("data")
             else:
@@ -657,9 +716,6 @@ class HistStorage(object):
     def initStyle(self,style="bg",colors=None):
         if style=="bg":
             self.applyStyleAll(fillstyle = 'solid',linewidth = 0)
-            #for key in self.hists:
-                #self.hists[key].fillstyle = 'solid'
-                #self.hists[key].linewidth = 0
         if style=="sg":
             self.applyStyleAll(fillstyle = '0',linewidth = 1)
         #nothing to do here yet
@@ -675,12 +731,16 @@ class HistStorage(object):
                 if isinstance(colors, (list)):
                     usecolor=colors.pop()
                     self.applyStyle(key,fillcolor = usecolor,linecolor = usecolor)
-                    #self.applyStyle(linecolor = usecolor)
                 if isinstance(colors, (dict)):
                     if key in colors:
                         self.applyStyle(key,fillcolor = colors[key],linecolor = colors[key])
-                        #self.applyStyle(linecolor = colors[key])
-            elif key in self.colorList:
-                self.applyStyle(key,  fillcolor = self.colorList[key],linecolor = self.colorList[key] )
+            else:
+                if isinstance(self.colorList, list):
+                    if len(self.colorList)>0:
+                        usecolor=self.colorList.pop()
+                        self.applyStyle(key,fillcolor = usecolor,linecolor = usecolor)
+                if isinstance(self.colorList, dict):
+                    if key in self.colorList:
+                        self.applyStyle(key,fillcolor = self.colorList[key],linecolor = self.colorList[key])
 
 

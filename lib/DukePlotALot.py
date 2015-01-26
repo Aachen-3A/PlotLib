@@ -2,7 +2,7 @@
 
 import ROOT
 import numpy as np
-from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph
+from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad
 import matplotlib
 from matplotlib import rc
 import matplotlib.ticker as mticker
@@ -13,6 +13,9 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from plotlib import duke_errorbar
 from operator import methodcaller
+from lib.rounding import rounding
+
+
 
 ##@class plotter
 # Class to collect matplotlib functions
@@ -42,7 +45,7 @@ class plotter():
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
     # @param[in] kwargs dict of key word arguments that will be passed to style
-    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, **kwargs):
+    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, useRoot=False, **kwargs):
         ## style variables
         self._style                = style
         ## BG histograms
@@ -63,6 +66,7 @@ class plotter():
         self._add_error_bands      = False
         self._error_hist           = []
         self._fig                  = None
+        self._useRoot              = useRoot
         self._Set_style(**kwargs)
 
     ## del function
@@ -200,12 +204,38 @@ class plotter():
     def SavePlot(self, out_name):
         self._SavePlot(out_name)
 
+    def ChangeStyle(self,**kwargs):
+
+        for key in kwargs:
+            if hasattr(self,"_"+key):
+                setattr(self,"_"+key,kwargs[key])
+            else:
+                print "No attribute _%s in plotter"%key
+
+
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
     def _Set_style(self,cmsPositon="upper right",legendPosition="upper right"):
-        matplotlib.rcParams.update({'font.size': 10})
-        matplotlib.rcParams.update({'lines.linewidth' : 1})
+        if self._useRoot:
+            self.cmsTextFont          = 61   # Fonts
+            self.lumiTextFont         = 42
+            self.extraTextFont        = 52
+            self.additionalTextFont   = 42
+            self.cmsTextSize          = 0.9  #Text sizes
+            self.lumiTextSize         = 0.6
+            self.extraTextSize        = 0.76*self.cmsTextSize
+            self.additionalTextSize   = 1.0*self.extraTextSize
+            self.legendTextSize       = self.extraTextSize*0.8
+            self.lumiTextOffset       = 0.2
+            self.extraTextOffset      = 2.5  # only used in outOfFrame version
+            self.axisTextSize         = 0.9
+            self.axisOffset           = 1.3
+            self._ratio_pad           ={}
+            self.rootMemory           =[]
+        else:
+            matplotlib.rcParams.update({'font.size': 10})
+            matplotlib.rcParams.update({'lines.linewidth' : 1})
         #rc('text', usetex=True)
         self._xaxis_title      = self._hist[0].xaxis.GetTitle()
         self._yaxis_title      = self._hist[0].yaxis.GetTitle()
@@ -227,9 +257,6 @@ class plotter():
         self._xmin = -1
         self._xmax = -1
         self.cmsTextPosition=position(cmsPositon,isText=True)
-        #take the text size into acount:
-        #self.cmsTextPosition.addXspace(-0.15)
-        #self.cmsTextPosition.addYspace(-0.05)
         self.LegendPosition=position(legendPosition)
         if self._style == 'CMS':
             self._add_cms_text           = True
@@ -790,7 +817,9 @@ class plotter():
         return None
 
     def _Draw(self):
-
+        if self._useRoot:
+            self.DrawRoot()
+            return
         ax1 = self._Draw_main()
 
         ax0 = self._Draw_0(ax1)
@@ -803,7 +832,152 @@ class plotter():
         self._Write_additional_text()
 
     def _SavePlot(self, out_name):
+        if self._useRoot:
+            self._fig.SaveAs(out_name)
+            return
         plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+
+    def _AddRootLegend(self):
+        if self.LegendPosition==self.cmsTextPosition:
+            self.LegendPosition.addYspace(self.cmsTextPosition.getY()-self.LegendPosition.getY()-0.02)
+
+        numberOfEntries=len(self._hist)+len(self._sig_hist)
+        if self._data:
+            numberOfEntries+=1
+        textSize=self.legendTextSize*self._referenceHeight
+        self.leg = Legend(numberOfEntries,rightmargin=1.-self.LegendPosition.getX(),topmargin=1.-self.LegendPosition.getY(),textfont=42,textsize=textSize,entryheight=textSize,entrysep=textSize*0.1)
+        self.leg.SetFillStyle(0)
+        self.leg.SetBorderSize(0)
+        self.leg.SetFillColor(ROOT.kWhite)
+        for h in self._hist:
+            self.leg.AddEntry(h,h.GetTitle(), "f")
+        for h in self._sig_hist:
+            self.leg.AddEntry(h,h.GetTitle(), "l")
+        if self._data:
+            self.leg.AddEntry(self._data_hist,"data","ep")
+
+
+    def _AddPlotBelow(self, pos=2):
+        ## setup the window and pads to draw a ratio
+        if self._add_plots[pos] != '':
+            self._canvas.cd()
+
+            expansion_factor=1.+self._add_plots_height[pos]*0.01
+            ## expand canvas
+            #self._canvas.SetWindowSize(self._canvas.width,self._canvas.height*expansion_factor)
+            #height(self._canvas.height()*expansion_factor )
+            self._canvas.height=int(self._canvas.height*expansion_factor)
+
+            # resize drawing pad
+            # base length - ( base length / expansion factor )
+            y_ndc = 0.97 - (0.97 / expansion_factor)
+            ROOT.gPad.SetPad(0.01, y_ndc, 0.98, 0.98)
+            #update_pad()
+
+            # draw new pad for ratio on canvas
+            self._canvas.canvas.cd()
+            # base length - ( drawing pad bottom margin * base length / expansion factor )
+            y_ndc = 0.97 - ((1 - ROOT.gPad.GetBottomMargin()) * 0.97 / expansion_factor)
+            self._ratio_pad[pos] = Pad(0.01, 0.01, 0.98, y_ndc)
+
+            # adjust settings, due to different scale
+            self._ratio_pad[pos].SetTopMargin(0.0)
+            self._ratio_pad[pos].SetBottomMargin(0.30)
+            self._ratio_pad[pos].Draw()
+
+            self._ratio_pad[pos].cd()
+
+            add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[pos],pos)
+            self.rootMemory.append(add_hist)
+            add_hist.Draw()
+
+
+
+    #def update_pad(self):
+        #"""Updates the pad and redraws the axis"""
+
+        #if not ROOT.gPad:
+            #print "No active pad."
+            #return
+
+        #ROOT.gPad.Modified()
+        #ROOT.gPad.Update()
+        #ROOT.gPad.RedrawAxis()
+
+
+    def DrawRoot(self):
+        import lib.rootplotlib as rooLib
+
+        rooLib.init()
+
+        self._canvas= Canvas()
+        self._referenceHeight=0.05/self._canvas.GetAbsHNDC() *self._canvas.GetWw() / self._canvas.GetWh()
+        self._AddPlotBelow()
+
+        self._Draw_main_root()
+
+        rnd=rounding(sigdigits=3)
+        lumitext=""
+        if self._lumi_val > 1000:
+            lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._lumi_val/1000.),self._cms_val)
+        else:
+            lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._lumi_val,self._cms_val)
+        deco=rooLib.CmsDecoration(extraText=self._additional_text, additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
+        deco.Draw()
+        self._canvas.Update()
+        self._fig=self._canvas
+
+    def _Draw_main_root(self):
+        print self._canvas.find_all_primitives()
+        drawnObjects=[]
+        same=""
+        if len(self._hist)>0:
+            self._hist[0].Draw("AXIS")
+            drawnObjects.append(self._hist[0])
+            same=" same"
+            hs=HistStack(hists=self._hist)
+            hs.Draw("hist"+same)
+            drawnObjects.append(hs)
+        for sg_hist in self._sig_hist:
+            sg_hist.Draw("hist"+same)
+            drawnObjects.append(sg_hist)
+            same=" same"
+        if self._data:
+            self._data_hist.Draw("E"+same)
+            drawnObjects.append(self._data_hist)
+            same=" same"
+        self._AddRootLegend()
+        if self._logy:
+            self._canvas.SetLogy(True)
+        if self._ymin != -1 and self._ymax != -1:
+            drawnObjects[0].GetYaxis().SetRangeUser(self._ymin,self._ymax)
+        else:
+            maximum=None
+            minimum=None
+            for h in drawnObjects:
+                if maximum is None:
+                    maximum=h.max()
+                    minimum=h.min()
+                else:
+                    if maximum<h.max():
+                        maximum=h.max()
+                    if minimum>h.min():
+                        minimum=h.min()
+            if minimum<=0:
+                minimum=1
+            drawnObjects[0].GetYaxis().SetRangeUser(minimum*0.02,maximum*100.)
+        if self._xmin != -1 and self._xmax != -1:
+            drawnObjects[0].GetXaxis().SetRangeUser(self._xmin,self._xmax)
+        drawnObjects[0].GetXaxis().SetTitle(drawnObjects[0].GetXaxis().GetTitle().replace("$\\mathsf{","").replace("}$",""))
+        print drawnObjects[0].GetXaxis().GetTitle()
+        drawnObjects[0].GetYaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
+        drawnObjects[0].GetXaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
+        drawnObjects[0].GetYaxis().SetTitleOffset(self.axisOffset)
+        
+
+
+        ROOT.gPad.RedrawAxis("g")
+        self.leg.Draw()
 
 
     def _checker(self):
@@ -816,9 +990,16 @@ class plotter():
 
 class position():
     def __init__(self,positiontext="upper right", refference="", isText=False):
+
         self._positiontext=positiontext
-        self._valign=self._positiontext.split(" ")[0]
-        self._align=self._positiontext.split(" ")[1]
+        if not isinstance(positiontext,str):
+            self._definedCoorinates=True
+            self._valign="left"
+            self._align="left"
+        else:
+            self._definedCoorinates=False
+            self._valign=self._positiontext.split(" ")[0]
+            self._align=self._positiontext.split(" ")[1]
         self.addY=0
         self.addX=0
         self._isText=isText
@@ -829,6 +1010,9 @@ class position():
                     "center":0.,
                     "lower":0.,
         }
+        if self._definedCoorinates:
+            self._x=self._positiontext[0]
+            self._y=self._positiontext[1]
 
     def __eq__(self,other):
         return (self._positiontext==other._positiontext)
@@ -853,6 +1037,8 @@ class position():
         return self._positiontext
 
     def getX(self):
+        if self._definedCoorinates:
+            return self._x
         alignDict={
                     "left":0.12,
                     "middle":0.5,
@@ -863,6 +1049,8 @@ class position():
         return self.addX+alignDict[self._align]
 
     def getY(self):
+        if self._definedCoorinates:
+            return self._y
         alignDict={
                     "upper":0.95,
                     "center":0.5,
