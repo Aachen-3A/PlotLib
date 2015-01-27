@@ -67,6 +67,7 @@ class plotter():
         self._error_hist           = []
         self._fig                  = None
         self._useRoot              = useRoot
+        self._allHists=self._hist+self._sig_hist+[self._data_hist]
         self._Set_style(**kwargs)
 
     ## del function
@@ -237,8 +238,8 @@ class plotter():
             matplotlib.rcParams.update({'font.size': 10})
             matplotlib.rcParams.update({'lines.linewidth' : 1})
         #rc('text', usetex=True)
-        self._xaxis_title      = self._hist[0].xaxis.GetTitle()
-        self._yaxis_title      = self._hist[0].yaxis.GetTitle()
+        self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
+        self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
         self._lumi_val         = 42000
         self._cms_val          = 13
         self._additional_text  = 'Preliminary'
@@ -973,7 +974,7 @@ class plotter():
         drawnObjects[0].GetYaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
         drawnObjects[0].GetXaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
         drawnObjects[0].GetYaxis().SetTitleOffset(self.axisOffset)
-        
+
 
 
         ROOT.gPad.RedrawAxis("g")
