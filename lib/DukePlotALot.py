@@ -386,6 +386,11 @@ class plotter():
             text.set_color(self._annotation_text_color)
 
     def _Compiler(self):
+        if len(self._hist) == 0:
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+            self._add_error_bands = False
         if self._add_plots[0] != '':
             self._hist_start = self._add_plots_height[0]
             self._hist_height -= self._add_plots_height[0]
@@ -682,7 +687,20 @@ class plotter():
             ax1.set_yscale('log')
         if self._logx:
             ax1.set_xscale('log')
-        if len(self._hist) == 1:
+        if len(self._hist) == 0:
+            if not self._data and len(self._sig_hist) == 0:
+                print('you have to add some histogram that should be plotted, there are no background, signal or data histograms.')
+            if self._data:
+                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                              markersize = self._marker_size,
+                              marker = self._marker_style,
+                              ecolor = self._marker_color,
+                              markerfacecolor = self._marker_color,
+                              markeredgecolor = self._marker_color,
+                              capthick = self._marker_error_cap_width)
+            if len(self._sig_hist) > 0:
+                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        elif len(self._hist) == 1:
             hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
             if self._data:
                 data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
@@ -692,6 +710,8 @@ class plotter():
                               markerfacecolor = self._marker_color,
                               markeredgecolor = self._marker_color,
                               capthick = self._marker_error_cap_width)
+            if len(self._sig_hist) > 0:
+                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         else:
             hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
             if self._data:
@@ -702,10 +722,10 @@ class plotter():
                               markerfacecolor = self._marker_color,
                               markeredgecolor = self._marker_color,
                               capthick = self._marker_error_cap_width)
+            if len(self._sig_hist) > 0:
+                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
-        if len(self._sig_hist) > 0:
-            rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         if self._ymin != -1 and self._ymax != -1:
             ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
         if self._xmin != -1 and self._xmax != -1:
