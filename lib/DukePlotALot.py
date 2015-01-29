@@ -13,7 +13,7 @@ import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from plotlib import duke_errorbar
 from operator import methodcaller
-from lib.rounding import rounding
+from rounding import rounding
 
 
 
