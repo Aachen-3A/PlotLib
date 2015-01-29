@@ -44,8 +44,11 @@ class plotter():
     # @param[in] sig List of signal histograms (default = [])
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
+    # @param[in] cms double to specify displayed center of mass energy (default = 13 (TeV))
+    # @param[in] lumi double to specify displayed luminosity value (default = 42000 (pb-1))
+    # @param[in] data Bool if data should be plotted (default = False)
     # @param[in] kwargs dict of key word arguments that will be passed to style
-    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, useRoot=False, **kwargs):
+    def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, useRoot=False, cms = 13, lumi = 42000, **kwargs):
         ## style variables
         self._style                = style
         ## BG histograms
@@ -67,6 +70,8 @@ class plotter():
         self._error_hist           = []
         self._fig                  = None
         self._useRoot              = useRoot
+        self._cms_val              = cms
+        self._lumi_val             = lumi
         self._allHists=self._hist+self._sig_hist+[self._data_hist]
         self._Set_style(**kwargs)
 
@@ -240,8 +245,6 @@ class plotter():
         #rc('text', usetex=True)
         self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
         self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
-        self._lumi_val         = 42000
-        self._cms_val          = 13
         self._additional_text  = 'Preliminary'
         self._y_label_offset   = -0.11
         self._error_bands_ecol = ['darkmagenta','darkcyan']
