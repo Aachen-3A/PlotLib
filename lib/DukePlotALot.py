@@ -44,6 +44,9 @@ class plotter():
     # @param[in] sig List of signal histograms (default = [])
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
+    # @param[in] cms double to specify displayed center of mass energy (default = 13 (TeV))
+    # @param[in] lumi double to specify displayed luminosity value (default = 42000 (pb-1))
+    # @param[in] data Bool if data should be plotted (default = False)
     # @param[in] kwargs dict of key word arguments that will be passed to style
     def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, useRoot=False, cms = 13, lumi = 42000, **kwargs):
         ## style variables
