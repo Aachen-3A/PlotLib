@@ -1,13 +1,13 @@
 #!/bin/env python
 
-from lib.DukePlotALot import *
-from lib.plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer
+from DukePlotALot import *
+from plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer
 import matplotlib.pyplot as plt
-from lib.configobj import ConfigObj
+from configobj import ConfigObj
 try:
     from collections import OrderedDict
 except ImportError:
-    from lib.ordered import OrderedDict
+    from ordered import OrderedDict
 
 from rootpy.plotting.views import ScaleView
 

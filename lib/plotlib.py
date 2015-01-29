@@ -10,7 +10,7 @@ import logging; logging.basicConfig(level=logging.DEBUG)
 from rootpy import log
 from rounding import rounding
 import re
-from lib.configobj import ConfigObj
+from configobj import ConfigObj
 
 log.basic_config_colorized()
 class NoDictMessagesFilter(logging.Filter):
