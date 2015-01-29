@@ -930,7 +930,7 @@ class plotter():
 
 
     def DrawRoot(self):
-        import lib.rootplotlib as rooLib
+        import rootplotlib as rooLib
 
         rooLib.init()
 
