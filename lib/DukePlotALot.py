@@ -438,6 +438,10 @@ class plotter():
             self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio()
+        elif plot == 'SoverSplusB':
+            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Signal}{\sqrt{Signal + MC}}}$'
+            self._add_plots_ref_line[pos] = 0.
+            return self._Calc_SoverSpB()            
         else:
             print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
 
@@ -555,6 +559,7 @@ class plotter():
         err = []
         for j in range(0,len(self._error_hist)):
             x_i = []
+            x_i = []
             y_i = []
             err_i = []
             for i in range(signi.GetNbinsX()+1):
@@ -577,6 +582,47 @@ class plotter():
             y.append(np.array(y_i))
             err.append(np.array(err_i))
         return signi, x, y, err
+        
+    def _Calc_SoverSpB(self):
+        sum_hist = self._hist[0].Clone('sum_hist')
+        for i in range(1,len(self._hist)):
+            sum_hist.Add(self._hist[i])
+        soverspb = self._sig_hist[0].Clone('soverspb')
+        for i in range(soverspb.GetNbinsX()+1):
+            if self._sig_hist[0].GetBinContent(i)!=0 and sum_hist.GetBinContent(i)!=0:
+                value = float(self._sig_hist[0].GetBinContent(i))
+                denominator = np.sqrt(float(self._sig_hist[0].GetBinContent(i) + sum_hist.GetBinContent(i)))
+                if denominator!=0:
+                    value /= denominator
+                    soverspb.SetBinContent(i,value)
+                    soverspb.SetBinError(i,0)
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(soverspb.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._error_bands_center == 'ref':
+                    y_i.append(0.)
+                    y_i.append(0.)
+                elif self._error_bands_center == 'val':
+                    y_i.append(soverspb.GetBinContent(i))
+                    y_i.append(soverspb.GetBinContent(i))
+                denominator = np.sqrt(float(self._sig_hist[0].GetBinContent(i) + sum_hist.GetBinContent(i)))
+                if denominator!=0:
+                    err_i.append(0.)
+                    err_i.append(0.)
+                else:
+                    err_i.append(0.)
+                    err_i.append(0.)
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
+        return soverspb, x, y, err            
 
     def _show_only_some(self, x, pos):
         s = str(int(x))
