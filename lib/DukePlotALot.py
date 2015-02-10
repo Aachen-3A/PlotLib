@@ -157,7 +157,7 @@ class plotter():
                 self._add_plots_labels[pos] = plot
             else:
                 self._add_plots_labels[pos] = label
-            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height, cmsPositon = self.Get_cmsTextPosition().getText(), legendPosition = self.Get_LegendPosition().getText())
+            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height, cmsPositon = self._Style_cont.Get_cmsTextPosition().getText(), legendPosition = self._Style_cont.Get_LegendPosition().getText())
         else:
             print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
 
@@ -237,11 +237,11 @@ class plotter():
 
     def _Add_legend(self):
         if self._add_plots[0] != '':
-            self.Get_LegendPosition().addYspace(-(0.85 * self._add_plots_height[0] / 100.))
+            self._Style_cont.Get_LegendPosition().addYspace(-(0.85 * self._add_plots_height[0] / 100.))
         if self._add_plots[1] != '':
-            self.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[1] / 100.)
+            self._Style_cont.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[1] / 100.)
         if self._add_plots[2] != '':
-            self.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[2] / 100.)
+            self._Style_cont.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[2] / 100.)
 
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
@@ -602,7 +602,7 @@ class plotter():
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
                           markersize = self._Style_cont.Get_marker_size(),
-                          label = self._Style_cont._add_plots_labels[0],
+                          label = self._add_plots_labels[0],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
@@ -702,7 +702,7 @@ class plotter():
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
                           markersize = self._Style_cont.Get_marker_size(),
-                          label = self._Style_cont._add_plots_labels[1],
+                          label = self._add_plots_labels[1],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
@@ -748,7 +748,7 @@ class plotter():
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
                           markersize = self._Style_cont.Get_marker_size(),
-                          label = self._Style_cont._add_plots_labels[2],
+                          label = self._add_plots_labels[2],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
