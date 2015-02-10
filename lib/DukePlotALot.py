@@ -74,6 +74,7 @@ class plotter():
         self._allHists=self._hist+self._sig_hist+[self._data_hist]
         self._Style_cont = style
         self._useRoot = self._Style_cont.Get_useRoot()
+        self._Style_cont.AddAxisTitle(self._allHists[0])
         self._Style_cont.InitStyle()
 
     ## del function

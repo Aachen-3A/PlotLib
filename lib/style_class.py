@@ -12,10 +12,6 @@ class style_container():
         self._useRoot = useRoot
 
         #rc('text', usetex=True)
-        # self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
-        # self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
-        self._xaxis_title      = 'bla'
-        self._yaxis_title      = '#epsilon'
         self._additional_text  = 'Preliminary'
         self._y_label_offset   = -0.11
         self._error_bands_ecol = ['darkmagenta','darkcyan']
@@ -34,6 +30,15 @@ class style_container():
 
     def __del__(self):
         pass
+
+    def AddAxisTitle(self, hist):
+        try:
+            self._xaxis_title      = hist.xaxis.GetTitle()
+            self._yaxis_title      = hist.yaxis.GetTitle()
+        except:
+            print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
+            self._xaxis_title      = 'bla'
+            self._yaxis_title      = '#epsilon'
 
     def InitStyle(self, addplots = ['', '', ''], addheights = [0, 0, 0], cmsPositon = "upper right", legendPosition = "upper right"):
         self.addplots = addplots
