@@ -198,12 +198,13 @@ class plotter():
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
-        self._logx = logx
-        self._logy = logy
-        self._ymin = ymin
-        self._ymax = ymax
-        self._xmin = xmin
-        self._xmax = xmax
+        self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax)
+        # self._logx = logx
+        # self._logy = logy
+        # self._ymin = ymin
+        # self._ymax = ymax
+        # self._xmin = xmin
+        # self._xmax = xmax
 
     ## Function to save the complete plot
     #
@@ -224,109 +225,6 @@ class plotter():
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
-    def _Set_style(self,cmsPositon="upper right",legendPosition="upper right"):
-        if self._useRoot:
-            self.cmsTextFont          = 61   # Fonts
-            self.lumiTextFont         = 42
-            self.extraTextFont        = 52
-            self.additionalTextFont   = 42
-            self.cmsTextSize          = 0.9  #Text sizes
-            self.lumiTextSize         = 0.6
-            self.extraTextSize        = 0.76*self.cmsTextSize
-            self.additionalTextSize   = 1.0*self.extraTextSize
-            self.legendTextSize       = self.extraTextSize*0.8
-            self.lumiTextOffset       = 0.2
-            self.extraTextOffset      = 2.5  # only used in outOfFrame version
-            self.axisTextSize         = 0.9
-            self.axisOffset           = 1.3
-            self._ratio_pad           ={}
-            self.rootMemory           =[]
-        else:
-            matplotlib.rcParams.update({'font.size': 10})
-            matplotlib.rcParams.update({'lines.linewidth' : 1})
-        #rc('text', usetex=True)
-        # self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
-        # self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
-        self._xaxis_title      = 'bla'
-        self._yaxis_title      = '#epsilon'
-        self._additional_text  = 'Preliminary'
-        self._y_label_offset   = -0.11
-        self._error_bands_ecol = ['darkmagenta','darkcyan']
-        self._error_bands_fcol = ['m','cyan']
-        self._error_bands_alph = 0.7
-        self._error_bands_labl = ['Sys. uncert. 1','Sys. uncert. 2']
-        self._error_bands_center = 'ref'
-        self._error_stacking = 'No'
-        self._spine_line_width = 0.5
-        self._logx = False
-        self._logy = True
-        self._ymin = -1
-        self._ymax = -1
-        self._xmin = -1
-        self._xmax = -1
-        self.cmsTextPosition=position(cmsPositon,isText=True)
-        self.LegendPosition=position(legendPosition)
-        if self._style == 'CMS':
-            self._add_cms_text           = True
-            self._add_lumi_text          = True
-            self._label_text_color       = 'black'
-            self._annotation_text_color  = 'black'
-            self._bg_color               = 'w'
-            self._ref_line_color         = 'blue'
-            self._spine_color            = 'black'
-            self._tick_color             = 'black'
-            self._marker_style           = 'o'
-            self._marker_size            = 3
-            self._marker_color           = 'black'
-            self._marker_error_cap_width = 0
-            self._cms_text_alignment     = 'row'
-            self._show_minor_tick_labels = False
-            self._legend_font_size       = 9
-            if self._add_plots[0] != '':
-                self.cmsTextPosition.addYspace(  -0.9 * self._add_plots_height[0] / 100.)
-            if self._add_plots[1] != '':
-                self.cmsTextPosition.addYspace(  0.9 * self._add_plots_height[1] / 100.)
-            if self._add_plots[2] != '':
-                self.cmsTextPosition.addYspace(  0.9 * self._add_plots_height[2] / 100.)
-        elif self._style == 'Plain':
-            self._add_cms_text           = False
-            self._add_lumi_text          = False
-            self._label_text_color       = 'black'
-            self._annotation_text_color  = 'black'
-            self._bg_color               = 'w'
-            self._ref_line_color         = 'blue'
-            self._spine_color            = 'black'
-            self._tick_color             = 'black'
-            self._marker_style           = 'o'
-            self._marker_size            = 4
-            self._marker_color           = 'black'
-            self._marker_error_cap_width = 1
-            self._cms_text_alignment     = 'row'
-            self._show_minor_tick_labels = True
-            self._legend_font_size       = 10
-            if self._add_plots[0] != '':
-                self.cmsTextPosition.addYspace(  -0.8 * self._add_plots_height[0] / 100.)
-            if self._add_plots[1] != '':
-                self.cmsTextPosition.addYspace(  0.8 * self._add_plots_height[1] / 100.)
-            if self._add_plots[2] != '':
-                self.cmsTextPosition.addYspace(  0.8 * self._add_plots_height[2] / 100.)
-        elif self._style == 'Cool':
-            self._add_cms_text           = True
-            self._add_lumi_text          = True
-            self._label_text_color       = 'white'
-            self._annotation_text_color  = 'white'
-            self._bg_color               = '#07000d'
-            self._ref_line_color         = 'y'
-            self._spine_color            = '#5998ff'
-            self._tick_color             = 'w'
-            self._marker_style           = 'o'
-            self._marker_size            = 3
-            self._marker_color           = 'lightgray'
-            self._marker_error_cap_width = 0
-            self._cms_text_alignment     = 'column'
-            self._show_minor_tick_labels = False
-            self._legend_font_size       = 9
-
     def _Write_additional_text(self):
         if self._Style_cont._add_lumi_text:
             self._lumi_val=float(self._lumi_val)
