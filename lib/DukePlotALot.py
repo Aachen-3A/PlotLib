@@ -243,8 +243,10 @@ class plotter():
             matplotlib.rcParams.update({'font.size': 10})
             matplotlib.rcParams.update({'lines.linewidth' : 1})
         #rc('text', usetex=True)
-        self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
-        self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
+        # self._xaxis_title      = self._allHists[0].xaxis.GetTitle()
+        # self._yaxis_title      = self._allHists[0].yaxis.GetTitle()
+        self._xaxis_title      = 'bla'
+        self._yaxis_title      = '#epsilon'
         self._additional_text  = 'Preliminary'
         self._y_label_offset   = -0.11
         self._error_bands_ecol = ['darkmagenta','darkcyan']
