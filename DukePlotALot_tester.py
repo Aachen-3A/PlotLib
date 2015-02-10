@@ -1,6 +1,7 @@
 #!/bin/env python
 
-from lib.DukePlotALot import *
+from DukePlotALot import *
+import style_class as sc
 
 def main():
     bag_hist, sig_hist, dat_hist, sys_hist = create_test_histos()
@@ -27,7 +28,9 @@ def main():
     sys_hist_2 = sys_hist.Clone(title='sys2')
     sys_hist_2.Scale(0.5)
 
-    test = plotter(hist=[bag_hist_2,bag_hist], sig = [sig_hist],style='CMS')
+    hist_style = sc.style_container(style = 'CMS', useRoot = False)
+
+    test = plotter(hist=[bag_hist_2,bag_hist], sig = [sig_hist], cms = 13, lumi = 19700, style=hist_style)
     test.Add_data(dat_hist)
     test.Add_plot('Signi',pos=0, height=15)
     test.Add_plot('Ratio',pos=1, height=15)

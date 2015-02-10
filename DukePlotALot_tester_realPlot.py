@@ -11,6 +11,8 @@ except ImportError:
 
 from rootpy.plotting.views import ScaleView
 
+import style_class as sc
+
 def main():
 
     basedir="/user/padeken/out/output2014_12_16_14_49/merged"
@@ -113,6 +115,8 @@ def main():
     bghists.initStyle(style="bg")
     sghist.initStyle(style="sg")
 
+    hist_style = sc.style_container(style = 'CMS', useRoot = False)
+
     for hist in hists:
         histContainer.getHist(hist)
 
@@ -132,7 +136,7 @@ def main():
         fakeData.SetTitle("pseudo data")
         fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
 
-        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style='CMS',cmsPositon="upper left")
+        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
 
 
 
@@ -162,7 +166,7 @@ def main():
     fakeData=sgPbghist.empty_clone()
     fakeData.SetTitle("pseudo data")
     fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
-    test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style='Cool',cmsPositon="upper left")
+    test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
     test.Add_data(fakeData)
     test.Add_plot('DiffRatio',pos=1, height=15)
     test._cms_val=8
