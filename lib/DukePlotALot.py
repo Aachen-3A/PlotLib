@@ -73,7 +73,6 @@ class plotter():
         self._cms_val              = cms
         self._lumi_val             = lumi
         self._allHists=self._hist+self._sig_hist+[self._data_hist]
-        # self._Set_style(**kwargs)
         self._Style_cont = style_container(istyle = style, useRoot = useRoot, addplots = self._add_plots, addheights = self._add_plots_height, **kwargs)
 
     ## del function
@@ -158,7 +157,6 @@ class plotter():
             else:
                 self._add_plots_labels[pos] = label
             self._Style_cont = style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
-            # self._Set_style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
         else:
             print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
 
@@ -199,12 +197,6 @@ class plotter():
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
         self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax)
-        # self._logx = logx
-        # self._logy = logy
-        # self._ymin = ymin
-        # self._ymax = ymax
-        # self._xmin = xmin
-        # self._xmax = xmax
 
     ## Function to save the complete plot
     #
