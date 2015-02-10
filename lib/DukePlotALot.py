@@ -15,7 +15,7 @@ from plotlib import duke_errorbar
 from operator import methodcaller
 from rounding import rounding
 
-
+from style_class import *
 
 ##@class plotter
 # Class to collect matplotlib functions
@@ -50,7 +50,7 @@ class plotter():
     # @param[in] kwargs dict of key word arguments that will be passed to style
     def __init__(self, style = 'Plain', hist = [], sig = [], data_hist = None, data = False, useRoot=False, cms = 13, lumi = 42000, **kwargs):
         ## style variables
-        self._style                = style
+        # self._style                = style
         ## BG histograms
         self._hist                 = hist
         self._hist_height          = 100
@@ -73,7 +73,8 @@ class plotter():
         self._cms_val              = cms
         self._lumi_val             = lumi
         self._allHists=self._hist+self._sig_hist+[self._data_hist]
-        self._Set_style(**kwargs)
+        # self._Set_style(**kwargs)
+        self._Style_cont = style_container(istyle = style, useRoot = useRoot, addplots = self._add_plots, addheights = self._add_plots_height, **kwargs)
 
     ## del function
     #
@@ -156,7 +157,8 @@ class plotter():
                 self._add_plots_labels[pos] = plot
             else:
                 self._add_plots_labels[pos] = label
-            self._Set_style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
+            self._Style_cont = style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
+            # self._Set_style(cmsPositon=self.cmsTextPosition.getText(), legendPosition= self.LegendPosition.getText())
         else:
             print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
 
@@ -326,19 +328,19 @@ class plotter():
             self._legend_font_size       = 9
 
     def _Write_additional_text(self):
-        if self._add_lumi_text:
+        if self._Style_cont._add_lumi_text:
             self._lumi_val=float(self._lumi_val)
             if self._lumi_val > 1000:
-                self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._annotation_text_color, size=12)
+                self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont._annotation_text_color, size=12)
             else:
-                self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._annotation_text_color, size=12)
-        if self._add_cms_text:
-            if self._cms_text_alignment == 'row':
-                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
-                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY()-0.03, self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
-            elif self._cms_text_alignment == 'column':
-                self._fig.text(self.cmsTextPosition.getX(), self.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._annotation_text_color, size=14, weight='bold')
-                self._fig.text(self.cmsTextPosition.getX() + 0.08, self.cmsTextPosition.getY(), self._additional_text, va='bottom', ha='left', color=self._annotation_text_color, size=10, style = 'italic')
+                self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont._annotation_text_color, size=12)
+        if self._Style_cont._add_cms_text:
+            if self._Style_cont._cms_text_alignment == 'row':
+                self._fig.text(self._Style_cont.cmsTextPosition.getX(), self._Style_cont.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont._annotation_text_color, size=14, weight='bold')
+                self._fig.text(self._Style_cont.cmsTextPosition.getX(), self._Style_cont.cmsTextPosition.getY()-0.03, self._Style_cont._additional_text, va='bottom', ha='left', color=self._Style_cont._annotation_text_color, size=10, style = 'italic')
+            elif self._Style_cont._cms_text_alignment == 'column':
+                self._fig.text(self._Style_cont.cmsTextPosition.getX(), self._Style_cont.cmsTextPosition.getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont._annotation_text_color, size=14, weight='bold')
+                self._fig.text(self._Style_cont.cmsTextPosition.getX() + 0.08, self._Style_cont.cmsTextPosition.getY(), self._Style_cont._additional_text, va='bottom', ha='left', color=self._Style_cont._annotation_text_color, size=10, style = 'italic')
             else:
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
@@ -350,8 +352,8 @@ class plotter():
         if self._add_plots[2] != '':
             self.LegendPosition.addYspace(  0.8 * self._add_plots_height[2] / 100.)
 
-        if self.LegendPosition==self.cmsTextPosition:
-            self.LegendPosition.addYspace(self.cmsTextPosition.getY()-self.LegendPosition.getY()-0.02)
+        if self._Style_cont.LegendPosition==self._Style_cont.cmsTextPosition:
+            self._Style_cont.LegendPosition.addYspace(self._Style_cont.cmsTextPosition.getY()-self._Style_cont.LegendPosition.getY()-0.02)
         handle_list = []
         label_list = []
         for item in self._hist:
@@ -372,23 +374,23 @@ class plotter():
                 handle_list.append(col_patch)
                 label_list.append('syst. sum')
         if self._data:
-            dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._marker_size,
-                              marker = self._marker_style,
-                              color = self._marker_color,
-                              capthick = self._marker_error_cap_width)
+            dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont._marker_size,
+                              marker = self._Style_cont._marker_style,
+                              color = self._Style_cont._marker_color,
+                              capthick = self._Style_cont._marker_error_cap_width)
             handle_list.append(dat_line)
             label_list.append(self._data_hist.GetTitle())
 
         self.leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
-                    bbox_to_anchor=(self.LegendPosition.getX(),self.LegendPosition.getY()),
+                    bbox_to_anchor=(self._Style_cont.LegendPosition.getX(),self._Style_cont.LegendPosition.getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
                     frameon = False,
-                    fontsize = self._legend_font_size)
+                    fontsize = self._Style_cont._legend_font_size)
 
         for text in self.leg.get_texts():
-            text.set_color(self._annotation_text_color)
+            text.set_color(self._Style_cont._annotation_text_color)
 
     def _Compiler(self):
         if len(self._hist) == 0:
@@ -406,7 +408,7 @@ class plotter():
         # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
         #matplotlib draws no errorbars in logy when the lower error = 0
-        if self._logy and self._data:
+        if self._Style_cont._logy and self._data:
             for ibin in self._data_hist.bins():
                 if ibin.error==1:
                     ibin.error=1.-1e-12
@@ -695,60 +697,60 @@ class plotter():
     def _Draw_0(self, axis1):
         ## Plot a derived distribution on top of the main distribution on axis 0
         if self._add_plots[0] != '':
-            ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._bg_color)
-            ax0.spines['bottom'].set_color(self._spine_color)
-            ax0.spines['bottom'].set_linewidth(self._spine_line_width)
-            ax0.spines['top'].set_color(self._spine_color)
-            ax0.spines['top'].set_linewidth(self._spine_line_width)
-            ax0.spines['left'].set_color(self._spine_color)
-            ax0.spines['left'].set_linewidth(self._spine_line_width)
-            ax0.spines['right'].set_color(self._spine_color)
-            ax0.spines['right'].set_linewidth(self._spine_line_width)
-            ax0.tick_params(axis='y', colors = self._tick_color)
-            ax0.tick_params(axis='x', colors = self._tick_color)
+            ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._Style_cont._bg_color)
+            ax0.spines['bottom'].set_color(self._Style_cont._spine_color)
+            ax0.spines['bottom'].set_linewidth(self._Style_cont._spine_line_width)
+            ax0.spines['top'].set_color(self._Style_cont._spine_color)
+            ax0.spines['top'].set_linewidth(self._Style_cont._spine_line_width)
+            ax0.spines['left'].set_color(self._Style_cont._spine_color)
+            ax0.spines['left'].set_linewidth(self._Style_cont._spine_line_width)
+            ax0.spines['right'].set_color(self._Style_cont._spine_color)
+            ax0.spines['right'].set_linewidth(self._Style_cont._spine_line_width)
+            ax0.tick_params(axis='y', colors = self._Style_cont._tick_color)
+            ax0.tick_params(axis='x', colors = self._Style_cont._tick_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
-                          markersize = self._marker_size,
-                          label = self._add_plots_labels[0],
-                          marker = self._marker_style,
-                          ecolor = self._marker_color,
-                          markerfacecolor = self._marker_color,
-                          markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width,
+                          markersize = self._Style_cont._marker_size,
+                          label = self._Style_cont._add_plots_labels[0],
+                          marker = self._Style_cont._marker_style,
+                          ecolor = self._Style_cont._marker_color,
+                          markerfacecolor = self._Style_cont._marker_color,
+                          markeredgecolor = self._Style_cont._marker_color,
+                          capthick = self._Style_cont._marker_error_cap_width,
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax0, x, y, err)
             ax0.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
-            if self._xmin != -1 and self._xmax != -1:
-                ax0.set_xlim(xmin = self._xmin, xmax = self._xmax)
-            ax0.axhline(self._add_plots_ref_line[0], color = self._ref_line_color)
-            ax0.set_ylabel(self._add_plots_labels[0], color = self._label_text_color, va='top', ha='left')
-            ax0.yaxis.set_label_coords(self._y_label_offset,1.)
+            if self._Style_cont._xmin != -1 and self._Style_cont._xmax != -1:
+                ax0.set_xlim(xmin = self._Style_cont._xmin, xmax = self._Style_cont._xmax)
+            ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont._ref_line_color)
+            ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont._label_text_color, va='top', ha='left')
+            ax0.yaxis.set_label_coords(self._Style_cont._y_label_offset,1.)
             ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(ax0.get_xticklabels(), visible=False)
             return ax0
         return None
 
     def _Draw_main(self):
-        self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._bg_color)
+        self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont._bg_color)
         ## Plot the main distribution on axis 1
-        ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._bg_color)
-        if self._logy:
+        ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont._bg_color)
+        if self._Style_cont._logy:
             ax1.set_yscale('log')
-        if self._logx:
+        if self._Style_cont._logx:
             ax1.set_xscale('log')
         if len(self._hist) == 0:
             if not self._data and len(self._sig_hist) == 0:
                 print('you have to add some histogram that should be plotted, there are no background, signal or data histograms.')
             if self._data:
                 data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._marker_size,
-                              marker = self._marker_style,
-                              ecolor = self._marker_color,
-                              markerfacecolor = self._marker_color,
-                              markeredgecolor = self._marker_color,
-                              capthick = self._marker_error_cap_width)
+                              markersize = self._Style_cont._marker_size,
+                              marker = self._Style_cont._marker_style,
+                              ecolor = self._Style_cont._marker_color,
+                              markerfacecolor = self._Style_cont._marker_color,
+                              markeredgecolor = self._Style_cont._marker_color,
+                              capthick = self._Style_cont._marker_error_cap_width)
             if len(self._sig_hist) > 0:
                 rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         elif len(self._hist) == 1:
@@ -777,73 +779,73 @@ class plotter():
                 rplt.hist(self._sig_hist, stacked = False, axes = ax1)
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
-        if self._ymin != -1 and self._ymax != -1:
-            ax1.set_ylim(ymin = self._ymin, ymax = self._ymax)
-        if self._xmin != -1 and self._xmax != -1:
-            ax1.set_xlim(xmin = self._xmin, xmax = self._xmax)
-        ax1.set_ylabel(self._yaxis_title, color=self._label_text_color, va='top', ha='left')
-        ax1.yaxis.set_label_coords(self._y_label_offset,0.9)
+        if self._Style_cont._ymin != -1 and self._Style_cont._ymax != -1:
+            ax1.set_ylim(ymin = self._Style_cont._ymin, ymax = self._Style_cont._ymax)
+        if self._Style_cont._xmin != -1 and self._Style_cont._xmax != -1:
+            ax1.set_xlim(xmin = self._Style_cont._xmin, xmax = self._Style_cont._xmax)
+        ax1.set_ylabel(self._Style_cont._yaxis_title, color=self._Style_cont._label_text_color, va='top', ha='left')
+        ax1.yaxis.set_label_coords(self._Style_cont._y_label_offset,0.9)
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
-        if self._show_minor_tick_labels:
+            plt.xlabel(self._Style_cont._xaxis_title, color = self._Style_cont._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
+        if self._Style_cont._show_minor_tick_labels:
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
             ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
         #ax1.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-        ax1.spines['bottom'].set_color(self._spine_color)
-        ax1.spines['bottom'].set_linewidth(self._spine_line_width)
-        ax1.spines['top'].set_color(self._spine_color)
-        ax1.spines['top'].set_linewidth(self._spine_line_width)
-        ax1.spines['left'].set_color(self._spine_color)
-        ax1.spines['left'].set_linewidth(self._spine_line_width)
-        ax1.spines['right'].set_color(self._spine_color)
-        ax1.spines['right'].set_linewidth(self._spine_line_width)
-        ax1.tick_params(axis = 'y', colors = self._tick_color)
-        ax1.tick_params(axis = 'x', colors = self._tick_color)
+        ax1.spines['bottom'].set_color(self._Style_cont._spine_color)
+        ax1.spines['bottom'].set_linewidth(self._Style_cont._spine_line_width)
+        ax1.spines['top'].set_color(self._Style_cont._spine_color)
+        ax1.spines['top'].set_linewidth(self._Style_cont._spine_line_width)
+        ax1.spines['left'].set_color(self._Style_cont._spine_color)
+        ax1.spines['left'].set_linewidth(self._Style_cont._spine_line_width)
+        ax1.spines['right'].set_color(self._Style_cont._spine_color)
+        ax1.spines['right'].set_linewidth(self._Style_cont._spine_line_width)
+        ax1.tick_params(axis = 'y', colors = self._Style_cont._tick_color)
+        ax1.tick_params(axis = 'x', colors = self._Style_cont._tick_color)
         self._Add_legend()
         return ax1
 
     def _Draw_2(self, axis1):
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
-            ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._bg_color)
+            ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._Style_cont._bg_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
-                          markersize = self._marker_size,
-                          label = self._add_plots_labels[1],
-                          marker = self._marker_style,
-                          ecolor = self._marker_color,
-                          markerfacecolor = self._marker_color,
-                          markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width,
+                          markersize = self._Style_cont._marker_size,
+                          label = self._Style_cont._add_plots_labels[1],
+                          marker = self._Style_cont._marker_style,
+                          ecolor = self._Style_cont._marker_color,
+                          markerfacecolor = self._Style_cont._marker_color,
+                          markeredgecolor = self._Style_cont._marker_color,
+                          capthick = self._Style_cont._marker_error_cap_width,
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax2, x, y, err)
             ax2.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
-            if self._xmin != -1 and self._xmax != -1:
-                ax2.set_xlim(xmin = self._xmin, xmax = self._xmax)
-            ax2.axhline(self._add_plots_ref_line[1], color = self._ref_line_color)
-            ax2.set_ylabel(self._add_plots_labels[1], color = self._label_text_color, va='top', ha='left')
-            ax2.yaxis.set_label_coords(self._y_label_offset,1.)
-            ax2.spines['bottom'].set_color(self._spine_color)
-            ax2.spines['bottom'].set_linewidth(self._spine_line_width)
-            ax2.spines['top'].set_color(self._spine_color)
-            ax2.spines['top'].set_linewidth(self._spine_line_width)
-            ax2.spines['left'].set_color(self._spine_color)
-            ax2.spines['left'].set_linewidth(self._spine_line_width)
-            ax2.spines['right'].set_color(self._spine_color)
-            ax2.spines['right'].set_linewidth(self._spine_line_width)
-            ax2.tick_params(axis = 'y', colors = self._tick_color)
-            ax2.tick_params(axis = 'x', colors = self._tick_color)
+            if self._Style_cont._xmin != -1 and self._Style_cont._xmax != -1:
+                ax2.set_xlim(xmin = self._Style_cont._xmin, xmax = self._Style_cont._xmax)
+            ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont._ref_line_color)
+            ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont._label_text_color, va='top', ha='left')
+            ax2.yaxis.set_label_coords(self._Style_cont._y_label_offset,1.)
+            ax2.spines['bottom'].set_color(self._Style_cont._spine_color)
+            ax2.spines['bottom'].set_linewidth(self._Style_cont._spine_line_width)
+            ax2.spines['top'].set_color(self._Style_cont._spine_color)
+            ax2.spines['top'].set_linewidth(self._Style_cont._spine_line_width)
+            ax2.spines['left'].set_color(self._Style_cont._spine_color)
+            ax2.spines['left'].set_linewidth(self._Style_cont._spine_line_width)
+            ax2.spines['right'].set_color(self._Style_cont._spine_color)
+            ax2.spines['right'].set_linewidth(self._Style_cont._spine_line_width)
+            ax2.tick_params(axis = 'y', colors = self._Style_cont._tick_color)
+            ax2.tick_params(axis = 'x', colors = self._Style_cont._tick_color)
             if self._add_plots[2] != '':
                 plt.setp(ax2.get_xticklabels(), visible = False)
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-                plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
+                plt.xlabel(self._Style_cont._xaxis_title, color = self._Style_cont._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
             else:
                 #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-                plt.xlabel(self._xaxis_title, color=self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
+                plt.xlabel(self._Style_cont._xaxis_title, color=self._Style_cont._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
             plt.setp(axis1.get_xticklabels(), visible = False)
             return ax2
         return None
@@ -851,40 +853,40 @@ class plotter():
     def _Draw_3(self, axis1):
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if self._add_plots[2] != '':
-            ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._bg_color)
+            ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._Style_cont._bg_color)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
-                          markersize = self._marker_size,
-                          label = self._add_plots_labels[2],
-                          marker = self._marker_style,
-                          ecolor = self._marker_color,
-                          markerfacecolor = self._marker_color,
-                          markeredgecolor = self._marker_color,
-                          capthick = self._marker_error_cap_width,
+                          markersize = self._Style_cont._marker_size,
+                          label = self._Style_cont._add_plots_labels[2],
+                          marker = self._Style_cont._marker_style,
+                          ecolor = self._Style_cont._marker_color,
+                          markerfacecolor = self._Style_cont._marker_color,
+                          markeredgecolor = self._Style_cont._marker_color,
+                          capthick = self._Style_cont._marker_error_cap_width,
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(ax3, x, y, err)
             ax3.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
-            if self._xmin != -1 and self._xmax != -1:
-                ax3.set_xlim(xmin = self._xmin, xmax = self._xmax)
-            ax3.axhline(self._add_plots_ref_line[2], color = self._ref_line_color)
-            ax3.set_ylabel(self._add_plots_labels[2], color = self._label_text_color, va = 'top', ha = 'left')
-            ax3.yaxis.set_label_coords(self._y_label_offset,1.)
+            if self._Style_cont._xmin != -1 and self._Style_cont._xmax != -1:
+                ax3.set_xlim(xmin = self._Style_cont._xmin, xmax = self._Style_cont._xmax)
+            ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont._ref_line_color)
+            ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont._label_text_color, va = 'top', ha = 'left')
+            ax3.yaxis.set_label_coords(self._Style_cont._y_label_offset,1.)
             #ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-            ax3.spines['bottom'].set_color(self._spine_color)
-            ax3.spines['bottom'].set_linewidth(self._spine_line_width)
-            ax3.spines['top'].set_color(self._spine_color)
-            ax3.spines['top'].set_linewidth(self._spine_line_width)
-            ax3.spines['left'].set_color(self._spine_color)
-            ax3.spines['left'].set_linewidth(self._spine_line_width)
-            ax3.spines['right'].set_color(self._spine_color)
-            ax3.spines['right'].set_linewidth(self._spine_line_width)
-            ax3.tick_params(axis = 'y', colors = self._tick_color)
-            ax3.tick_params(axis = 'x', colors = self._tick_color)
+            ax3.spines['bottom'].set_color(self._Style_cont._spine_color)
+            ax3.spines['bottom'].set_linewidth(self._Style_cont._spine_line_width)
+            ax3.spines['top'].set_color(self._Style_cont._spine_color)
+            ax3.spines['top'].set_linewidth(self._Style_cont._spine_line_width)
+            ax3.spines['left'].set_color(self._Style_cont._spine_color)
+            ax3.spines['left'].set_linewidth(self._Style_cont._spine_line_width)
+            ax3.spines['right'].set_color(self._Style_cont._spine_color)
+            ax3.spines['right'].set_linewidth(self._Style_cont._spine_line_width)
+            ax3.tick_params(axis = 'y', colors = self._Style_cont._tick_color)
+            ax3.tick_params(axis = 'x', colors = self._Style_cont._tick_color)
             plt.setp(axis1.get_xticklabels(), visible = False)
-            plt.xlabel(self._xaxis_title, color = self._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
+            plt.xlabel(self._Style_cont._xaxis_title, color = self._Style_cont._label_text_color, position = (1., -0.1), va = 'top', ha = 'right')
             return ax3
         return None
 
@@ -910,14 +912,14 @@ class plotter():
         plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
     def _AddRootLegend(self):
-        if self.LegendPosition==self.cmsTextPosition:
-            self.LegendPosition.addYspace(self.cmsTextPosition.getY()-self.LegendPosition.getY()-0.02)
+        if self._Style_cont.LegendPosition==self._Style_cont.cmsTextPosition:
+            self._Style_cont.LegendPosition.addYspace(self._Style_cont.cmsTextPosition.getY()-self._Style_cont.LegendPosition.getY()-0.02)
 
         numberOfEntries=len(self._hist)+len(self._sig_hist)
         if self._data:
             numberOfEntries+=1
-        textSize=self.legendTextSize*self._referenceHeight
-        self.leg = Legend(numberOfEntries,rightmargin=1.-self.LegendPosition.getX(),topmargin=1.-self.LegendPosition.getY(),textfont=42,textsize=textSize,entryheight=textSize,entrysep=textSize*0.1)
+        textSize=self._Style_cont.legendTextSize*self._referenceHeight
+        self.leg = Legend(numberOfEntries,rightmargin=1.-self._Style_cont.LegendPosition.getX(),topmargin=1.-self._Style_cont.LegendPosition.getY(),textfont=42,textsize=textSize,entryheight=textSize,entrysep=textSize*0.1)
         self.leg.SetFillStyle(0)
         self.leg.SetBorderSize(0)
         self.leg.SetFillColor(ROOT.kWhite)
@@ -994,7 +996,7 @@ class plotter():
             lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._lumi_val/1000.),self._cms_val)
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._lumi_val,self._cms_val)
-        deco=rooLib.CmsDecoration(extraText=self._additional_text, additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
+        deco=rooLib.CmsDecoration(extraText=self._Style_cont._additional_text, additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
         self._fig=self._canvas
@@ -1019,10 +1021,10 @@ class plotter():
             drawnObjects.append(self._data_hist)
             same=" same"
         self._AddRootLegend()
-        if self._logy:
+        if self._Style_cont._logy:
             self._canvas.SetLogy(True)
-        if self._ymin != -1 and self._ymax != -1:
-            drawnObjects[0].GetYaxis().SetRangeUser(self._ymin,self._ymax)
+        if self._Style_cont._ymin != -1 and self._Style_cont._ymax != -1:
+            drawnObjects[0].GetYaxis().SetRangeUser(self._Style_cont._ymin,self._Style_cont._ymax)
         else:
             maximum=None
             minimum=None
@@ -1038,13 +1040,13 @@ class plotter():
             if minimum<=0:
                 minimum=1
             drawnObjects[0].GetYaxis().SetRangeUser(minimum*0.02,maximum*100.)
-        if self._xmin != -1 and self._xmax != -1:
-            drawnObjects[0].GetXaxis().SetRangeUser(self._xmin,self._xmax)
+        if self._Style_cont._xmin != -1 and self._Style_cont._xmax != -1:
+            drawnObjects[0].GetXaxis().SetRangeUser(self._Style_cont._xmin,self._Style_cont._xmax)
         drawnObjects[0].GetXaxis().SetTitle(drawnObjects[0].GetXaxis().GetTitle().replace("$\\mathsf{","").replace("}$",""))
         print drawnObjects[0].GetXaxis().GetTitle()
-        drawnObjects[0].GetYaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
-        drawnObjects[0].GetXaxis().SetTitleSize(self.axisTextSize*self._referenceHeight)
-        drawnObjects[0].GetYaxis().SetTitleOffset(self.axisOffset)
+        drawnObjects[0].GetYaxis().SetTitleSize(self._Style_cont.axisTextSize*self._referenceHeight)
+        drawnObjects[0].GetXaxis().SetTitleSize(self._Style_cont.axisTextSize*self._referenceHeight)
+        drawnObjects[0].GetYaxis().SetTitleOffset(self._Style_cont.axisOffset)
 
 
 
@@ -1059,78 +1061,6 @@ class plotter():
         #except AttributeError:
             #print('No histogram added')
         #print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
-
-class position():
-    def __init__(self,positiontext="upper right", refference="", isText=False):
-
-        self._positiontext=positiontext
-        if not isinstance(positiontext,str):
-            self._definedCoorinates=True
-            self._valign="left"
-            self._align="left"
-        else:
-            self._definedCoorinates=False
-            self._valign=self._positiontext.split(" ")[0]
-            self._align=self._positiontext.split(" ")[1]
-        self.addY=0
-        self.addX=0
-        self._isText=isText
-        self._correctcms={"left":0.,
-                    "middle":0.,
-                    "right":-0.15,
-                    "upper":-0.04,
-                    "center":0.,
-                    "lower":0.,
-        }
-        if self._definedCoorinates:
-            self._x=self._positiontext[0]
-            self._y=self._positiontext[1]
-
-    def __eq__(self,other):
-        return (self._positiontext==other._positiontext)
-
-    def addYspace(self,y):
-        if self._valign=="upper" and y<0.:
-            self.addY+=y
-        elif self._valign!="upper" and self.getY()+y>0.1:
-            self.addY+=y
-
-    def addXspace(self,x):
-        self.addX+=x
-
-
-
-    def setPosition(self,positiontext):
-        self._positiontext=positiontext
-        self.valign=self._positiontext.split(" ")[0]
-        self.align=self._positiontext.split(" ")[1]
-
-    def getText(self):
-        return self._positiontext
-
-    def getX(self):
-        if self._definedCoorinates:
-            return self._x
-        alignDict={
-                    "left":0.12,
-                    "middle":0.5,
-                    "right":0.95,
-        }
-        if self._isText:
-            return self.addX+alignDict[self._align]+self._correctcms[self._align]
-        return self.addX+alignDict[self._align]
-
-    def getY(self):
-        if self._definedCoorinates:
-            return self._y
-        alignDict={
-                    "upper":0.95,
-                    "center":0.5,
-                    "lower":0.12,
-        }
-        if self._isText:
-            return self.addY+alignDict[self._valign]+self._correctcms[self._valign]
-        return self.addY+alignDict[self._valign]
 
 
 
