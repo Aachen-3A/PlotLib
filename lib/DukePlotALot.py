@@ -636,9 +636,12 @@ class plotter():
         return None
 
     def _Draw_main(self):
+        ## Create the figure for all subplots
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
         ## Plot the main distribution on axis 1
+        ## Create the subplot for the main distribution
         ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
             ax1.set_yscale('log')
         if self._Style_cont.Get_logx():
@@ -647,18 +650,6 @@ class plotter():
             if not self._data and len(self._sig_hist) == 0:
                 print('\n\tyou have to add some histogram that should be plotted, there are no background, signal or data histograms.\n')
                 sys.exit(42)
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
-        elif len(self._hist) == 1:
-            hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
             if self._data:
                 data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
                               markersize = self._Style_cont.Get_marker_size(),
@@ -681,20 +672,25 @@ class plotter():
                               capthick = self._Style_cont.Get_marker_error_cap_width())
             if len(self._sig_hist) > 0:
                 rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
+        ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+        ## Set the y-axis title and its options
         ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left')
         ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+        ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
             ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
-        #ax1.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+        ## Set the properties of the plot spine
         ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
         ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
@@ -703,8 +699,10 @@ class plotter():
         ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
         ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ## Set the properties of the tick marks
         ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
         ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        ## Add the legend
         self._Add_legend()
         return ax1
 
