@@ -326,8 +326,6 @@ class position():
     def addXspace(self,x):
         self.addX+=x
 
-
-
     def setPosition(self,positiontext):
         self._positiontext=positiontext
         self.valign=self._positiontext.split(" ")[0]
@@ -347,6 +345,9 @@ class position():
         if self._isText:
             return self.addX+alignDict[self._align]+self._correctcms[self._align]
         return self.addX+alignDict[self._align]
+
+    def get_positiontext(self):
+        return self._positiontext.replace('middle','center')
 
     def getY(self):
         if self._definedCoorinates:

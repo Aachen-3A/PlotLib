@@ -317,7 +317,7 @@ class plotter():
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
         self.leg = plt.legend(handle_list, label_list,
-                    loc = 'upper right',
+                    loc = self._Style_cont.Get_LegendPosition().get_positiontext(),
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
