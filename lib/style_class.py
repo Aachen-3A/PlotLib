@@ -6,8 +6,17 @@ class style_container():
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
-    def __init__(self, style = 'Plain', useRoot = False):
+    def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False):
         self._style = style
+
+        if not (kind == 'Standard' or kind == 'Lines' or kind == 'Graphs'):
+            print('\n\tThis kind of plot (' + kind + ') is not supported')
+            print('\tThe allowed values are:')
+            print('\t  - \'Standard\' (Stacked backgrounds, signal lines and data points)')
+            print('\t  - \'Lines\'    (Only lines, like for a gen level plot)')
+            print('\t  - \'Graphs\'   (Only graphs, like for an efficiency plot)\n')
+            sys.exit(42)
+        self._kind = kind
 
         self._useRoot = useRoot
 
@@ -167,7 +176,8 @@ class style_container():
     def Get_LegendPosition(self):
         return self._LegendPosition
 
-
+    def Get_kind(self):
+        return self._kind
 
     def Set_error_bands_labl(self, label):
         self._error_bands_labl = label

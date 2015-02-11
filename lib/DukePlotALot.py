@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import ROOT
+import sys
 import numpy as np
 from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad
 import matplotlib
@@ -160,7 +161,8 @@ class plotter():
                 self._add_plots_labels[pos] = label
             self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height, cmsPositon = self._Style_cont.Get_cmsTextPosition().getText(), legendPosition = self._Style_cont.Get_LegendPosition().getText())
         else:
-            print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
+            print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
+            sys.exit(42)
 
     ## Function to add a histogram to the background list
     #
@@ -208,12 +210,12 @@ class plotter():
         self._SavePlot(out_name)
 
     def ChangeStyle(self,**kwargs):
-
         for key in kwargs:
             if hasattr(self,"_"+key):
                 setattr(self,"_"+key,kwargs[key])
             else:
-                print "No attribute _%s in plotter"%key
+                print "\n\tNo attribute _%s in plotter\n"%key
+                sys.exit(42)
 
 
     ##------------------------------------------------------------------
@@ -286,6 +288,15 @@ class plotter():
 
     def _Compiler(self):
         if len(self._hist) == 0:
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+            self._add_error_bands = False
+        if self._Style_cont.Get_kind() == 'Lines':
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+        if self._Style_cont.Get_kind() == 'Graphs':
             self._add_plots[0] = ''
             self._add_plots[1] = ''
             self._add_plots[2] = ''
@@ -478,7 +489,7 @@ class plotter():
             y.append(np.array(y_i))
             err.append(np.array(err_i))
         return signi, x, y, err
-        
+
     def _Calc_SoverSpB(self):
         sum_hist = self._hist[0].Clone('sum_hist')
         for i in range(1,len(self._hist)):
@@ -634,7 +645,8 @@ class plotter():
             ax1.set_xscale('log')
         if len(self._hist) == 0:
             if not self._data and len(self._sig_hist) == 0:
-                print('you have to add some histogram that should be plotted, there are no background, signal or data histograms.')
+                print('\n\tyou have to add some histogram that should be plotted, there are no background, signal or data histograms.\n')
+                sys.exit(42)
             if self._data:
                 data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
                               markersize = self._Style_cont.Get_marker_size(),
@@ -822,7 +834,6 @@ class plotter():
         if self._data:
             self.leg.AddEntry(self._data_hist,"data","ep")
 
-
     def _AddPlotBelow(self, pos=2):
         ## setup the window and pads to draw a ratio
         if self._add_plots[pos] != '':
@@ -857,8 +868,6 @@ class plotter():
             self.rootMemory.append(add_hist)
             add_hist.Draw()
 
-
-
     #def update_pad(self):
         #"""Updates the pad and redraws the axis"""
 
@@ -869,7 +878,6 @@ class plotter():
         #ROOT.gPad.Modified()
         #ROOT.gPad.Update()
         #ROOT.gPad.RedrawAxis()
-
 
     def DrawRoot(self):
         import rootplotlib as rooLib
@@ -944,7 +952,6 @@ class plotter():
 
         ROOT.gPad.RedrawAxis("g")
         self.leg.Draw()
-
 
     def _checker(self):
         pass
