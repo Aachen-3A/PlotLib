@@ -638,7 +638,6 @@ class plotter():
     def _Draw_main(self):
         ## Create the figure for all subplots
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
-        ## Plot the main distribution on axis 1
         ## Create the subplot for the main distribution
         ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
         ## If specified in the style container set logarithmic axis
@@ -646,32 +645,66 @@ class plotter():
             ax1.set_yscale('log')
         if self._Style_cont.Get_logx():
             ax1.set_xscale('log')
-        if len(self._hist) == 0:
-            if not self._data and len(self._sig_hist) == 0:
-                print('\n\tyou have to add some histogram that should be plotted, there are no background, signal or data histograms.\n')
+        ## Crete the standard plots with histograms
+        if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
+            if len(self._hist) == 0:
+                if not self._data and len(self._sig_hist) == 0:
+                    print('\n\tyou have to add some histogram that should be plotted,')
+                    print('\tthere are no background, signal or data histograms.\n')
+                    sys.exit(42)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+            else:
+                hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        ## Create the main plot with graphs
+        elif self._Style_cont.Get_kind() == 'Graphs':
+            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
                 sys.exit(42)
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
-        else:
-            hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+            else:
+                for item in self._hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                for item in self._sig_hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
@@ -958,15 +991,3 @@ class plotter():
         #except AttributeError:
             #print('No histogram added')
         #print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
-
-
-
-
-
-
-
-
-
-
-
-
