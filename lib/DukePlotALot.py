@@ -687,7 +687,13 @@ class plotter():
         if self._Style_cont.Get_logx():
             ax1.set_xscale('log')
         if self._Style_cont.Get_grid():
-            plt.grid(True)
+            ax1.grid(True)
+            gridlines = ax1.get_xgridlines()
+            gridlines.extend( ax1.get_ygridlines() )
+            for line in gridlines:
+                line.set_linestyle('-')
+                line.set_linewidth(3)
+                line.set_color('green')
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             if len(self._hist) == 0:
