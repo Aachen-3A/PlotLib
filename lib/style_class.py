@@ -37,6 +37,8 @@ class style_container():
         self._xmin = -1
         self._xmax = -1
 
+        self._grid = False
+
         self._cmsTextPosition = position(cmsPositon, isText = True)
         self._LegendPosition = position(legendPosition)
 
@@ -179,6 +181,18 @@ class style_container():
     def Get_kind(self):
         return self._kind
 
+    def Get_grid(self):
+        return self._grid
+
+    def Get_grid_style(self):
+        return self._grid_style
+
+    def Get_grid_width(self):
+        return self._grid_width
+
+    def Get_grid_color(self):
+        return self._grid_color
+
     def Set_error_bands_labl(self, label):
         self._error_bands_labl = label
 
@@ -198,13 +212,14 @@ class style_container():
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
         self._xmin = xmin
         self._xmax = xmax
+        self._grid = grid
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
@@ -216,6 +231,9 @@ class style_container():
         self._bg_color               = 'w'
         self._ref_line_color         = 'blue'
         self._spine_color            = 'black'
+        self._grid_style             = '-.'
+        self._grid_width             = 0.2
+        self._grid_color             = 'black'
         self._tick_color             = 'black'
         self._marker_style           = 'o'
         self._marker_size            = 3
@@ -239,6 +257,9 @@ class style_container():
         self._bg_color               = 'w'
         self._ref_line_color         = 'blue'
         self._spine_color            = 'black'
+        self._grid_style             = '-'
+        self._grid_width             = 0.2
+        self._grid_color             = 'black'
         self._tick_color             = 'black'
         self._marker_style           = 'o'
         self._marker_size            = 4
@@ -262,6 +283,9 @@ class style_container():
         self._bg_color               = '#07000d'
         self._ref_line_color         = 'y'
         self._spine_color            = '#5998ff'
+        self._grid_style             = '-'
+        self._grid_width             = 0.2
+        self._grid_color             = '#5998ff'
         self._tick_color             = 'w'
         self._marker_style           = 'o'
         self._marker_size            = 3
