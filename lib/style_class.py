@@ -37,6 +37,8 @@ class style_container():
         self._xmin = -1
         self._xmax = -1
 
+        self._grid = False
+
         self._cmsTextPosition = position(cmsPositon, isText = True)
         self._LegendPosition = position(legendPosition)
 
@@ -179,6 +181,9 @@ class style_container():
     def Get_kind(self):
         return self._kind
 
+    def Get_grid(self):
+        return self._grid
+
     def Set_error_bands_labl(self, label):
         self._error_bands_labl = label
 
@@ -198,13 +203,14 @@ class style_container():
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
         self._xmin = xmin
         self._xmax = xmax
+        self._grid = grid
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------

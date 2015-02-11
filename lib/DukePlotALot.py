@@ -200,8 +200,8 @@ class plotter():
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1):
-        self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax)
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
+        self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax, grid = grid)
 
     ## Function to save the complete plot
     #
@@ -686,6 +686,8 @@ class plotter():
             ax1.set_yscale('log')
         if self._Style_cont.Get_logx():
             ax1.set_xscale('log')
+        if self._Style_cont.Get_grid():
+            plt.grid(True)
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             if len(self._hist) == 0:
