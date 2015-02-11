@@ -1,6 +1,8 @@
 #!/bin/env python
 
 import ROOT
+import sys
+import subprocess
 import numpy as np
 from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad
 import matplotlib
@@ -158,9 +160,10 @@ class plotter():
                 self._add_plots_labels[pos] = plot
             else:
                 self._add_plots_labels[pos] = label
-            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height, cmsPositon = self._Style_cont.Get_cmsTextPosition().getText(), legendPosition = self._Style_cont.Get_LegendPosition().getText())
+            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height)
         else:
-            print('for pos %.0f is already %s planned, so that is not possible'%(pos,self.add_plots[pos]))
+            print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
+            sys.exit(42)
 
     ## Function to add a histogram to the background list
     #
@@ -208,12 +211,12 @@ class plotter():
         self._SavePlot(out_name)
 
     def ChangeStyle(self,**kwargs):
-
         for key in kwargs:
             if hasattr(self,"_"+key):
                 setattr(self,"_"+key,kwargs[key])
             else:
-                print "No attribute _%s in plotter"%key
+                print "\n\tNo attribute _%s in plotter\n"%key
+                sys.exit(42)
 
 
     ##------------------------------------------------------------------
@@ -222,7 +225,7 @@ class plotter():
     def _Write_additional_text(self):
         if self._Style_cont.Get_add_lumi_text():
             self._lumi_val=float(self._lumi_val)
-            if self._lumi_val > 1000:
+            if self._lumi_val >= 1000:
                 self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
                 self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
@@ -248,33 +251,73 @@ class plotter():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
         handle_list = []
         label_list = []
-        for item in self._hist:
-            col_patch = mpatches.Patch(color = item.GetFillColor())
-            handle_list.append(col_patch)
-            label_list.append(item.GetTitle())
-        for item in self._sig_hist:
-            col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
-            handle_list.append(col_patch)
-            label_list.append(item.GetTitle())
-        if self._add_error_bands:
-            for i in range(0,len(self._error_hist)):
-                col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+        if self._Style_cont.Get_kind() == 'Standard':
+            for item in self._hist:
+                col_patch = mpatches.Patch(color = item.GetFillColor())
                 handle_list.append(col_patch)
-                label_list.append(self._Style_cont.Get_error_bands_labl()[i])
-            if self._Style_cont.Get_error_stacking() == 'No':
-                col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
                 handle_list.append(col_patch)
-                label_list.append('syst. sum')
-        if self._data:
-            dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              color = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            handle_list.append(dat_line)
-            label_list.append(self._data_hist.GetTitle())
-
+                label_list.append(item.GetTitle())
+            if self._add_error_bands:
+                for i in range(0,len(self._error_hist)):
+                    col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append(self._Style_cont.Get_error_bands_labl()[i])
+                if self._Style_cont.Get_error_stacking() == 'No':
+                    col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append('syst. sum')
+            if self._data:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(self._data_hist.GetTitle())
+        elif self._Style_cont.Get_kind() == 'Lines':
+            for item in self._hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+        elif self._Style_cont.Get_kind() == 'Graphs':
+            for item in self._hist:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = item.GetLineColor(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = item.GetLineColor(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(item.GetTitle())
+            if self._add_error_bands:
+                for i in range(0,len(self._error_hist)):
+                    col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append(self._Style_cont.Get_error_bands_labl()[i])
+                if self._Style_cont.Get_error_stacking() == 'No':
+                    col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append('syst. sum')
+            if self._data:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(self._data_hist.GetTitle())
         self.leg = plt.legend(handle_list, label_list,
-                    loc = 'upper right',
+                    loc = self._Style_cont.Get_LegendPosition().get_positiontext(),
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
@@ -286,6 +329,15 @@ class plotter():
 
     def _Compiler(self):
         if len(self._hist) == 0:
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+            self._add_error_bands = False
+        if self._Style_cont.Get_kind() == 'Lines':
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+        if self._Style_cont.Get_kind() == 'Graphs':
             self._add_plots[0] = ''
             self._add_plots[1] = ''
             self._add_plots[2] = ''
@@ -478,7 +530,7 @@ class plotter():
             y.append(np.array(y_i))
             err.append(np.array(err_i))
         return signi, x, y, err
-        
+
     def _Calc_SoverSpB(self):
         sum_hist = self._hist[0].Clone('sum_hist')
         for i in range(1,len(self._hist)):
@@ -625,64 +677,94 @@ class plotter():
         return None
 
     def _Draw_main(self):
+        ## Create the figure for all subplots
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
-        ## Plot the main distribution on axis 1
+        ## Create the subplot for the main distribution
         ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
             ax1.set_yscale('log')
         if self._Style_cont.Get_logx():
             ax1.set_xscale('log')
-        if len(self._hist) == 0:
-            if not self._data and len(self._sig_hist) == 0:
-                print('you have to add some histogram that should be plotted, there are no background, signal or data histograms.')
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
-        elif len(self._hist) == 1:
-            hist_handle = rplt.hist(self._hist[0], stacked = False, axes = ax1, zorder = 2)
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
-        else:
-            hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        ## Crete the standard plots with histograms
+        if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
+            if len(self._hist) == 0:
+                if not self._data and len(self._sig_hist) == 0:
+                    print('\n\tyou have to add some histogram that should be plotted,')
+                    print('\tthere are no background, signal or data histograms.\n')
+                    sys.exit(42)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+            else:
+                hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+        ## Create the main plot with graphs
+        elif self._Style_cont.Get_kind() == 'Graphs':
+            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
+                sys.exit(42)
+            else:
+                for item in self._hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                for item in self._sig_hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+        ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
+        ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+        ## Set the y-axis title and its options
         ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left')
         ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+        ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
             ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
-        #ax1.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+        ## Set the properties of the plot spine
         ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
         ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
@@ -691,8 +773,10 @@ class plotter():
         ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
         ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ## Set the properties of the tick marks
         ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
         ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        ## Add the legend
         self._Add_legend()
         return ax1
 
@@ -801,7 +885,19 @@ class plotter():
         if self._useRoot:
             self._fig.SaveAs(out_name)
             return
-        plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+        if out_name[-3:] == 'pdf':
+            try:
+                plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+            except(AssertionError):
+                plt.savefig(out_name[:-3] + 'eps', facecolor = self._fig.get_facecolor())
+                command="epstopdf %s"%(out_name[:-3] + 'eps')
+                command=command.split(" ")
+                subprocess.call(command)
+                command="rm %s"%(out_name[:-3] + 'eps')
+                command=command.split(" ")
+                subprocess.call(command)
+        else:
+            plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
     def _AddRootLegend(self):
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
@@ -821,7 +917,6 @@ class plotter():
             self.leg.AddEntry(h,h.GetTitle(), "l")
         if self._data:
             self.leg.AddEntry(self._data_hist,"data","ep")
-
 
     def _AddPlotBelow(self, pos=2):
         ## setup the window and pads to draw a ratio
@@ -857,8 +952,6 @@ class plotter():
             self.rootMemory.append(add_hist)
             add_hist.Draw()
 
-
-
     #def update_pad(self):
         #"""Updates the pad and redraws the axis"""
 
@@ -869,7 +962,6 @@ class plotter():
         #ROOT.gPad.Modified()
         #ROOT.gPad.Update()
         #ROOT.gPad.RedrawAxis()
-
 
     def DrawRoot(self):
         import rootplotlib as rooLib
@@ -945,7 +1037,6 @@ class plotter():
         ROOT.gPad.RedrawAxis("g")
         self.leg.Draw()
 
-
     def _checker(self):
         pass
         #try:
@@ -953,15 +1044,3 @@ class plotter():
         #except AttributeError:
             #print('No histogram added')
         #print('with height: ' + str(self._hist_height) + ' and start: ' + str(self._hist_start))
-
-
-
-
-
-
-
-
-
-
-
-
