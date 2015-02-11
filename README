@@ -1,7 +1,1 @@
-#to set up rootpy:
-#source CMSSW (python>=2.7 is easyer)
-git clone git://github.com/rootpy/rootpy.git
-
-cd rootpy
-python setup.py install --user
-#follow the instructions
+The documentation on how the set up and use this library can be found at https://github.com/Aachen-3A/PlotLib/wiki.
