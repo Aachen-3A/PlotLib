@@ -6,7 +6,7 @@ class style_container():
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
-    def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False):
+    def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False, cmsPositon = "upper right", legendPosition = "upper right"):
         self._style = style
 
         if not (kind == 'Standard' or kind == 'Lines' or kind == 'Graphs'):
@@ -37,6 +37,9 @@ class style_container():
         self._xmin = -1
         self._xmax = -1
 
+        self._cmsTextPosition = position(cmsPositon, isText = True)
+        self._LegendPosition = position(legendPosition)
+
     def __del__(self):
         pass
 
@@ -49,12 +52,9 @@ class style_container():
             self._xaxis_title      = 'bla'
             self._yaxis_title      = '#epsilon'
 
-    def InitStyle(self, addplots = ['', '', ''], addheights = [0, 0, 0], cmsPositon = "upper right", legendPosition = "upper right"):
+    def InitStyle(self, addplots = ['', '', ''], addheights = [0, 0, 0]):
         self.addplots = addplots
         self.addheights = addheights
-
-        self._cmsTextPosition = position(cmsPositon, isText = True)
-        self._LegendPosition = position(legendPosition)
 
         if self._useRoot:
             self._Set_Root_style()

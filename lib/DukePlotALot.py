@@ -2,6 +2,7 @@
 
 import ROOT
 import sys
+import subprocess
 import numpy as np
 from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad
 import matplotlib
@@ -159,7 +160,7 @@ class plotter():
                 self._add_plots_labels[pos] = plot
             else:
                 self._add_plots_labels[pos] = label
-            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height, cmsPositon = self._Style_cont.Get_cmsTextPosition().getText(), legendPosition = self._Style_cont.Get_LegendPosition().getText())
+            self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height)
         else:
             print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
             sys.exit(42)
@@ -224,7 +225,7 @@ class plotter():
     def _Write_additional_text(self):
         if self._Style_cont.Get_add_lumi_text():
             self._lumi_val=float(self._lumi_val)
-            if self._lumi_val > 1000:
+            if self._lumi_val >= 1000:
                 self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
                 self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
@@ -250,31 +251,71 @@ class plotter():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
         handle_list = []
         label_list = []
-        for item in self._hist:
-            col_patch = mpatches.Patch(color = item.GetFillColor())
-            handle_list.append(col_patch)
-            label_list.append(item.GetTitle())
-        for item in self._sig_hist:
-            col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
-            handle_list.append(col_patch)
-            label_list.append(item.GetTitle())
-        if self._add_error_bands:
-            for i in range(0,len(self._error_hist)):
-                col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+        if self._Style_cont.Get_kind() == 'Standard':
+            for item in self._hist:
+                col_patch = mpatches.Patch(color = item.GetFillColor())
                 handle_list.append(col_patch)
-                label_list.append(self._Style_cont.Get_error_bands_labl()[i])
-            if self._Style_cont.Get_error_stacking() == 'No':
-                col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
                 handle_list.append(col_patch)
-                label_list.append('syst. sum')
-        if self._data:
-            dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              color = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
-            handle_list.append(dat_line)
-            label_list.append(self._data_hist.GetTitle())
-
+                label_list.append(item.GetTitle())
+            if self._add_error_bands:
+                for i in range(0,len(self._error_hist)):
+                    col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append(self._Style_cont.Get_error_bands_labl()[i])
+                if self._Style_cont.Get_error_stacking() == 'No':
+                    col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append('syst. sum')
+            if self._data:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(self._data_hist.GetTitle())
+        elif self._Style_cont.Get_kind() == 'Lines':
+            for item in self._hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+        elif self._Style_cont.Get_kind() == 'Graphs':
+            for item in self._hist:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = item.GetLineColor(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = item.GetLineColor(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(item.GetTitle())
+            if self._add_error_bands:
+                for i in range(0,len(self._error_hist)):
+                    col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append(self._Style_cont.Get_error_bands_labl()[i])
+                if self._Style_cont.Get_error_stacking() == 'No':
+                    col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append('syst. sum')
+            if self._data:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(self._data_hist.GetTitle())
         self.leg = plt.legend(handle_list, label_list,
                     loc = 'upper right',
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
@@ -844,7 +885,19 @@ class plotter():
         if self._useRoot:
             self._fig.SaveAs(out_name)
             return
-        plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+        if out_name[-3:] == 'pdf':
+            try:
+                plt.savefig(out_name, facecolor = self._fig.get_facecolor())
+            except(AssertionError):
+                plt.savefig(out_name[:-3] + 'eps', facecolor = self._fig.get_facecolor())
+                command="epstopdf %s"%(out_name[:-3] + 'eps')
+                command=command.split(" ")
+                subprocess.call(command)
+                command="rm %s"%(out_name[:-3] + 'eps')
+                command=command.split(" ")
+                subprocess.call(command)
+        else:
+            plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
     def _AddRootLegend(self):
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
