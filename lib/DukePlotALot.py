@@ -234,7 +234,7 @@ class plotter():
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY()-0.03, self._Style_cont.Get_additional_text(), va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=10, style = 'italic')
             elif self._Style_cont.Get_cms_text_alignment() == 'column':
-                self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.TGet_annotation_text_color(), size=14, weight='bold')
+                self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX() + 0.08, self._Style_cont.Get_cmsTextPosition().getY(), self._Style_cont.Get_additional_text(), va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=10, style = 'italic')
             else:
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
@@ -691,9 +691,9 @@ class plotter():
             gridlines = ax1.get_xgridlines()
             gridlines.extend( ax1.get_ygridlines() )
             for line in gridlines:
-                line.set_linestyle('-')
-                line.set_linewidth(3)
-                line.set_color('green')
+                line.set_linestyle(self._Style_cont.Get_grid_style())
+                line.set_linewidth(self._Style_cont.Get_grid_width())
+                line.set_color(self._Style_cont.Get_grid_color())
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             if len(self._hist) == 0:
