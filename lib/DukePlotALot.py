@@ -725,7 +725,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)                   
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
                 if self._data:
