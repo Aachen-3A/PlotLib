@@ -237,6 +237,9 @@ class style_container():
     def Set_error_stacking(self, stacking):
         self._error_stacking = stacking
 
+    def Set_additional_text(self, text):
+        self._additional_text = text
+
     ## Function to set properties of the plotting axis
     #
     # This function sets axis properties like the y-range or
