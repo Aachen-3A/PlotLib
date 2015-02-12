@@ -23,6 +23,7 @@ class style_container():
         #rc('text', usetex=True)
         self._additional_text  = 'Preliminary'
         self._y_label_offset   = -0.11
+        self._histaxis_y_label_offset   = 1.07
         self._error_bands_ecol = ['darkmagenta','darkcyan']
         self._error_bands_fcol = ['m','cyan']
         self._error_bands_alph = 0.7
@@ -36,6 +37,9 @@ class style_container():
         self._ymax = -1
         self._xmin = -1
         self._xmax = -1
+        self._histaxis_logy = False
+        self._histaxis_ymin = -1
+        self._histaxis_ymax = -1     
 
         self._grid = False
 
@@ -53,10 +57,20 @@ class style_container():
             print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
             self._xaxis_title      = 'bla'
             self._yaxis_title      = '#epsilon'
+            
+    def AddAxisTitle_histaxis(self, hist):
+        try:
+            self._histaxis_xaxis_title      = hist.xaxis.GetTitle()
+            self._histaxis_yaxis_title      = hist.yaxis.GetTitle()
+        except:
+            print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
+            self._histaxis_xaxis_title      = 'bla'
+            self._histaxis_yaxis_title      = '#epsilon'
 
-    def InitStyle(self, addplots = ['', '', ''], addheights = [0, 0, 0]):
+    def InitStyle(self, addplots = ['', '', ''], addheights = [0, 0, 0], histaxis = []):
         self.addplots = addplots
         self.addheights = addheights
+        self.histaxis = histaxis
 
         if self._useRoot:
             self._Set_Root_style()
@@ -81,12 +95,21 @@ class style_container():
 
     def Get_yaxis_title(self):
         return self._yaxis_title
+        
+    def Get_histaxis_xaxis_title(self):
+        return self._histaxis_xaxis_title
+
+    def Get_histaxis_yaxis_title(self):
+        return self._histaxis_yaxis_title
 
     def Get_additional_text(self):
         return self._additional_text
 
     def Get_y_label_offset(self):
         return self._y_label_offset
+        
+    def Get_histaxis_y_label_offset(self):
+        return self._histaxis_y_label_offset
 
     def Get_error_bands_ecol(self):
         return self._error_bands_ecol
@@ -126,6 +149,15 @@ class style_container():
 
     def Get_xmax(self):
         return self._xmax
+        
+    def Get_histaxis_logy(self):
+        return self._histaxis_logy
+
+    def Get_histaxis_ymin(self):
+        return self._histaxis_ymin
+
+    def Get_histaxis_ymax(self):
+        return self._histaxis_ymax     
 
     def Get_add_cms_text(self):
         return self._add_cms_text
@@ -135,6 +167,9 @@ class style_container():
 
     def Get_label_text_color(self):
         return self._label_text_color
+        
+    def Get_histaxis_label_text_color(self):
+        return self._histaxis_label_text_color
 
     def Get_annotation_text_color(self):
         return self._annotation_text_color
@@ -210,13 +245,19 @@ class style_container():
     # @param[in] logy Boolean if the y-axis should be logarithmic (Default = True)
     # @param[in] ymin Minimum plotting range for the y-axis (Default = -1 automatic values)
     # @param[in] ymax Maximum plotting range for the y-axis (Default = -1 automatic values)
+    # @param[in] logy Boolean if the second / additional y-axis should be logarithmic (Default = False)
+    # @param[in] ymin Minimum plotting range for the second / additional y-axis (Default = -1 automatic values)
+    # @param[in] ymax Maximum plotting range for the second / additional y-axis (Default = -1 automatic values)
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, histaxis_logy = False, histaxis_ymin = -1, histaxis_ymax = -1, grid = False):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
+        self._histaxis_logy = histaxis_logy
+        self._histaxis_ymin = histaxis_ymin
+        self._histaxis_ymax = histaxis_ymax
         self._xmin = xmin
         self._xmax = xmax
         self._grid = grid
@@ -226,7 +267,7 @@ class style_container():
     def _Set_CMS_style(self):
         self._add_cms_text           = True
         self._add_lumi_text          = True
-        self._label_text_color       = 'black'
+        self._label_text_color       = 'black'		
         self._annotation_text_color  = 'black'
         self._bg_color               = 'w'
         self._ref_line_color         = 'blue'
@@ -242,38 +283,50 @@ class style_container():
         self._cms_text_alignment     = 'row'
         self._show_minor_tick_labels = False
         self._legend_font_size       = 9
+        if len(self.histaxis) > 0:
+            self._histaxis_label_text_color= self.histaxis[0].linecolor
+        else:
+            self._histaxis_label_text_color='red'	
         if self.addplots[0] != '':
             self._cmsTextPosition.addYspace(  -0.9 * self.addheights[0] / 100.)
         if self.addplots[1] != '':
             self._cmsTextPosition.addYspace(  0.9 * self.addheights[1] / 100.)
         if self.addplots[2] != '':
             self._cmsTextPosition.addYspace(  0.9 * self.addheights[2] / 100.)
+        if len(self.histaxis) > 0:
+            self._cmsTextPosition.addXspace(  -0.04)    
 
     def _Set_Plain_style(self):
-        self._add_cms_text           = False
-        self._add_lumi_text          = False
-        self._label_text_color       = 'black'
-        self._annotation_text_color  = 'black'
-        self._bg_color               = 'w'
-        self._ref_line_color         = 'blue'
-        self._spine_color            = 'black'
-        self._grid_style             = '-'
-        self._grid_width             = 0.2
-        self._grid_color             = 'black'
-        self._tick_color             = 'black'
-        self._marker_style           = 'o'
-        self._marker_size            = 4
-        self._marker_color           = 'black'
-        self._marker_error_cap_width = 1
-        self._cms_text_alignment     = 'row'
-        self._show_minor_tick_labels = True
-        self._legend_font_size       = 10
+        self._add_cms_text                    = False
+        self._add_lumi_text                   = False
+        self._label_text_color                = 'black'
+        self._annotation_text_color           = 'black'
+        self._bg_color                        = 'w'
+        self._ref_line_color                  = 'blue'
+        self._spine_color                     = 'black'
+        self._grid_style                      = '-'
+        self._grid_width                      = 0.2
+        self._grid_color                      = 'black'
+        self._tick_color                      = 'black'
+        self._marker_style                    = 'o'
+        self._marker_size                     = 4
+        self._marker_color                    = 'black'
+        self._marker_error_cap_width          = 1
+        self._cms_text_alignment              = 'row'
+        self._show_minor_tick_labels          = True
+        self._legend_font_size                = 10
+        if len(self.histaxis) > 0:
+            self._histaxis_label_text_color= self.histaxis[0].linecolor
+        else:
+            self._histaxis_label_text_color='red'	
         if self.addplots[0] != '':
             self._cmsTextPosition.addYspace(  -0.8 * self.addheights[0] / 100.)
         if self.addplots[1] != '':
             self._cmsTextPosition.addYspace(  0.8 * self.addheights[1] / 100.)
         if self.addplots[2] != '':
             self._cmsTextPosition.addYspace(  0.8 * self.addheights[2] / 100.)
+        if len(self.histaxis) > 0:
+            self._cmsTextPosition.addXspace(  -0.04)  
 
     def _Set_Cool_style(self):
         self._add_cms_text           = True
@@ -294,6 +347,10 @@ class style_container():
         self._cms_text_alignment     = 'column'
         self._show_minor_tick_labels = False
         self._legend_font_size       = 9
+        if len(self.histaxis) > 0:
+            self._histaxis_label_text_color= self.histaxis[0].linecolor
+        else:
+            self._histaxis_label_text_color='red'	
 
     def _Set_Root_style(self):
         self.cmsTextFont          = 61   # Fonts

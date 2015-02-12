@@ -50,7 +50,7 @@ class plotter():
     # @param[in] lumi double to specify displayed luminosity value (default = 42000 (pb-1))
     # @param[in] data Bool if data should be plotted (default = False)
     # @param[in] kwargs dict of key word arguments that will be passed to style
-    def __init__(self, hist = [], sig = [], data_hist = None, data = False, cms = 13, lumi = 42000, style = sc.style_container(), **kwargs):
+    def __init__(self, hist = [], sig = [], hist_axis = [], data_hist = None, data = False, cms = 13, lumi = 42000, style = sc.style_container(), **kwargs):
         ## style variables
         # self._style                = style
         ## BG histograms
@@ -62,6 +62,8 @@ class plotter():
         ## Data histograms
         self._data                 = data
         self._data_hist            = data_hist
+        ## Second axis histograms
+        self._hist_axis            = hist_axis
         ## Additional plots
         self._add_plots            = ['', '', '']
         self._add_plots_height     = [0, 0, 0]
@@ -73,11 +75,15 @@ class plotter():
         self._fig                  = None
         self._cms_val              = cms
         self._lumi_val             = lumi
-        self._allHists=self._hist+self._sig_hist+[self._data_hist]
+        self._allHists=self._hist+self._sig_hist+[self._data_hist]+self._hist_axis
         self._Style_cont = style
         self._useRoot = self._Style_cont.Get_useRoot()
         self._Style_cont.AddAxisTitle(self._allHists[0])
-        self._Style_cont.InitStyle()
+        if len(self._hist_axis) > 0:
+            self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
+            self._Style_cont.InitStyle(histaxis = self._hist_axis)
+        else:
+            self._Style_cont.InitStyle()
 
     ## del function
     #
@@ -87,6 +93,7 @@ class plotter():
         del self._hist
         del self._sig_hist
         del self._data_hist
+        del self._hist_axis
         del self._fig
 
 
@@ -146,7 +153,7 @@ class plotter():
     # This function is called to add an additional plot to the figure and
     # define its properties, like where it should be placed and how much
     # space of the figure should be taken by this plot.
-    # At the moment 'Ratio', 'Diff', 'Signi' and 'DiffRatio' are available
+    # At the moment 'Ratio', 'Diff', 'Signi', 'DiffRatio' and 'SoverSplusB' are available
     # as additional plots.
     # @param[in] plot String of the plot name that should be added (default = 'Ratio')
     # @param[in] pos Position where the plot should be added, 0 is on top of the main plot, 1 and 2 at the bottom (default = 0)
@@ -226,9 +233,15 @@ class plotter():
         if self._Style_cont.Get_add_lumi_text():
             self._lumi_val=float(self._lumi_val)
             if self._lumi_val >= 1000:
-                self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                if len(self._hist_axis) > 0:	
+                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)                			
+                else:
+                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
-                self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                if len(self._hist_axis) > 0:
+                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                else: 
+                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
         if self._Style_cont.Get_add_cms_text():
             if self._Style_cont.Get_cms_text_alignment() == 'row':
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
@@ -246,6 +259,8 @@ class plotter():
             self._Style_cont.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[1] / 100.)
         if self._add_plots[2] != '':
             self._Style_cont.Get_LegendPosition().addYspace(  0.8 * self._add_plots_height[2] / 100.)
+        if len(self._hist_axis) > 0: 
+            self._Style_cont.Get_LegendPosition().addXspace(  -0.04  )  
 
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
@@ -710,7 +725,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)                   
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
                 if self._data:
@@ -722,7 +737,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)                   
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
             if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
@@ -753,7 +768,7 @@ class plotter():
                                   ecolor = self._Style_cont.Get_marker_color(),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())                                  
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(ax1)
@@ -787,6 +802,134 @@ class plotter():
         ## Add the legend
         self._Add_legend()
         return ax1
+        
+    def _Draw_main_axis(self):
+        ## Create the figure for all subplots
+        self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
+        ## Create the subplot for the main distribution
+        ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        par1 = ax1.twinx()        
+        ## If specified in the style container set logarithmic axis
+        if self._Style_cont.Get_logy():
+            ax1.set_yscale('log')
+        if self._Style_cont.Get_logx():
+            ax1.set_xscale('log')
+        if self._Style_cont.Get_grid():
+            ax1.grid(True)
+            gridlines = ax1.get_xgridlines()
+            gridlines.extend( ax1.get_ygridlines() )
+            for line in gridlines:
+                line.set_linestyle(self._Style_cont.Get_grid_style())
+                line.set_linewidth(self._Style_cont.Get_grid_width())
+                line.set_color(self._Style_cont.Get_grid_color())
+        ## Crete the standard plots with histograms
+        if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
+            if len(self._hist) == 0:
+                if not self._data and len(self._sig_hist) == 0:
+                    print('\n\tyou have to add some histogram that should be plotted,')
+                    print('\tthere are no background, signal or data histograms.\n')
+                    sys.exit(42)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                rplt.hist(self._hist_axis, stacked = False, axes = par1) 
+            else:
+                hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                if len(self._sig_hist) > 0:
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1) 
+                rplt.hist(self._hist_axis, stacked = False, axes = par1)                  
+        ## Create the main plot with graphs
+        elif self._Style_cont.Get_kind() == 'Graphs':
+            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
+                sys.exit(42)
+            else:
+                for item in self._hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                for item in self._sig_hist:
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+                if self._data:
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                                  markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  ecolor = self._Style_cont.Get_marker_color(),
+                                  markerfacecolor = self._Style_cont.Get_marker_color(),
+                                  markeredgecolor = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width()) 
+                for item in self._hist_axis:
+                    axishist_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = par1,
+                                   markersize = self._Style_cont.Get_marker_size(),
+                                   marker = self._Style_cont.Get_marker_style(),
+                                   ecolor = item.GetLineColor(),
+                                   markerfacecolor = item.GetLineColor(),
+                                   markeredgecolor = item.GetLineColor(),
+                                   capthick = self._Style_cont.Get_marker_error_cap_width())                                                 
+        ## If defined draw error bands
+        if self._add_error_bands:
+            self._Draw_Error_Bands(ax1)
+        ## If specified change the axis ranges
+        if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
+            ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+        if self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
+            par1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+        if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
+            ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+        ## Set the y-axis title and its options
+        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left')
+        ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left')
+        par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
+        ## If no other additional plots, set the x-axis title
+        if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
+            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+        ## If defined show the minor tick marks
+        if self._Style_cont.Get_show_minor_tick_labels():
+            ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
+            ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
+        ## Set the properties of the plot spine
+        ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        ## Set the properties of the tick marks
+        ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        ## Add the legend
+        self._Add_legend()
+        return ax1        
+         
 
     def _Draw_2(self, axis1):
         ## Plot a derived distribution below the main distribution on axis 2
@@ -878,7 +1021,11 @@ class plotter():
         if self._useRoot:
             self.DrawRoot()
             return
-        ax1 = self._Draw_main()
+        
+        if len(self._hist_axis) > 0:
+            ax1 = self._Draw_main_axis() 
+        else: 
+            ax1 = self._Draw_main()       
 
         ax0 = self._Draw_0(ax1)
 
@@ -886,7 +1033,10 @@ class plotter():
 
         ax3 = self._Draw_3(ax1)
 
-        plt.subplots_adjust(left = .10, bottom = .08, right =  .95, top = .95, wspace = .2, hspace = .0)
+        if len(self._hist_axis) > 0:
+            plt.subplots_adjust(left = .10, bottom = .08, right =  .91, top = .95, wspace = .2, hspace = .0)
+        else:
+            plt.subplots_adjust(left = .10, bottom = .08, right =  .95, top = .95, wspace = .2, hspace = .0)
         self._Write_additional_text()
 
     def _SavePlot(self, out_name):
