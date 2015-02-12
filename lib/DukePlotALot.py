@@ -284,6 +284,10 @@ class plotter():
                     col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
                     handle_list.append(col_patch)
                     label_list.append('syst. sum')
+            for item in self._hist_axis:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())				
             if self._data:
                 dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
@@ -300,6 +304,10 @@ class plotter():
                 col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
+            for item in self._hist_axis:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())	
         elif self._Style_cont.Get_kind() == 'Graphs':
             for item in self._hist:
                 dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
@@ -315,6 +323,13 @@ class plotter():
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
+            for item in self._hist_axis:    
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = item.GetLineColor(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(item.GetTitle())            
             if self._add_error_bands:
                 for i in range(0,len(self._error_hist)):
                     col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
@@ -812,6 +827,8 @@ class plotter():
         ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
             ax1.set_yscale('log')
+        if self._Style_cont.Get_histaxis_logy():
+            par1.set_yscale('log')
         if self._Style_cont.Get_logx():
             ax1.set_xscale('log')
         if self._Style_cont.Get_grid():
@@ -899,7 +916,7 @@ class plotter():
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
-            par1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+            par1.set_ylim(ymin = self._Style_cont.Get_histaxis_ymin(), ymax = self._Style_cont.Get_histaxis_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
@@ -925,6 +942,7 @@ class plotter():
         ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ## Set the properties of the tick marks
         ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
         ## Add the legend
         self._Add_legend()
