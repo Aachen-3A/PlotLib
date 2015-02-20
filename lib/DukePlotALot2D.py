@@ -102,7 +102,8 @@ class plotter2D():
         ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
         ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        self._plotted_hist = rplt.imshow(self._hist, axes = ax1, cmap=mpl.cm.brg)
+        self._plotted_hist = rplt.imshow(self._hist, axes = ax1, cmap=mpl.cm.YlGnBu)
+        # self._plotted_hist.set_interpolation('nearest')
 
         ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
         ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
@@ -230,10 +231,10 @@ class plotter2D():
         dummy_hist.xaxis.SetTitle('$' + temp_hist.GetXaxis().GetTitle().replace('#','\\') + '$')
         dummy_hist.xaxis.SetTitle(dummy_hist.xaxis.GetTitle().replace('$$','$'))
         dummy_hist.yaxis.SetTitle('$' + temp_hist.GetYaxis().GetTitle().replace('#','\\') + '$')
-        if dummy_hist.yaxis.GetTitle() == '$$':
+        if temp_hist.GetYaxis().GetTitle() == '$$':
             dummy_hist.yaxis.SetTitle('$\epsilon$')
         else:
-            dummy_hist.yaxis.SetTitle(dummy_hist.yaxis.GetTitle().replace('$$','$'))
+            dummy_hist.yaxis.SetTitle(temp_hist.GetYaxis().GetTitle().replace('$$','$'))
         return dummy_hist
 
 def grid(x, y, z, resX=100, resY=100):

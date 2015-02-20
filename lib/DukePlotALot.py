@@ -73,6 +73,7 @@ class plotter():
         self._allHists=self._hist+self._sig_hist+[self._data_hist]+self._hist_axis
         self._Style_cont = style
         self._useRoot = self._Style_cont.Get_useRoot()
+        self._Style_cont.AddAxisTitle(self._allHists[0])
         if self._useRoot:
             ROOT.gROOT.SetBatch()
         if len(self._hist_axis) > 0:

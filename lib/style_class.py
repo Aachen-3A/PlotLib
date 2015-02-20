@@ -103,11 +103,19 @@ class style_container():
         return self._useRoot
 
     def Get_xaxis_title(self):
-        return self._xaxis_title
+        try:
+            return self._xaxis_title
+        except(AttributeError):
+            print('\n\t It seems that no x-axis title is set, we will therefore use a dummy value\n')
+            return 'dummy'
 
     def Get_yaxis_title(self):
-        return self._yaxis_title
-        
+        try:
+            return self._yaxis_title
+        except(AttributeError):
+            print('\n\t It seems that no y-axis title is set, we will therefore use a dummy value\n')
+            return 'dummy'
+
     def Get_histaxis_xaxis_title(self):
         return self._histaxis_xaxis_title
 
