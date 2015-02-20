@@ -697,7 +697,7 @@ class plotter():
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
             ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
-            ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left')
+            ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(ax0.get_xticklabels(), visible=False)
@@ -791,11 +791,11 @@ class plotter():
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left')
+        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
@@ -918,13 +918,13 @@ class plotter():
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left')
+        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
-        par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left')
+        par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
@@ -968,7 +968,7 @@ class plotter():
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
             ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
-            ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left')
+            ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
@@ -983,12 +983,12 @@ class plotter():
             if self._add_plots[2] != '':
                 plt.setp(ax2.get_xticklabels(), visible = False)
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             else:
                 #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
                 ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             plt.setp(axis1.get_xticklabels(), visible = False)
             return ax2
         return None
@@ -1014,7 +1014,7 @@ class plotter():
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 ax3.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
             ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
-            ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left')
+            ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             #ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1029,7 +1029,7 @@ class plotter():
             ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
             ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             plt.setp(axis1.get_xticklabels(), visible = False)
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             return ax3
         return None
 

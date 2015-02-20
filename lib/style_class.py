@@ -263,6 +263,9 @@ class style_container():
     def Get_zmax(self):
         return self._zmax
 
+    def Get_axis_title_font_size(self):
+        return self._axis_title_font_size
+
     def Set_lumi_val(self, lumi):
         self._lumi_val = lumi
 
@@ -326,6 +329,7 @@ class style_container():
         self._cms_text_alignment     = 'row'
         self._show_minor_tick_labels = False
         self._legend_font_size       = 9
+        self._axis_title_font_size   = 14
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -358,6 +362,7 @@ class style_container():
         self._cms_text_alignment              = 'row'
         self._show_minor_tick_labels          = True
         self._legend_font_size                = 10
+        self._axis_title_font_size   = 9
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -390,6 +395,7 @@ class style_container():
         self._cms_text_alignment     = 'column'
         self._show_minor_tick_labels = False
         self._legend_font_size       = 9
+        self._axis_title_font_size   = 9
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
