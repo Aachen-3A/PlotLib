@@ -34,10 +34,10 @@ def getColorList(ncolors):
     from colorsys import hls_to_rgb,rgb_to_hls
     from math import pi
 
-    from random import random
+    from random import uniform
     colors=[]
     for i in xfrange(0,2.*pi,(2.*pi)/ncolors):
-        colors.append(hls_to_rgb(i, random() , random() ))
+        colors.append(hls_to_rgb(i, uniform(0.25,0.75) ,uniform(0.,1.) ))
     return colors
 
 # helper to search if a hist contains a key
