@@ -6,7 +6,7 @@ class style_container():
     ##------------------------------------------------------------------
     ## Public functions
     ##------------------------------------------------------------------
-    def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False, cmsPositon = "upper right", legendPosition = "upper right"):
+    def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False, cmsPositon = "upper right", legendPosition = "upper right", content = 'Histogram', lumi = 42000, cms = 13):
         self._style = style
 
         if not (kind == 'Standard' or kind == 'Lines' or kind == 'Graphs'):
@@ -19,6 +19,14 @@ class style_container():
         self._kind = kind
 
         self._useRoot = useRoot
+
+        if not (content == 'Histogram' or content == 'Efficiencies'):
+            print('\n\tThis content for a plot (' + content + ') is not supported')
+            print('\tThe allowed values are:')
+            print('\t  - \'Histogram\'    (Normal histograms)')
+            print('\t  - \'Efficiencies\' (Efficiency histograms)\n')
+            sys.exit(42)
+        self._content = content
 
         #rc('text', usetex=True)
         self._additional_text  = 'Preliminary'
@@ -37,9 +45,13 @@ class style_container():
         self._ymax = -1
         self._xmin = -1
         self._xmax = -1
+        self._zmin = -1
+        self._zmax = -1
         self._histaxis_logy = False
         self._histaxis_ymin = -1
-        self._histaxis_ymax = -1     
+        self._histaxis_ymax = -1
+        self._lumi_val = lumi
+        self._cms_val = cms
 
         self._grid = False
 
@@ -228,6 +240,24 @@ class style_container():
     def Get_grid_color(self):
         return self._grid_color
 
+    def Get_content(self):
+        return self._content
+
+    def Get_lumi_val(self):
+        return self._lumi_val
+
+    def Get_cms_val(self):
+        return self._cms_val
+
+    def Get_zmin(self):
+        return self._zmin
+
+    def Get_zmax(self):
+        return self._zmax
+
+    def Set_lumi_val(self, lumi):
+        self._lumi_val = lumi
+
     def Set_error_bands_labl(self, label):
         self._error_bands_labl = label
 
@@ -253,11 +283,13 @@ class style_container():
     # @param[in] ymax Maximum plotting range for the second / additional y-axis (Default = -1 automatic values)
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
-    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, histaxis_logy = False, histaxis_ymin = -1, histaxis_ymax = -1, grid = False):
+    def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, zmin = -1, zmax = -1, histaxis_logy = False, histaxis_ymin = -1, histaxis_ymax = -1, grid = False):
         self._logx = logx
         self._logy = logy
         self._ymin = ymin
         self._ymax = ymax
+        self._zmin = zmin
+        self._zmax = zmax
         self._histaxis_logy = histaxis_logy
         self._histaxis_ymin = histaxis_ymin
         self._histaxis_ymax = histaxis_ymax
