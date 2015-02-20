@@ -55,8 +55,8 @@ class style_container():
 
         self._grid = False
 
-        self._cmsTextPosition = position(cmsPositon, isText = True)
-        self._LegendPosition = position(legendPosition)
+        self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
+        self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
 
     def __del__(self):
         pass
@@ -388,24 +388,26 @@ class style_container():
             self._histaxis_label_text_color='red'	
 
     def _Set_Root_style(self):
-        self.cmsTextFont          = 61   # Fonts
-        self.lumiTextFont         = 42
-        self.extraTextFont        = 52
-        self.additionalTextFont   = 42
-        self.cmsTextSize          = 0.9  #Text sizes
-        self.lumiTextSize         = 0.6
-        self.extraTextSize        = 0.76*self.cmsTextSize
-        self.additionalTextSize   = 1.0*self.extraTextSize
-        self.legendTextSize       = self.extraTextSize*0.8
+        self.cmsTextFont          = 63   # Fonts
+        self.lumiTextFont         = 43
+        self.extraTextFont        = 53
+        self.additionalTextFont   = 43
+        self.cmsTextSize          = 22  #Text sizes
+        self.lumiTextSize         = 20
+        self.extraTextSize        = 20
+        self.additionalTextSize   = 20
+        self.legendTextSize       = 16
         self.lumiTextOffset       = 0.2
         self.extraTextOffset      = 2.5  # only used in outOfFrame version
-        self.axisTextSize         = 0.9
-        self.axisOffset           = 1.3
-        self._ratio_pad           ={}
-        self.rootMemory           =[]
+        self.axisLabelTextSize    = 18
+        self.axisTitleTextSize    = 20
+        self.axisOffsetY          = 1.5
+        self.axisOffsetX          = 1.5
+        #self._ratio_pad           ={}
+        #self.rootMemory           =[]
 
 class position():
-    def __init__(self,positiontext="upper right", refference="", isText=False):
+    def __init__(self,positiontext="upper right", refference="", isText=False ,useRoot=False):
 
         self._positiontext=positiontext
         if not isinstance(positiontext,str):
@@ -419,12 +421,21 @@ class position():
         self.addY=0
         self.addX=0
         self._isText=isText
+
         self._correctcms={"left":0.,
                     "middle":0.,
                     "right":-0.15,
                     "upper":-0.04,
                     "center":0.,
                     "lower":0.,
+        }
+        if useRoot:
+            self._correctcms={"left":0.,
+                    "middle":0.,
+                    "right": -0.025,
+                    "upper": -0.05,
+                    "center":0.,
+                    "lower":0.08,
         }
         if self._definedCoorinates:
             self._x=self._positiontext[0]
