@@ -41,16 +41,13 @@ class plotter():
     #
     # In this function the default variables are set. Also the style can
     # be defined and the histogram input can be given.
-    # @param[in] style String of which style should be used (default = 'Plain')
     # @param[in] hist List of background histograms (default = [])
     # @param[in] sig List of signal histograms (default = [])
     # @param[in] data_hist Data histogram (default = None)
     # @param[in] data Bool if data should be plotted (default = False)
-    # @param[in] cms double to specify displayed center of mass energy (default = 13 (TeV))
-    # @param[in] lumi double to specify displayed luminosity value (default = 42000 (pb-1))
-    # @param[in] data Bool if data should be plotted (default = False)
+    # @param[in] style Style container that should be used for the plot
     # @param[in] kwargs dict of key word arguments that will be passed to style
-    def __init__(self, hist = [], sig = [], hist_axis = [], data_hist = None, data = False, cms = 13, lumi = 42000, style = sc.style_container(), **kwargs):
+    def __init__(self, hist = [], sig = [], hist_axis = [], data_hist = None, data = False, style = sc.style_container(), **kwargs):
         ## style variables
         # self._style                = style
         ## BG histograms
@@ -73,8 +70,6 @@ class plotter():
         self._add_error_bands      = False
         self._error_hist           = []
         self._fig                  = None
-        self._cms_val              = cms
-        self._lumi_val             = lumi
         self._allHists=self._hist+self._sig_hist+[self._data_hist]+self._hist_axis
         self._Style_cont = style
         self._useRoot = self._Style_cont.Get_useRoot()
@@ -231,17 +226,17 @@ class plotter():
     ##------------------------------------------------------------------
     def _Write_additional_text(self):
         if self._Style_cont.Get_add_lumi_text():
-            self._lumi_val=float(self._lumi_val)
-            if self._lumi_val >= 1000:
-                if len(self._hist_axis) > 0:	
-                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)                			
+            self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
+            if self._Style_cont.Get_lumi_val() >= 1000:
+                if len(self._hist_axis) > 0:
+                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)                			
                 else:
-                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val/1000,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
                 if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else: 
-                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._lumi_val,self._cms_val), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
         if self._Style_cont.Get_add_cms_text():
             if self._Style_cont.Get_cms_text_alignment() == 'row':
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
@@ -725,7 +720,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)                   
+                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
                 if self._data:
@@ -1134,10 +1129,10 @@ class plotter():
 
         rnd=rounding(sigdigits=3)
         lumitext=""
-        if self._lumi_val > 1000:
-            lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._lumi_val/1000.),self._cms_val)
+        if self._Style_cont.Get_lumi_val() > 1000:
+            lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._Style_cont.Get_lumi_val()/1000.),self._Style_cont.Get_cms_val())
         else:
-            lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._lumi_val,self._cms_val)
+            lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
         deco=rooLib.CmsDecoration(extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
