@@ -208,6 +208,9 @@ class plotter():
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
         self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax, grid = grid)
 
+    def show_fig(self):
+        self._fig.show()
+
     ## Function to save the complete plot
     #
     # This function saves the plot you which is stored in the object so create it first
