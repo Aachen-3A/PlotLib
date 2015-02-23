@@ -212,6 +212,10 @@ class plotter():
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
         self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax, grid = grid)
 
+    ## Function to show the complete plot in the matplotlib browser
+    #
+    # This function shows the plot in the matplotlib browser, so that the
+    # user can modify it.
     def show_fig(self):
         self._fig.show()
         raw_input('bla')
