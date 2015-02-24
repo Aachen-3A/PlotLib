@@ -240,28 +240,44 @@ class plotter():
     # This function returns the axis for the top plot
     # @param[out] self._ax0 axis 0
     def Get_axis0(self):
-        return self._ax0
+        try:
+            return self._ax0
+        except(AttributeError):
+            print("\n\tThe axis 0, you want to get does not exist\n")
+            sys.exit(42)
 
     ## Function to get the axis 1
     #
     # This function returns the axis for the main plot
     # @param[out] self._ax1 axis 1
     def Get_axis1(self):
-        return self._ax1
+        try:
+            return self._ax1
+        except(AttributeError):
+            print("\n\tThe axis 1, you want to get does not exist\n")
+            sys.exit(42)
 
     ## Function to get the axis 2
     #
     # This function returns the axis for the plot below the main plot
     # @param[out] self._ax2 axis 2
     def Get_axis2(self):
-        return self._ax2
+        try:
+            return self._ax2
+        except(AttributeError):
+            print("\n\tThe axis 2, you want to get does not exist\n")
+            sys.exit(42)
 
     ## Function to get the axis 3
     #
     # This function returns the axis for the lowest plot
     # @param[out] self._ax3 axis 3
     def Get_axis3(self):
-        return self._ax3
+        try:
+            return self._ax3
+        except(AttributeError):
+            print("\n\tThe axis 3, you want to get does not exist\n")
+            sys.exit(42)
 
     ##------------------------------------------------------------------
     ## Private functions
