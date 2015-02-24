@@ -235,6 +235,49 @@ class plotter():
                 print "\n\tNo attribute _%s in plotter\n"%key
                 sys.exit(42)
 
+    ## Function to get the axis 0
+    #
+    # This function returns the axis for the top plot
+    # @param[out] self._ax0 axis 0
+    def Get_axis0(self):
+        try:
+            return self._ax0
+        except(AttributeError):
+            print("\n\tThe axis 0, you want to get does not exist\n")
+            sys.exit(42)
+
+    ## Function to get the axis 1
+    #
+    # This function returns the axis for the main plot
+    # @param[out] self._ax1 axis 1
+    def Get_axis1(self):
+        try:
+            return self._ax1
+        except(AttributeError):
+            print("\n\tThe axis 1, you want to get does not exist\n")
+            sys.exit(42)
+
+    ## Function to get the axis 2
+    #
+    # This function returns the axis for the plot below the main plot
+    # @param[out] self._ax2 axis 2
+    def Get_axis2(self):
+        try:
+            return self._ax2
+        except(AttributeError):
+            print("\n\tThe axis 2, you want to get does not exist\n")
+            sys.exit(42)
+
+    ## Function to get the axis 3
+    #
+    # This function returns the axis for the lowest plot
+    # @param[out] self._ax3 axis 3
+    def Get_axis3(self):
+        try:
+            return self._ax3
+        except(AttributeError):
+            print("\n\tThe axis 3, you want to get does not exist\n")
+            sys.exit(42)
 
     ##------------------------------------------------------------------
     ## Private functions
@@ -678,22 +721,22 @@ class plotter():
                              facecolor = 'grey',
                              lw = 0.7, axes = axis, zorder = 2.2)
 
-    def _Draw_0(self, axis1):
+    def _Draw_0(self):
         ## Plot a derived distribution on top of the main distribution on axis 0
         if self._add_plots[0] != '':
-            ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
-            ax0.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-            ax0.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax0.spines['top'].set_color(self._Style_cont.Get_spine_color())
-            ax0.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax0.spines['left'].set_color(self._Style_cont.Get_spine_color())
-            ax0.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax0.spines['right'].set_color(self._Style_cont.Get_spine_color())
-            ax0.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax0.tick_params(axis='y', colors = self._Style_cont.Get_tick_color())
-            ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color())
+            self._ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax0.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+            self._ax0.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax0.spines['top'].set_color(self._Style_cont.Get_spine_color())
+            self._ax0.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax0.spines['left'].set_color(self._Style_cont.Get_spine_color())
+            self._ax0.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax0.spines['right'].set_color(self._Style_cont.Get_spine_color())
+            self._ax0.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax0.tick_params(axis='y', colors = self._Style_cont.Get_tick_color())
+            self._ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes=ax0,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes=self._ax0,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[0],
                           marker = self._Style_cont.Get_marker_style(),
@@ -704,32 +747,32 @@ class plotter():
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
-                self._Draw_Any_uncertainty_band(ax0, x, y, err)
-            ax0.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
+                self._Draw_Any_uncertainty_band(self._ax0, x, y, err)
+            self._ax0.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-                ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
-            ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
-            ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
-            ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-            plt.setp(ax0.get_xticklabels(), visible=False)
-            return ax0
+                self._ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
+            self._ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
+            self._ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+            plt.setp(self._ax0.get_xticklabels(), visible=False)
+            return None
         return None
 
     def _Draw_main(self):
         ## Create the figure for all subplots
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
         ## Create the subplot for the main distribution
-        ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        self._ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
         ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
-            ax1.set_yscale('log')
+            self._ax1.set_yscale('log')
         if self._Style_cont.Get_logx():
-            ax1.set_xscale('log')
+            self._ax1.set_xscale('log')
         if self._Style_cont.Get_grid():
-            ax1.grid(True)
-            gridlines = ax1.get_xgridlines()
-            gridlines.extend( ax1.get_ygridlines() )
+            self._ax1.grid(True)
+            gridlines = self._ax1.get_xgridlines()
+            gridlines.extend( self._ax1.get_ygridlines() )
             for line in gridlines:
                 line.set_linestyle(self._Style_cont.Get_grid_style())
                 line.set_linewidth(self._Style_cont.Get_grid_width())
@@ -742,7 +785,7 @@ class plotter():
                     print('\tthere are no background, signal or data histograms.\n')
                     sys.exit(42)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -750,11 +793,11 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
             else:
-                hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
+                hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -762,7 +805,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
             if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
@@ -771,7 +814,7 @@ class plotter():
                 sys.exit(42)
             else:
                 for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -779,7 +822,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -787,7 +830,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -796,55 +839,55 @@ class plotter():
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
         ## If defined draw error bands
         if self._add_error_bands:
-            self._Draw_Error_Bands(ax1)
+            self._Draw_Error_Bands(self._ax1)
         ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
-            ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+            self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-            ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-        ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
-            ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
-            ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
+            self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
+            self._ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
         ## Set the properties of the plot spine
-        ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ## Set the properties of the tick marks
-        ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
         ## Add the legend
         self._Add_legend()
-        return ax1
+        return None
 
     def _Draw_main_axis(self):
         ## Create the figure for all subplots
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
         ## Create the subplot for the main distribution
-        ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
-        par1 = ax1.twinx()
+        self._ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        par1 = self._ax1.twinx()
         ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
-            ax1.set_yscale('log')
+            self._ax1.set_yscale('log')
         if self._Style_cont.Get_histaxis_logy():
             par1.set_yscale('log')
         if self._Style_cont.Get_logx():
-            ax1.set_xscale('log')
+            self._ax1.set_xscale('log')
         if self._Style_cont.Get_grid():
-            ax1.grid(True)
-            gridlines = ax1.get_xgridlines()
-            gridlines.extend( ax1.get_ygridlines() )
+            self._ax1.grid(True)
+            gridlines = self._ax1.get_xgridlines()
+            gridlines.extend( self._ax1.get_ygridlines() )
             for line in gridlines:
                 line.set_linestyle(self._Style_cont.Get_grid_style())
                 line.set_linewidth(self._Style_cont.Get_grid_width())
@@ -857,7 +900,7 @@ class plotter():
                     print('\tthere are no background, signal or data histograms.\n')
                     sys.exit(42)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -865,12 +908,12 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
                 rplt.hist(self._hist_axis, stacked = False, axes = par1)
             else:
-                hist_handle = rplt.hist(self._hist, stacked = True, axes = ax1, zorder = 2)
+                hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -878,7 +921,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
                 rplt.hist(self._hist_axis, stacked = False, axes = par1)
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
@@ -888,7 +931,7 @@ class plotter():
                 sys.exit(42)
             else:
                 for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -896,7 +939,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = ax1,
+                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -904,7 +947,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -921,17 +964,17 @@ class plotter():
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
         ## If defined draw error bands
         if self._add_error_bands:
-            self._Draw_Error_Bands(ax1)
+            self._Draw_Error_Bands(self._ax1)
         ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
-            ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+            self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
             par1.set_ylim(ymin = self._Style_cont.Get_histaxis_ymin(), ymax = self._Style_cont.Get_histaxis_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-            ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-        ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
         par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
@@ -939,32 +982,32 @@ class plotter():
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
-            ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
-            ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
+            self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
+            self._ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
         ## Set the properties of the plot spine
-        ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ## Set the properties of the tick marks
-        ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
         par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
-        ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
         ## Add the legend
         self._Add_legend()
-        return ax1
+        return None
 
 
-    def _Draw_2(self, axis1):
+    def _Draw_2(self):
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
-            ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax2,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax2,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[1],
                           marker = self._Style_cont.Get_marker_style(),
@@ -975,42 +1018,42 @@ class plotter():
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
-                self._Draw_Any_uncertainty_band(ax2, x, y, err)
-            ax2.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
+                self._Draw_Any_uncertainty_band(self._ax2, x, y, err)
+            self._ax2.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-                ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
-            ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
-            ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
-            ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-            ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax2.spines['top'].set_color(self._Style_cont.Get_spine_color())
-            ax2.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax2.spines['left'].set_color(self._Style_cont.Get_spine_color())
-            ax2.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax2.spines['right'].set_color(self._Style_cont.Get_spine_color())
-            ax2.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax2.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-            ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+                self._ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
+            self._ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
+            self._ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+            self._ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax2.spines['top'].set_color(self._Style_cont.Get_spine_color())
+            self._ax2.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax2.spines['left'].set_color(self._Style_cont.Get_spine_color())
+            self._ax2.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax2.spines['right'].set_color(self._Style_cont.Get_spine_color())
+            self._ax2.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax2.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+            self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             if self._add_plots[2] != '':
-                plt.setp(ax2.get_xticklabels(), visible = False)
-                ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
+                plt.setp(self._ax2.get_xticklabels(), visible = False)
+                self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             else:
-                #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
-                ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-                #ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
+                #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+                self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
+                #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
                 plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             plt.setp(axis1.get_xticklabels(), visible = False)
-            return ax2
+            return None
         return None
 
-    def _Draw_3(self, axis1):
+    def _Draw_3(self):
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if self._add_plots[2] != '':
-            ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = ax3,
+            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax3,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[2],
                           marker = self._Style_cont.Get_marker_style(),
@@ -1021,28 +1064,28 @@ class plotter():
                           ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
-                self._Draw_Any_uncertainty_band(ax3, x, y, err)
-            ax3.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
+                self._Draw_Any_uncertainty_band(self._ax3, x, y, err)
+            self._ax3.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-                ax3.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
-            ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
-            ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
-            #ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
-            ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-            ax3.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-            ax3.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax3.spines['top'].set_color(self._Style_cont.Get_spine_color())
-            ax3.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax3.spines['left'].set_color(self._Style_cont.Get_spine_color())
-            ax3.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax3.spines['right'].set_color(self._Style_cont.Get_spine_color())
-            ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-            ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+                self._ax3.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
+            self._ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
+            #self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
+            self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
+            self._ax3.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+            self._ax3.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax3.spines['top'].set_color(self._Style_cont.Get_spine_color())
+            self._ax3.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax3.spines['left'].set_color(self._Style_cont.Get_spine_color())
+            self._ax3.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax3.spines['right'].set_color(self._Style_cont.Get_spine_color())
+            self._ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+            self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+            self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             plt.setp(axis1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            return ax3
+            return None
         return None
 
     def _Draw(self):
@@ -1051,15 +1094,15 @@ class plotter():
             return
 
         if len(self._hist_axis) > 0:
-            ax1 = self._Draw_main_axis()
+            self._Draw_main_axis()
         else:
-            ax1 = self._Draw_main()
+            self._Draw_main()
 
-        ax0 = self._Draw_0(ax1)
+        self._Draw_0()
 
-        ax2 = self._Draw_2(ax1)
+        self._Draw_2()
 
-        ax3 = self._Draw_3(ax1)
+        self._Draw_3()
 
         if len(self._hist_axis) > 0:
             plt.subplots_adjust(left = .10, bottom = .08, right =  .91, top = .95, wspace = .2, hspace = .0)
