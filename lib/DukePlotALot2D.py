@@ -74,6 +74,12 @@ class plotter2D():
     def Get_y_projection_axis(self):
         return self._ax3
 
+    def Get_x_projection_hist(self):
+        return self._x_projection
+
+    def Get_y_projection_hist(self):
+        return self._y_projection
+
     def Add_x_projection(self, size = 15):
         self._x_projection_size = size
         self._x_starting_point = size
