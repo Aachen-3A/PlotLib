@@ -235,6 +235,33 @@ class plotter():
                 print "\n\tNo attribute _%s in plotter\n"%key
                 sys.exit(42)
 
+    ## Function to get the axis 0
+    #
+    # This function returns the axis for the top plot
+    # @param[out] self._ax0 axis 0
+    def Get_axis0(self):
+        return self._ax0
+
+    ## Function to get the axis 1
+    #
+    # This function returns the axis for the main plot
+    # @param[out] self._ax1 axis 1
+    def Get_axis1(self):
+        return self._ax1
+
+    ## Function to get the axis 2
+    #
+    # This function returns the axis for the plot below the main plot
+    # @param[out] self._ax2 axis 2
+    def Get_axis2(self):
+        return self._ax2
+
+    ## Function to get the axis 3
+    #
+    # This function returns the axis for the lowest plot
+    # @param[out] self._ax3 axis 3
+    def Get_axis3(self):
+        return self._ax3
 
     ##------------------------------------------------------------------
     ## Private functions
