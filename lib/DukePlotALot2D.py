@@ -54,36 +54,16 @@ class plotter2D():
                 test.Set_axis(ymin = self._Style_cont.Get_zmin(), ymax = self._Style_cont.Get_zmax(), xmin = self._Style_cont.Get_ymin(), xmax = self._Style_cont.Get_ymax())
                 test.make_plot(out_name.replace('.','_y.'))
 
-    def create_plot(self, individual = False):
+    def create_plot(self):
         self._hist = self._Get_rootpy_hist2d()
         self._Draw_main()
-        if individual:
-            self._test_2D = plotter2D(hist = self._hist, style = self._Style_cont)
-            self._test_2D.Set_axis(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
-            self._test_2D.create_plot()
-            if self._x_projection_size > 0:
-                self._test_x = plotter(hist = [self._Get_rootpy_hist1d(self._x_projection)],style=self._Style_cont)
-                self._test_x.Set_axis(ymin = self._Style_cont.Get_zmin(), ymax = self._Style_cont.Get_zmax(), xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
-                self._test_x.create_plot()
-            if self._y_projection_size > 0:
-                self._test_y = plotter(hist = [self._Get_rootpy_hist1d(self._y_projection)],style=self._Style_cont)
-                self._test_y.Set_axis(ymin = self._Style_cont.Get_zmin(), ymax = self._Style_cont.Get_zmax(), xmin = self._Style_cont.Get_ymin(), xmax = self._Style_cont.Get_ymax())
-                self._test_y.create_plot()
+
+    def show_fig(self):
+        self._fig.show()
+        raw_input('bla')
 
     def save_plot(self, out_name):
         self._SavePlot(out_name)
-        try:
-            test.save_plot(out_name.replace('.','_2D.'))
-        except(AttributeError):
-            pass
-        try:
-            test.SavePlot(out_name.replace('.','_x.'))
-        except(AttributeError):
-            pass
-        try:
-            test.SavePlot(out_name.replace('.','_y.'))
-        except(AttributeError):
-            pass
 
     def Get_2D_axis(self):
         return self._ax1
@@ -176,8 +156,6 @@ class plotter2D():
         cbar_ax.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
         cbar_ax.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-
-        plt.show()
 
     def _Calc_x_projection(self):
         if self._Style_cont.Get_content() == 'Efficiencies':
