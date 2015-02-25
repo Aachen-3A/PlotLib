@@ -389,7 +389,7 @@ class plotter():
         elif plot == 'SoverSplusB':
             self._add_plots_labels[pos] = '$\mathdefault{\\frac{Signal}{\sqrt{Signal + MC}}}$'
             self._add_plots_ref_line[pos] = 0.
-            return self._Calc_SoverSpB()            
+            return self._Calc_SoverSpB()
         else:
             print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
 
@@ -570,7 +570,7 @@ class plotter():
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
-        return soverspb, x, y, err            
+        return soverspb, x, y, err
 
     def _show_only_some(self, x, pos):
         s = str(int(x))
@@ -970,6 +970,16 @@ class plotter():
 
         self._canvas= Canvas()
         self._referenceHeight=0.05/self._canvas.GetAbsHNDC() *self._canvas.GetWw() / self._canvas.GetWh()
+        #fix axis if not root style:
+        for h in self._allHists:
+            if h is None:
+                continue
+            if "\\" in h.GetXaxis().GetTitle():
+                h.GetXaxis().SetTitle( h.GetXaxis().GetTitle().replace("$\\mathsf{","").replace("\\","#").replace("}$","")  )
+            else:
+                break
+
+
         self._AddPlotBelow()
 
         self._Draw_main_root()
@@ -986,7 +996,6 @@ class plotter():
         self._fig=self._canvas
 
     def _Draw_main_root(self):
-        print self._canvas.find_all_primitives()
         drawnObjects=[]
         same=""
         if len(self._hist)>0:
@@ -1027,7 +1036,6 @@ class plotter():
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             drawnObjects[0].GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
         drawnObjects[0].GetXaxis().SetTitle(drawnObjects[0].GetXaxis().GetTitle().replace("$\\mathsf{","").replace("}$",""))
-        print drawnObjects[0].GetXaxis().GetTitle()
         drawnObjects[0].GetYaxis().SetTitleSize(self._Style_cont.axisTextSize*self._referenceHeight)
         drawnObjects[0].GetXaxis().SetTitleSize(self._Style_cont.axisTextSize*self._referenceHeight)
         drawnObjects[0].GetYaxis().SetTitleOffset(self._Style_cont.axisOffset)

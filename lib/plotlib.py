@@ -203,6 +203,21 @@ def _duke__errorbar(h, xerr, yerr, axes=None, emptybins=True, ignore_binns=None,
     return axes.errorbar(x, y, xerr=xerr, yerr=yerr, zorder=zorder, **kwargs)
 
 
+def getRGBTColor(color):
+    import ROOT
+    if type(color)==type(""):
+        if "+" in color:
+            tcolor,modif=color.split("+")
+            color=getattr(ROOT,tcolor)+int(modif)
+        elif "-" in color:
+            tcolor,modif=color.split("-")
+            color=getattr(ROOT,tcolor)-int(modif)
+        else:
+            color=getattr(ROOT,color)
+    col=ROOT.gROOT.GetColor(color)
+    return (col.GetRed(),col.GetGreen(),col.GetBlue())
+
+
 
 ##@class HistSorageContainer Class to handle data, bg and sg HistStorages
 #
@@ -323,7 +338,7 @@ class HistStorage(object):
     # @param[in] lumi is the lumi in pb
     # @param[in] path is the default path of the files (default=None)
     # @param[in] isData is a switch  (default=None)
-    def __init__(self,xs, lumi,xstype="pythonConfig", path=None,isData=False,matplotlibStyle=True):
+    def __init__(self,xs, lumi,xstype="pythonConfig", path=None,isData=False,useRoot=False):
         self.views=OrderedDict()
         self.hists=OrderedDict()
         self.files=OrderedDict()
@@ -344,7 +359,7 @@ class HistStorage(object):
         self.isCumulative=False
         self.forcedWidth=False
         self.Unit=""
-        self.matplotlibStyle=matplotlibStyle
+        self.matplotlibStyle= (not useRoot)
         self.additionalWeight={}
         self.eventString="Events"
 
@@ -424,6 +439,9 @@ class HistStorage(object):
                 weight*=self.additionalWeight[name]
             self.weight[name]=weight
             return weight
+
+    def __getitem__(self,item):
+        return self.hists[item]
 
 
     ## Function to add all files in the given path
