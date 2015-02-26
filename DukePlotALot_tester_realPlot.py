@@ -131,6 +131,8 @@ def main():
         if getDictValue(hist,cumulative):
             ##histContainer.makeCumulative(width=2)
             histContainer.makeCumulative()
+
+        print histContainer.bg["W"]
         sgPbghist=histContainer.bg.getAllAdded()+histContainer.sg.getAllAdded()
         fakeData=sgPbghist.empty_clone()
         fakeData.SetTitle("pseudo data")

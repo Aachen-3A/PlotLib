@@ -287,13 +287,13 @@ class plotter():
             self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
             if self._Style_cont.Get_lumi_val() >= 1000:
                 if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)                			
+                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else:
                     self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
                 if len(self._hist_axis) > 0:
                     self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
-                else: 
+                else:
                     self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
         if self._Style_cont.Get_add_cms_text():
             if self._Style_cont.Get_cms_text_alignment() == 'row':
@@ -1224,6 +1224,16 @@ class plotter():
 
         self._canvas= Canvas()
         self._referenceHeight=0.05/self._canvas.GetAbsHNDC() *self._canvas.GetWw() / self._canvas.GetWh()
+        #fix axis if not root style:
+        for h in self._allHists:
+            if h is None:
+                continue
+            if "\\" in h.GetXaxis().GetTitle():
+                h.GetXaxis().SetTitle( h.GetXaxis().GetTitle().replace("$\\mathsf{","").replace("\\","#").replace("}$","")  )
+            else:
+                break
+
+
         self._AddPlotBelow()
 
         self._Draw_main_root()

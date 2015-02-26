@@ -1,8 +1,15 @@
 #!/bin/env python
 
+<<<<<<< HEAD
 from DukePlotALot import *
 from plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer
 from configobj import ConfigObj
+=======
+from lib.DukePlotALot import *
+from lib.plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer,getRGBTColor
+import matplotlib.pyplot as plt
+from lib.configobj import ConfigObj
+>>>>>>> converter for root colors and a better root output switch
 try:
     from collections import OrderedDict
 except ImportError:
@@ -19,7 +26,7 @@ def main():
     xs= ConfigObj("/home/home1/institut_3a/padeken/Analysis/SirPlotAlot/xsv100.cfg")
 
 
-    bghists=HistStorage(xs,lumi,path=basedir,matplotlibStyle=False)
+    bghists=HistStorage(xs,lumi,path=basedir)
 
 
 
@@ -66,7 +73,7 @@ def main():
     colorList["QCD jet"]="darkblue"
     colorList["Top"]="pink"
     colorList["Diboson"]="green"
-    colorList["DY"]="red"
+    colorList["DY"]=getRGBTColor("kGreen+1")
 
     #print bglist
     bghists.addFileList(bglist)
@@ -74,7 +81,7 @@ def main():
     bghists.views["dataDrivenQCD"]=ScaleView(bghists.files["dataDrivenQCD"],0.63)
     bghists.colorList=colorList
 
-    sghist=HistStorage(xs,lumi,path=basedir,matplotlibStyle=False)
+    sghist=HistStorage(xs,lumi,path=basedir)
     #sgName="$\mathsf{W' \, M=2.3\,TeV \cdot 0.02}$"
     #sgName="W' M=2.3TeV $\cdot$ 0.02"
     sgName="W' M=2.3TeV 0.02"
@@ -83,7 +90,7 @@ def main():
     sghist.colorList={sgName :"darkred"}
 
 
-    dat_hist=HistStorage(xs,lumi,path=basedir,isData=True,matplotlibStyle=False)
+    dat_hist=HistStorage(xs,lumi,path=basedir,isData=True)
     dat_hist.addFile("allDataMET")
 
 
@@ -165,7 +172,7 @@ def main():
     fakeData.SetTitle("pseudo data")
     fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
 
-    hist_style = sc.style_container(style = 'CMS', useRoot = False)
+    hist_style = sc.style_container(style = 'Cool', useRoot = True)
 
     test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
     test.Add_data(fakeData)
