@@ -52,6 +52,7 @@ class style_container():
         self._histaxis_ymax = -1
         self._lumi_val = lumi
         self._cms_val = cms
+        self._no_legend=False
 
         self._grid = False
 
@@ -233,6 +234,9 @@ class style_container():
     def Get_LegendPosition(self):
         return self._LegendPosition
 
+    def Get_no_legend(self):
+        return self._no_legend
+
     def Get_kind(self):
         return self._kind
 
@@ -277,6 +281,9 @@ class style_container():
 
     def Set_error_stacking(self, stacking):
         self._error_stacking = stacking
+
+    def Set_no_legend(self):
+        self._no_legend=True
 
     def Set_additional_text(self, text):
         self._additional_text = text

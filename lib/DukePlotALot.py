@@ -306,6 +306,8 @@ class plotter():
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
     def _Add_legend(self):
+        if self._Style_cont.Get_no_legend():
+            return
         if self._add_plots[0] != '':
             self._Style_cont.Get_LegendPosition().addYspace(-(0.85 * self._add_plots_height[0] / 100.))
         if self._add_plots[1] != '':
@@ -1129,6 +1131,8 @@ class plotter():
             plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
     def _AddRootLegend(self):
+        if self._Style_cont.Get_no_legend():
+            return
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
 
