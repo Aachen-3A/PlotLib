@@ -3,8 +3,11 @@
 import sys
 import matplotlib
 import numpy as np
+import rootpy
 
 import matplotlib.pyplot as plt
+
+import rootpy.plotting.root2matplotlib as rplt
 
 def plot_upper_cut(axis1, value, cut_arrow_position = 0.5):
     print('will now plot an upper cut marker at %f'%value)
@@ -60,7 +63,29 @@ def plot_gauss_fit(axis1, histo, xmin = 0, xmax = 0):
     if xmin == 0 and xmax == 0:
         xmin, xmax = axis1.get_xlim()
 
-    fit_res = histo.Fit('gaus', 'N0S', '', xmin, xmax)
+    try:
+        fit_res = histo.Fit('gaus', 'N0S', '', xmin, xmax)
+        dummy = fit_res.Parameter(0)
+    except rootpy.ROOTError as bla:
+        print('\n\terror in the Chi2 fitting: ')
+        print('\t'+str(bla))
+        print('\ttrying again with binned likelihood method\n')
+        try:
+            fit_res = histo.Fit('gaus', 'WLN0S', '', xmin, xmax)
+            dummy = fit_res.Parameter(0)
+        except rootpy.ROOTError as bla:
+            print('\n\terror in the binned likelihood fitting: ')
+            print('\t' + str(bla))
+            print('\tThis doesn\'t seem to work either, I think you have to fix something!\n')
+            sys.exit(42)
+        except:
+            print('An unexpected error occured in the binned likelihood fitting:')
+            print(sys.exc_info()[0], sys.exc_info()[1])
+            sys.exit(42)
+    except:
+        print('An unexpected error occured in the Chi2 fitting:')
+        print(sys.exc_info()[0], sys.exc_info()[1])
+        sys.exit(42)
 
     x = np.linspace(xmin, xmax)
     y = gaussian(x, fit_res.Parameter(0), fit_res.Parameter(1), fit_res.Parameter(2))
