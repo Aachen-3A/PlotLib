@@ -53,8 +53,8 @@ class style_container():
         self._lumi_val = lumi
         self._cms_val = cms
         self._no_legend=False
-
         self._grid = False
+        self._batch_mode=True
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -198,6 +198,9 @@ class style_container():
     def Get_bg_color(self):
         return self._bg_color
 
+    def Get_batch_mode(self):
+        return self._batch_mode
+
     def Get_ref_line_color(self):
         return self._ref_line_color
 
@@ -272,6 +275,13 @@ class style_container():
 
     def Set_lumi_val(self, lumi):
         self._lumi_val = lumi
+
+    def Set_batch_mode(self,value):
+        self._batch_mode=value
+
+    #to have the same syntax as root
+    def SetBatchMode(self,value):
+        self.Set_batch_mode(value)
 
     def Set_error_bands_labl(self, label):
         self._error_bands_labl = label

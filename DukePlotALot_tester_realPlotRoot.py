@@ -114,6 +114,7 @@ def main():
     sghist.initStyle(style="sg")
 
     hist_style = sc.style_container(style = 'CMS', useRoot = True,cmsPositon="upper left",lumi=19.7,cms=13)
+    hist_style.SetBatchMode(False)
 
     for hist in hists:
         histContainer.getHist(hist)

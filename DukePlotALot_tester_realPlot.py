@@ -117,6 +117,8 @@ def main():
 
     hist_style = sc.style_container(style = 'CMS', useRoot = False)
 
+    hist_style.SetBatchMode(False)
+
     for hist in hists:
         histContainer.getHist(hist)
 

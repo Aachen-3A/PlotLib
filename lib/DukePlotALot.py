@@ -79,7 +79,8 @@ class plotter():
         self._useRoot = self._Style_cont.Get_useRoot()
         self._Style_cont.AddAxisTitle(self._allHists[0])
         if self._useRoot:
-            ROOT.gROOT.SetBatch()
+            if self._Style_cont.Get_batch_mode():
+                ROOT.gROOT.SetBatch()
         if len(self._hist_axis) > 0:
             self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
             self._Style_cont.InitStyle(histaxis = self._hist_axis)
@@ -112,6 +113,8 @@ class plotter():
         self._checker()
         self._Draw()
         self._SavePlot(out_name)
+        if self._Style_cont.Get_batch_mode()==False:
+            self.show_fig()
 
     ## Function to create the complete plot, after all definitions are set
     #
@@ -217,8 +220,9 @@ class plotter():
     # This function shows the plot in the matplotlib browser, so that the
     # user can modify it.
     def show_fig(self):
-        self._fig.show()
-        raw_input('bla')
+        if not self._useRoot:
+            self._fig.show()
+        raw_input('hit any key to continue')
 
     ## Function to save the complete plot
     #
