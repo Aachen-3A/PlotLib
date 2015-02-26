@@ -75,7 +75,8 @@ class plotter2D():
         return self._ax3
 
     def Get_x_projection_hist(self):
-        return self._x_projection
+        ret_hist = self._x_projection
+        return ret_hist
 
     def Get_y_projection_hist(self):
         return self._y_projection
@@ -249,6 +250,7 @@ class plotter2D():
 
     def _Get_rootpy_hist1d(self, temp_hist):
         dummy_hist = Hist(temp_hist.GetNbinsX(), temp_hist.GetXaxis().GetXmin(), temp_hist.GetXaxis().GetXmax())
+        dummy_hist.SetTitle(temp_hist.GetName())
         for i in range(0, temp_hist.GetNbinsX()):
             dummy_hist.SetBinContent(i, temp_hist.GetBinContent(i))
             dummy_hist.SetBinError(i, temp_hist.GetBinError(i))
