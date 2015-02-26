@@ -69,7 +69,7 @@ class style_container():
             print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
             self._xaxis_title      = 'bla'
             self._yaxis_title      = '#epsilon'
-            
+
     def AddAxisTitle_histaxis(self, hist):
         try:
             self._histaxis_xaxis_title      = hist.xaxis.GetTitle()
@@ -127,7 +127,7 @@ class style_container():
 
     def Get_y_label_offset(self):
         return self._y_label_offset
-        
+
     def Get_histaxis_y_label_offset(self):
         return self._histaxis_y_label_offset
 
@@ -169,7 +169,7 @@ class style_container():
 
     def Get_xmax(self):
         return self._xmax
-        
+
     def Get_histaxis_logy(self):
         return self._histaxis_logy
 
@@ -177,7 +177,7 @@ class style_container():
         return self._histaxis_ymin
 
     def Get_histaxis_ymax(self):
-        return self._histaxis_ymax     
+        return self._histaxis_ymax
 
     def Get_add_cms_text(self):
         return self._add_cms_text
@@ -187,7 +187,7 @@ class style_container():
 
     def Get_label_text_color(self):
         return self._label_text_color
-        
+
     def Get_histaxis_label_text_color(self):
         return self._histaxis_label_text_color
 
@@ -313,7 +313,7 @@ class style_container():
     def _Set_CMS_style(self):
         self._add_cms_text           = True
         self._add_lumi_text          = True
-        self._label_text_color       = 'black'		
+        self._label_text_color       = 'black'
         self._annotation_text_color  = 'black'
         self._bg_color               = 'w'
         self._ref_line_color         = 'blue'
@@ -333,7 +333,7 @@ class style_container():
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
-            self._histaxis_label_text_color='red'	
+            self._histaxis_label_text_color='red'
         if self.addplots[0] != '':
             self._cmsTextPosition.addYspace(  -0.9 * self.addheights[0] / 100.)
         if self.addplots[1] != '':
@@ -341,7 +341,7 @@ class style_container():
         if self.addplots[2] != '':
             self._cmsTextPosition.addYspace(  0.9 * self.addheights[2] / 100.)
         if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)    
+            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Plain_style(self):
         self._add_cms_text                    = False
@@ -360,13 +360,13 @@ class style_container():
         self._marker_color                    = 'black'
         self._marker_error_cap_width          = 1
         self._cms_text_alignment              = 'row'
-        self._show_minor_tick_labels          = True
+        self._show_minor_tick_labels          = False
         self._legend_font_size                = 10
         self._axis_title_font_size   = 9
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
-            self._histaxis_label_text_color='red'	
+            self._histaxis_label_text_color='red'
         if self.addplots[0] != '':
             self._cmsTextPosition.addYspace(  -0.8 * self.addheights[0] / 100.)
         if self.addplots[1] != '':
@@ -374,7 +374,7 @@ class style_container():
         if self.addplots[2] != '':
             self._cmsTextPosition.addYspace(  0.8 * self.addheights[2] / 100.)
         if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)  
+            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Cool_style(self):
         self._add_cms_text           = True
@@ -399,7 +399,7 @@ class style_container():
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
-            self._histaxis_label_text_color='red'	
+            self._histaxis_label_text_color='red'
 
     def _Set_Root_style(self):
         self.cmsTextFont          = 63   # Fonts
