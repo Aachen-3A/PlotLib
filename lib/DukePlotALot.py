@@ -1244,7 +1244,7 @@ class plotter():
             lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._Style_cont.Get_lumi_val()/1000.),self._Style_cont.Get_cms_val())
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
-        deco=rooLib.CmsDecoration(extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
+        deco=rooLib.CmsDecoration(sc_obj=self._Style_cont ,extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, position=self._Style_cont.Get_cmsTextPosition(), pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
         self._fig=self._canvas
