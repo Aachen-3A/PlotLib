@@ -726,7 +726,7 @@ class plotter():
     def _Draw_0(self):
         ## Plot a derived distribution on top of the main distribution on axis 0
         if self._add_plots[0] != '':
-            self._ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             self._ax0.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             self._ax0.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax0.spines['top'].set_color(self._Style_cont.Get_spine_color())
@@ -1007,7 +1007,7 @@ class plotter():
     def _Draw_2(self):
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
-            self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax2,
                           markersize = self._Style_cont.Get_marker_size(),
@@ -1046,14 +1046,14 @@ class plotter():
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
                 plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            plt.setp(axis1.get_xticklabels(), visible = False)
+            plt.setp(self._ax1.get_xticklabels(), visible = False)
             return None
         return None
 
     def _Draw_3(self):
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if self._add_plots[2] != '':
-            self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax3,
                           markersize = self._Style_cont.Get_marker_size(),
@@ -1085,7 +1085,7 @@ class plotter():
             self._ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
-            plt.setp(axis1.get_xticklabels(), visible = False)
+            plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             return None
         return None
