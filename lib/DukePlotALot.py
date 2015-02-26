@@ -229,10 +229,10 @@ class plotter():
 
     def ChangeStyle(self,**kwargs):
         for key in kwargs:
-            if hasattr(self,"_"+key):
-                setattr(self,"_"+key,kwargs[key])
+            if hasattr(self._Style_cont,"_"+key):
+                setattr(self._Style_cont,"_"+key,kwargs[key])
             else:
-                print "\n\tNo attribute _%s in plotter\n"%key
+                print "\n\tNo attribute _%s in syle\n"%key
                 sys.exit(42)
 
     ## Function to get the axis 0

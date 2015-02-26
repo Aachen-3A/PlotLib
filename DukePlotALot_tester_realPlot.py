@@ -149,7 +149,7 @@ def main():
         #test.Add_plot('Diff',pos=2, height=15)
         #test.Add_plot('Ratio',pos=0, height=15)
         #test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
-        test.ChangeStyle(cms_val=8,lumi_val=lumi)
+        #test.ChangeStyle(cms_val=8,lumi_val=lumi)
         #test._cms_val=8
         #test._lumi_val=19700
 
@@ -171,8 +171,6 @@ def main():
     test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
     test.Add_data(fakeData)
     test.Add_plot('DiffRatio',pos=1, height=15)
-    test._cms_val=8
-    test._lumi_val=19700
     name="metTreePlot"
     test.Set_axis(xmin=140,xmax=1500,ymin=1.01e-1,ymax=0.5e4)
 

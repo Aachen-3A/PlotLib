@@ -113,7 +113,7 @@ def main():
     bghists.initStyle(style="bg")
     sghist.initStyle(style="sg")
 
-    hist_style = sc.style_container(style = 'CMS', useRoot = True,cmsPositon="upper left")
+    hist_style = sc.style_container(style = 'CMS', useRoot = True,cmsPositon="upper left",lumi=19.7,cms=13)
 
     for hist in hists:
         histContainer.getHist(hist)
