@@ -52,6 +52,7 @@ class style_container():
         self._histaxis_ymax = -1
         self._lumi_val = lumi
         self._cms_val = cms
+        self._add_lumi_text = True
 
         self._grid = False
 
@@ -266,6 +267,9 @@ class style_container():
     def Get_axis_title_font_size(self):
         return self._axis_title_font_size
 
+    def Set_add_lumi_text(self, value):
+        self._add_lumi_text = value
+
     def Set_lumi_val(self, lumi):
         self._lumi_val = lumi
 
@@ -312,7 +316,6 @@ class style_container():
     ##------------------------------------------------------------------
     def _Set_CMS_style(self):
         self._add_cms_text           = True
-        self._add_lumi_text          = True
         self._label_text_color       = 'black'
         self._annotation_text_color  = 'black'
         self._bg_color               = 'w'
@@ -345,7 +348,6 @@ class style_container():
 
     def _Set_Plain_style(self):
         self._add_cms_text                    = False
-        self._add_lumi_text                   = False
         self._label_text_color                = 'black'
         self._annotation_text_color           = 'black'
         self._bg_color                        = 'w'
@@ -378,7 +380,6 @@ class style_container():
 
     def _Set_Cool_style(self):
         self._add_cms_text           = True
-        self._add_lumi_text          = True
         self._label_text_color       = 'white'
         self._annotation_text_color  = 'white'
         self._bg_color               = '#07000d'
