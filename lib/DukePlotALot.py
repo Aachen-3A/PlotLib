@@ -79,7 +79,8 @@ class plotter():
         self._useRoot = self._Style_cont.Get_useRoot()
         self._Style_cont.AddAxisTitle(self._allHists[0])
         if self._useRoot:
-            ROOT.gROOT.SetBatch()
+            if self._Style_cont.Get_batch_mode():
+                ROOT.gROOT.SetBatch()
         if len(self._hist_axis) > 0:
             self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
             self._Style_cont.InitStyle(histaxis = self._hist_axis)
@@ -112,6 +113,8 @@ class plotter():
         self._checker()
         self._Draw()
         self._SavePlot(out_name)
+        if self._Style_cont.Get_batch_mode()==False:
+            self.show_fig()
 
     ## Function to create the complete plot, after all definitions are set
     #
@@ -217,8 +220,9 @@ class plotter():
     # This function shows the plot in the matplotlib browser, so that the
     # user can modify it.
     def show_fig(self):
-        self._fig.show()
-        raw_input('bla')
+        if not self._useRoot:
+            self._fig.show()
+        raw_input('hit any key to continue')
 
     ## Function to save the complete plot
     #
@@ -229,10 +233,10 @@ class plotter():
 
     def ChangeStyle(self,**kwargs):
         for key in kwargs:
-            if hasattr(self,"_"+key):
-                setattr(self,"_"+key,kwargs[key])
+            if hasattr(self._Style_cont,"_"+key):
+                setattr(self._Style_cont,"_"+key,kwargs[key])
             else:
-                print "\n\tNo attribute _%s in plotter\n"%key
+                print "\n\tNo attribute _%s in syle\n"%key
                 sys.exit(42)
 
     ## Function to get the axis 0
@@ -306,6 +310,8 @@ class plotter():
                 print('At the moment only ''row'' and ''column'' are allowed alignment values')
 
     def _Add_legend(self):
+        if self._Style_cont.Get_no_legend():
+            return
         if self._add_plots[0] != '':
             self._Style_cont.Get_LegendPosition().addYspace(-(0.85 * self._add_plots_height[0] / 100.))
         if self._add_plots[1] != '':
@@ -724,7 +730,7 @@ class plotter():
     def _Draw_0(self):
         ## Plot a derived distribution on top of the main distribution on axis 0
         if self._add_plots[0] != '':
-            self._ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax0 = plt.subplot2grid((100,1), (0,0), rowspan = self._hist_start, colspan=1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             self._ax0.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             self._ax0.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax0.spines['top'].set_color(self._Style_cont.Get_spine_color())
@@ -1005,7 +1011,7 @@ class plotter():
     def _Draw_2(self):
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
-            self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax2,
                           markersize = self._Style_cont.Get_marker_size(),
@@ -1044,14 +1050,14 @@ class plotter():
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
                 plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-            plt.setp(axis1.get_xticklabels(), visible = False)
+            plt.setp(self._ax1.get_xticklabels(), visible = False)
             return None
         return None
 
     def _Draw_3(self):
         ## Plot a derived distribution at the very bottom of the main distribution on axis 3
         if self._add_plots[2] != '':
-            self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = axis1, axisbg = self._Style_cont.Get_bg_color())
+            self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
             duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax3,
                           markersize = self._Style_cont.Get_marker_size(),
@@ -1083,7 +1089,7 @@ class plotter():
             self._ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
-            plt.setp(axis1.get_xticklabels(), visible = False)
+            plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             return None
         return None
@@ -1129,6 +1135,8 @@ class plotter():
             plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
     def _AddRootLegend(self):
+        if self._Style_cont.Get_no_legend():
+            return
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
 
@@ -1244,7 +1252,7 @@ class plotter():
             lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._Style_cont.Get_lumi_val()/1000.),self._Style_cont.Get_cms_val())
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
-        deco=rooLib.CmsDecoration(extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, align="left", valign="top", pad=ROOT.gPad)
+        deco=rooLib.CmsDecoration(sc_obj=self._Style_cont ,extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, position=self._Style_cont.Get_cmsTextPosition(), pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
         self._fig=self._canvas
