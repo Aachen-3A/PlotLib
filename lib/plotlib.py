@@ -18,6 +18,13 @@ class NoDictMessagesFilter(logging.Filter):
         #return "is not an exact divider of nbins=" not in record.msg
         return " is not an exact divider of nbins=" not in record.msg
 log["/ROOT.TH1D.Rebin"].addFilter(NoDictMessagesFilter())
+class LayoutMessagesFilter(logging.Filter):
+    def filter(self, record):
+        return "the on-file layout version 4 of class 'TAttAxis' differs from" not in record.msg
+log["/ROOT.TStreamerInfo.CompareContent"].addFilter(LayoutMessagesFilter())
+
+
+log_plotlib = log["plotlib"]
 
 rnd=rounding()
 
@@ -273,6 +280,13 @@ class HistStorageContainer():
         for stored in self.allStored:
             stored.rebin(width=width,factor=factor,vector=vector)
 
+    ## Function setTitle for the all hists
+    #
+    # @param[in] xtitle
+    def setTitle(self,xtitle):
+        for stored in self.allStored:
+            stored.setTitle(xtitle)
+
     ## Function to set the style of the histograms
     #
     # @param[in] bgcolors a list/dict of colors that the hists should have
@@ -384,8 +398,8 @@ class HistStorage(object):
                 Nev=max(counter[1].value,counter[2].value)
             except:
                 if self.verbosity==3:
-                    print("[Info] If you want to use Nev from the root file store 'h_counters'")
-                    print("will set to 1 for %s"%(name))
+                    log_plotlib.info("[Info] If you want to use Nev from the root file store 'h_counters'")
+                    log_plotlib.info("will set to 1 for %s"%(name))
                 Nev=1
             self.genNumber[name]=Nev
 
@@ -427,10 +441,16 @@ class HistStorage(object):
                 weight=1.
             else:
                 if self.configxs=="pythonConfig":
-                    if "weight" in self.xs[name]:
-                        weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                    if "xs" in self.xs[name]:
+                        if "weight" in self.xs[name]:
+                            weight=self.xs[name].as_float("xs")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                        else:
+                            weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
                     else:
-                        weight=self.xs[name].as_float("xs")*self.lumi/self.genNumber[name]
+                        if "weight" in self.xs[name]:
+                            weight=self.xs[name].as_float("crosssection")*self.xs[name].as_float("weight")*self.lumi/self.genNumber[name]
+                        else:
+                            weight=self.xs[name].as_float("crosssection")*self.lumi/self.genNumber[name]
                 if self.configxs=="music":
                     weight=self.xs.as_float("%s.XSec"%(name))*self.xs.as_float("%s.FilterEff"%(name))*self.xs.as_float("%s.kFactor"%(name))*self.xs.as_float("Lumi")/self.genNumber[name]
                 if self.configxs==None:
@@ -469,7 +489,7 @@ class HistStorage(object):
                     if v.lower() in file.split("/")[-1].lower():
                         vetoed=True
                 if vetoed:
-                    print("vetoed file: %s"%file)
+                    log_plotlib.info("vetoed file: %s"%file)
                     continue
             name=file.split("/")[-1].replace(".root","")
             self.files[name]=File(file, "read")
@@ -583,8 +603,11 @@ class HistStorage(object):
     def getHist(self,hist):
         self.clearHists()
         for f in self.views:
-            self.hists[f]=self.views[f].Get(hist)
-            self.hists[f].Sumw2()
+            try:
+                self.hists[f]=self.views[f].Get(hist)
+                self.hists[f].Sumw2()
+            except:
+                self.hists[f]=self.files[f].Get(hist)
         if self._joinList is not False:
             self.joinList(self._joinList)
         for hist in self.hists:
@@ -601,8 +624,8 @@ class HistStorage(object):
             try:
                 _tree=self.files[f].Get(tree)
             except:
-                print "No %s in %s"%(tree,f)
-                print "Will try without %s, and add an empty hist."%f
+                log_plotlib.warning( "No %s in %s"%(tree,f))
+                log_plotlib.warning( "Will try without %s, and add an empty hist."%f)
                 self.hists[f]=Hist(binns,xmin,xmax)
                 continue
             self.hists[f]=Hist(binns,xmin,xmax)
@@ -610,9 +633,9 @@ class HistStorage(object):
             try:
                 _tree.Draw(value,selection=cut,hist=self.hists[f])
             except:
-                print "Perhaps try this one:"
+                log_plotlib.info( "Perhaps try this one:")
                 for i in _tree.glob("*"):
-                    print i
+                    log_plotlib.info( i)
                 raise RuntimeError("Will stop here!")
             self.hists[f].Scale(self._getWeight(f))
             self.hists[f].Sumw2()
@@ -706,25 +729,36 @@ class HistStorage(object):
     def setPath(self,path):
         self.basepath=path
 
+    ## Function to set x axis title for all hists
+    #
+    # @param[in] xtitle
+    def setTitle(self,xtitle):
+        for h in self.hists.values():
+            h.GetXaxis().SetTitle(xtitle)
+
+
     ## Function to set the style of the histograms
     #
     # sets the axis labels and titles
     def setStyle(self):
         for key in self.hists:
-            if self.matplotlibStyle:
-                if "$" not in self.hists[key].xaxis.GetTitle():
-                    self.hists[key].xaxis.SetTitle("$\\mathsf{"+self.hists[key].xaxis.GetTitle().replace("#","\\")+"}$")
-            if self.isCumulative and ">" not in self.eventString:
-                self.eventString+=">%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
-            if self.forcedWidth is not False:
-                width=self.forcedWidth
-            else:
-                width=self.hists.values()[-1].xwidth(2)
-            self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(self.eventString,rnd.latex(width),self._getUnit()))
-            if self.isData:
-                self.hists[key].SetTitle("data")
-            else:
-                self.hists[key].SetTitle(key)
+            try:
+                if self.matplotlibStyle:
+                    if "$" not in self.hists[key].xaxis.GetTitle():
+                        self.hists[key].xaxis.SetTitle("$\\mathsf{"+self.hists[key].xaxis.GetTitle().replace("#","\\")+"}$")
+                if self.isCumulative and ">" not in self.eventString:
+                    self.eventString+=">%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
+                if self.forcedWidth is not False:
+                    width=self.forcedWidth
+                else:
+                    width=self.hists.values()[-1].xwidth(2)
+                self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(self.eventString,rnd.latex(width),self._getUnit()))
+                if self.isData:
+                    self.hists[key].SetTitle("data")
+                else:
+                    self.hists[key].SetTitle(key)
+            except:
+                log_plotlib.warning("Could not change the axis title")
 
     ## Function to init the style of the histograms
     #
