@@ -1,5 +1,6 @@
 from __future__ import division
 import ROOT
+import style_class as sc
 
 def Latex(pad=None):
     if pad is None:
@@ -11,125 +12,141 @@ def Latex(pad=None):
     #latex.SetNDC()
     latex.SetTextAngle(0)
     latex.SetTextColor(ROOT.kBlack)
-    latex.SetTextFont(42)
+    latex.SetTextFont(43)
     latex.SetTextSize(0.9*referenceHeight)
     return latex
 
 class CmsDecoration(object):
-    def __init__(self, extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", align="left", valign="top", vspace=0, hspace=0, referenceHeight=None, pad=None):
-        self.cmsTextFont          = 61   # Fonts
-        self.lumiTextFont         = 42
-        self.extraTextFont        = 52
-        self.additionalTextFont   = 42
-        self.cmsTextSize          = 0.9  #Text sizes
-        self.lumiTextSize         = 0.6
-        self.extraTextSize        = 0.76*self.cmsTextSize
-        self.additionalTextSize   = 1.0*self.extraTextSize
-        self.additionalTextVspace = 0.3*self.extraTextSize
-        self.lumiTextOffset       = 0.2
-        self.extraTextOffset      = 2.5  # only used in outOfFrame version
-        #self.referenceSize        = 0.1
+
+    def __init__(self,sc_obj=sc.style_container(), extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", position=None, vspace=0, hspace=0, referenceHeight=None, pad=None):
+        self._style=sc_obj
         self.relPosX    = 0.055  #relative padding
         self.relPosY    = 0.035#55
         self.relExtraDY = 1.3    #line height
-        self.extraText, self.additionalText, self.lumiText = extraText, additionalText, lumiText
-        self.align, self.valign, self.vspace, self.hspace = align, valign, vspace, hspace
-        
+
+
+        self.lumiText=lumiText
+        self.lumiTextOffset       = 0.2
+        self.extraTextOffset      = 2.5  # only used in outOfFrame version
+
+        if extraText!=None:
+            self.extraText=extraText
+        else:
+            self.extraText=""
+        if additionalText!=None:
+            self.additionalText=additionalText
+        else:
+            self.additionalText=""
+
+
         if pad:
             self.pad=pad
         else:
             for i in range(1000):
                 self.pad = ROOT.gROOT.GetSelectedPad()
-                #print "mark",self.pad
                 if repr(self.pad)!="<ROOT.TVirtualPad object at 0x(nil)>": break
-        if referenceHeight:
-            self.referenceHeight = referenceHeight
-        else:
-            self.referenceHeight=0.05/self.pad.GetAbsHNDC() *self.pad.GetWw() / self.pad.GetWh()
-            #self.referenceHeight = self.pad.GetTopMargin()
-        #print "decoreferenceheight",self.referenceHeight,0.05,self.pad.GetAbsHNDC() ,self.pad.GetWw() , self.pad.GetWh()
+
+
+        if position is None:
+            self._style._cmsTextPosition=sc.position(positiontext="top left", isText=True)
+
+        self.align_=2
+        if self._style._cmsTextPosition.getX()<=0.3:
+            self.align_+=10
+        elif self._style._cmsTextPosition.getX()>0.3 and self._style._cmsTextPosition.getX()<0.7:
+            self.align_+=20
+        elif self._style._cmsTextPosition.getX()>=0.7:
+            self.align_+=30
+
 
     def Draw(self):
         if type(self.additionalText) is list or self.additionalText is None:
             additionalTextList = self.additionalText
         else:
             additionalTextList = [self.additionalText]
-        align_=2
-        if self.align=="left":
-            align_+=10
-        elif self.align=="center":
-            align_+=20
-        elif self.align=="right":
-            align_+=30
-    
+
         l = self.pad.GetLeftMargin()
         t = self.pad.GetTopMargin()
         r = self.pad.GetRightMargin()
         b = self.pad.GetBottomMargin()
+
         self.pad.cd()
         latex=ROOT.TLatex()
         latex.SetNDC()
         latex.SetTextAngle(0)
         latex.SetTextColor(ROOT.kBlack)
-        latex.SetTextFont(42)
+        latex.SetTextFont(self._style.additionalTextFont)
         latex.SetTextAlign(31)
-        latex.SetTextSize(self.lumiTextSize*self.referenceHeight)
+        latex.SetTextSize(self._style.lumiTextSize)
         latex.DrawLatex(1-r,1-t+self.lumiTextOffset*t,self.lumiText)
-    
-        if self.valign=="outofframe":
-            latex.SetTextFont(self.cmsTextFont)
-            latex.SetTextAlign(11)
-            latex.SetTextSize(self.cmsTextSize*self.referenceHeight)
-            latex.DrawLatex(l,1-t+lumiTextOffset*t,"CMS")
-            latex.SetTextFont(self.extraTextFont)
-            latex.SetTextSize(self.extraTextSize*self.referenceHeight)
-            latex.DrawLatex(l +  cmsTextSize*t*extraTextOffset, 1-t+lumiTextOffset*t, extraText)  #this can be improved to the actual cms text size+something
-        else:
-            latex.SetTextAlign(align_)
-            totalTextHeight=self.relExtraDY*self.cmsTextSize*self.referenceHeight
-            if self.extraText: totalTextHeight+=self.relExtraDY*self.extraTextSize*self.referenceHeight
-            if additionalTextList: totalTextHeight+=len(additionalTextList)*(self.relExtraDY*self.additionalTextSize*self.referenceHeight)+self.additionalTextVspace*self.referenceHeight
-            
-            if self.align=="left":
-                posX_ =   l + self.relPosX*(1-l-r)+self.hspace
-            elif( self.align=="center" ):
-                posX_ =  l + 0.5*(1-l-r)+self.hspace
-            elif( self.align=="right" ):
-                posX_ =  1-r - self.relPosX*(1-l-r)+self.hspace
-            if self.valign=="top":
-                posY_ = 1-t - self.relPosY*(1-t-b)-self.vspace
-            elif( self.valign=="middle" ):
-                posY_ = b + 0.5*(1-t-b+totalTextHeight) -self.vspace
-            elif( self.valign=="bottom" ):
-                posY_ = b + self.relPosY*(1-t-b)+totalTextHeight-self.vspace
-            posY_-=self.relExtraDY*self.cmsTextSize*self.referenceHeight*0.5
-            latex.SetTextFont(self.cmsTextFont)
-            latex.SetTextSize(self.cmsTextSize*self.referenceHeight)
-            #print "settextsize",self.cmsTextSize,self.referenceHeight
-            latex.SetTextAlign(align_)
-            latex.DrawLatex(posX_, posY_, "CMS")
-            posY_-=self.relExtraDY*self.cmsTextSize*self.referenceHeight*0.5
-            if( self.extraText ):
-                posY_-=self.relExtraDY*self.extraTextSize*self.referenceHeight*0.5
-                latex.SetTextFont(self.extraTextFont)
-                latex.SetTextAlign(align_)
-                latex.SetTextSize(self.extraTextSize*self.referenceHeight)
-                latex.DrawLatex(posX_, posY_, self.extraText)
-                posY_-=self.relExtraDY*self.extraTextSize*self.referenceHeight*0.5
-            if( additionalTextList ):
-                posY_-=self.additionalTextVspace*self.referenceHeight
-                for text in additionalTextList:
-                    posY_-=self.relExtraDY*self.additionalTextSize*self.referenceHeight*0.5
-                    latex.SetTextFont(self.additionalTextFont)
-                    latex.SetTextAlign(align_)
-                    latex.SetTextSize(self.additionalTextSize*self.referenceHeight)
-                    latex.DrawLatex(posX_, posY_, text)
-                    posY_-=self.relExtraDY*self.additionalTextSize*self.referenceHeight*0.5
+
+
+        latex.SetTextAlign(self.align_)
+        latex.SetTextFont(self._style.cmsTextFont)
+        latex.SetTextSize(self._style.cmsTextSize)
+
+
+        latex.DrawLatex(self._style._cmsTextPosition.getX(),self._style._cmsTextPosition.getY(),"CMS")
+        latex.SetTextFont(self._style.extraTextFont)
+        latex.SetTextSize(self._style.extraTextSize)
+
+        latex.SetTextAlign(self.align_)
+        latex.DrawLatex(self._style.Get_cmsTextPosition().getX(),self._style.Get_cmsTextPosition().getY()-0.04, self.extraText)  #this can be improved to the actual cms text size+something
+
+        #if self.valign=="outofframe":
+            #latex.SetTextFont(self.cmsTextFont)
+            #latex.SetTextAlign(11)
+            #latex.SetTextSize(self.cmsTextSize*self.referenceHeight)
+            #latex.DrawLatex(l,1-t+lumiTextOffset*t,"CMS")
+            #latex.SetTextFont(self.extraTextFont)
+            #latex.SetTextSize(self.extraTextSize*self.referenceHeight)
+            #latex.DrawLatex(l +  cmsTextSize*t*extraTextOffset, 1-t+lumiTextOffset*t, extraText)  #this can be improved to the actual cms text size+something
+        #else:
+            #latex.SetTextAlign(align_)
+            #totalTextHeight=self.relExtraDY*self.cmsTextSize*self.referenceHeight
+            #if self.extraText: totalTextHeight+=self.relExtraDY*self.extraTextSize*self.referenceHeight
+            #if additionalTextList: totalTextHeight+=len(additionalTextList)*(self.relExtraDY*self.additionalTextSize*self.referenceHeight)+self.additionalTextVspace*self.referenceHeight
+
+            #if self.align=="left":
+                #posX_ =   l + self.relPosX*(1-l-r)+self.hspace
+            #elif( self.align=="center" ):
+                #posX_ =  l + 0.5*(1-l-r)+self.hspace
+            #elif( self.align=="right" ):
+                #posX_ =  1-r - self.relPosX*(1-l-r)+self.hspace
+            #if self.valign=="top":
+                #posY_ = 1-t - self.relPosY*(1-t-b)-self.vspace
+            #elif( self.valign=="middle" ):
+                #posY_ = b + 0.5*(1-t-b+totalTextHeight) -self.vspace
+            #elif( self.valign=="bottom" ):
+                #posY_ = b + self.relPosY*(1-t-b)+totalTextHeight-self.vspace
+            #posY_-=self.relExtraDY*self.cmsTextSize*self.referenceHeight*0.5
+            #latex.SetTextFont(self.cmsTextFont)
+            #latex.SetTextSize(self.cmsTextSize*self.referenceHeight)
+            ##print "settextsize",self.cmsTextSize,self.referenceHeight
+            #latex.SetTextAlign(align_)
+            #latex.DrawLatex(posX_, posY_, "CMS")
+            #posY_-=self.relExtraDY*self.cmsTextSize*self.referenceHeight*0.5
+            #if( self.extraText ):
+                #posY_-=self.relExtraDY*self.extraTextSize*self.referenceHeight*0.5
+                #latex.SetTextFont(self.extraTextFont)
+                #latex.SetTextAlign(align_)
+                #latex.SetTextSize(self.extraTextSize*self.referenceHeight)
+                #latex.DrawLatex(posX_, posY_, self.extraText)
+                #posY_-=self.relExtraDY*self.extraTextSize*self.referenceHeight*0.5
+            #if( additionalTextList ):
+                #posY_-=self.additionalTextVspace*self.referenceHeight
+                #for text in additionalTextList:
+                    #posY_-=self.relExtraDY*self.additionalTextSize*self.referenceHeight*0.5
+                    #latex.SetTextFont(self.additionalTextFont)
+                    #latex.SetTextAlign(align_)
+                    #latex.SetTextSize(self.additionalTextSize*self.referenceHeight)
+                    #latex.DrawLatex(posX_, posY_, text)
+                    #posY_-=self.relExtraDY*self.additionalTextSize*self.referenceHeight*0.5
 
 
 class Legend(object):
     def __init__(self, align="right", valign="top", pad=None, vspace=0, hspace=0,ncolumns=1):
-        self.textFont    = 42       #text font
+        self.textFont    = 43       #text font
         self.textSize    = 0.6      #relative text size to top margin
         self.tickOffset  = 0.02     #offset for ticks
         self.relPosX     = 0.01#0.055;   #relative padding
@@ -171,14 +188,14 @@ class Legend(object):
         t = self.pad.GetTopMargin()
         r = self.pad.GetRightMargin()
         b = self.pad.GetBottomMargin()
-        
+
         textwidth=0
         for e in self.entries:
             #print self.getTextWidth(e[1])
             textwidth=max(textwidth, self.getTextWidth(e[1]))
         self.margin=1/(1+textwidth/self.symbolWidth)  # relative symbol width
-        legendheight=int((len(self.entries)+1)/self.ncolumns) *self.textSize*self.lineHeight*self.referenceHeight 
-        legendwidth =(self.margin+1)*textwidth+self.legendGap 
+        legendheight=int((len(self.entries)+1)/self.ncolumns) *self.textSize*self.lineHeight*self.referenceHeight
+        legendwidth =(self.margin+1)*textwidth+self.legendGap
         if self.valign=="top":
             posy=1-t-legendheight- self.tickOffset - self.relPosY*(1-t-b)
         elif self.valign=="bottom":
@@ -287,7 +304,7 @@ def tdrStyle():
     tdrStyle.SetOptFile(0)
     tdrStyle.SetOptStat(0) # To display the mean and RMS:   SetOptStat("mr")
     tdrStyle.SetStatColor(ROOT.kWhite)
-    tdrStyle.SetStatFont(42)
+    tdrStyle.SetStatFont(43)
     tdrStyle.SetStatFontSize(0.025)
     tdrStyle.SetStatTextColor(1)
     tdrStyle.SetStatFormat("6.4g")
@@ -307,7 +324,7 @@ def tdrStyle():
     # For the Global title:
 
     #  tdrStyle.SetOptTitle(0)
-    tdrStyle.SetTitleFont(42)
+    tdrStyle.SetTitleFont(43)
     tdrStyle.SetTitleColor(1)
     tdrStyle.SetTitleTextColor(1)
     tdrStyle.SetTitleFillColor(10)
@@ -322,7 +339,7 @@ def tdrStyle():
     # For the axis titles:
 
     tdrStyle.SetTitleColor(1, "XYZ")
-    tdrStyle.SetTitleFont(42, "XYZ")
+    tdrStyle.SetTitleFont(43, "XYZ")
     tdrStyle.SetTitleSize(0.06, "XYZ")
     # tdrStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
     # tdrStyle.SetTitleYSize(Float_t size = 0.02)
@@ -333,7 +350,7 @@ def tdrStyle():
     # For the axis labels:
 
     tdrStyle.SetLabelColor(1, "XYZ")
-    tdrStyle.SetLabelFont(42, "XYZ")
+    tdrStyle.SetLabelFont(43, "XYZ")
     tdrStyle.SetLabelOffset(0.007, "XYZ")
     tdrStyle.SetLabelSize(0.04, "XYZ")
 

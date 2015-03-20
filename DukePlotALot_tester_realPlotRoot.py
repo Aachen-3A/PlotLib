@@ -2,16 +2,14 @@
 
 from lib.DukePlotALot import *
 from lib.plotlib import HistStorage,getColorList,getDictValue,HistStorageContainer,getRGBTColor
-import matplotlib.pyplot as plt
 from lib.configobj import ConfigObj
 try:
     from collections import OrderedDict
 except ImportError:
-    from lib.ordered import OrderedDict
+    from ordered import OrderedDict
 
 from rootpy.plotting.views import ScaleView
 
-import style_class as sc
 
 def main():
 
@@ -115,7 +113,8 @@ def main():
     bghists.initStyle(style="bg")
     sghist.initStyle(style="sg")
 
-    hist_style = sc.style_container(style = 'CMS', useRoot = True)
+    hist_style = sc.style_container(style = 'CMS', useRoot = True,cmsPositon="upper left",lumi=19.7,cms=13)
+    hist_style.SetBatchMode(False)
 
     for hist in hists:
         histContainer.getHist(hist)
@@ -136,7 +135,7 @@ def main():
         fakeData.SetTitle("pseudo data")
         fakeData.FillRandom(sgPbghist,int(sgPbghist.Integral()))
 
-        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
+        test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style)
 
 
 
@@ -144,10 +143,9 @@ def main():
         test.Add_data(fakeData)
         #test.Add_plot('DiffRatio',pos=1, height=15)
         #test.Add_plot('Signi',pos=2, height=15)
-        #test.Add_plot('Diff',pos=2, height=15)
-        #test.Add_plot('Ratio',pos=0, height=15)
+        #test.Add_plot('Diff',pos=1, height=0.33)
+        #test.Add_plot('Ratio',pos=0, height=0.2)
         #test.Add_error_hist([sys_hist_2,sys_hist], band_center = 'ref')
-        test.ChangeStyle(cms_val=8,lumi_val=lumi)
         #test._cms_val=8
         #test._lumi_val=19700
 
@@ -171,9 +169,7 @@ def main():
 
     test = plotter(hist=histContainer.getBGList(),sig=histContainer.getSGList(),style=hist_style,cmsPositon="upper left")
     test.Add_data(fakeData)
-    test.Add_plot('DiffRatio',pos=1, height=15)
-    test._cms_val=8
-    test._lumi_val=19700
+    test.Add_plot('DiffRatio',pos=0, height=0.33)
     name="metTreePlot"
     test.Set_axis(xmin=140,xmax=1500,ymin=1.01e-1,ymax=0.5e4)
 
