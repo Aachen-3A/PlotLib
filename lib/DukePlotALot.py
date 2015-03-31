@@ -1131,6 +1131,8 @@ class plotter():
                 command="rm %s"%(out_name[:-3] + 'eps')
                 command=command.split(" ")
                 subprocess.call(command)
+        elif out_name[-3:] == 'png':
+            plt.savefig(out_name,dpi=300)
         else:
             plt.savefig(out_name, facecolor = self._fig.get_facecolor())
 
