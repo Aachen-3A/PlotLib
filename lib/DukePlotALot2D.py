@@ -13,6 +13,7 @@ from matplotlib.mlab import griddata
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from matplotlib.ticker import ScalarFormatter, FormatStrFormatter
 
 import rootpy.plotting.root2matplotlib as rplt
 
@@ -73,6 +74,9 @@ class plotter2D():
 
     def Get_y_projection_axis(self):
         return self._ax3
+
+    def Get_z_axis(self):
+        return self._z_axis
 
     def Get_x_projection_hist(self):
         ret_hist = self._x_projection
@@ -157,12 +161,12 @@ class plotter2D():
 
         self._Write_additional_text()
 
-        cbar_ax = self._fig.add_axes([0.87, 0.08, 0.05, 0.87])
-        self._fig.colorbar(self._plotted_hist, cax = cbar_ax)
+        self._z_axis = self._fig.add_axes([0.87, 0.08, 0.05, 0.87])
+        self._fig.colorbar(self._plotted_hist, cax = self._z_axis)
 
-        cbar_ax.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._z_axis.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
-        cbar_ax.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._z_axis.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
 
     def _Calc_x_projection(self):
         if self._Style_cont.Get_content() == 'Efficiencies':
@@ -270,6 +274,17 @@ def grid(x, y, z, resX=100, resY=100):
     Z = griddata(x, y, z, xi, yi)
     X, Y = meshgrid(xi, yi)
     return X, Y, Z
+
+class FixedOrderFormatter(ScalarFormatter):
+    """Formats axis ticks using scientific notation with a constant order of 
+    magnitude"""
+    def __init__(self, order_of_mag=0, useOffset=True, useMathText=False):
+        self._order_of_mag = order_of_mag
+        ScalarFormatter.__init__(self, useOffset=useOffset, 
+                                 useMathText=useMathText)
+    def _set_orderOfMagnitude(self, range):
+        """Over-riding this to avoid having orderOfMagnitude reset elsewhere"""
+        self.orderOfMagnitude = self._order_of_mag
 
 
 def contourplot(xlist, ylist, zlist, levels=[], labels=[], overlay=True, resolution=100, interactive=True, showPoints=True, logz=False, filename="", contoursAlpha=0.5, contourLineWidth=4, CMSLabel=True, CMSLabelCoords=[5,87,5,84], xlabel="x", ylabel="y", zlabel="z", xyrange=[0,100,0,100], LegendLocation="upper right", LegendTitle="contourplot",LegendColumns=1):

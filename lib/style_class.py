@@ -68,7 +68,7 @@ class style_container():
             self._xaxis_title      = hist.xaxis.GetTitle()
             self._yaxis_title      = hist.yaxis.GetTitle()
         except:
-            print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
+            print "(Setting axis title) Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
             self._xaxis_title      = 'bla'
             self._yaxis_title      = '#epsilon'
 
@@ -77,7 +77,7 @@ class style_container():
             self._histaxis_xaxis_title      = hist.xaxis.GetTitle()
             self._histaxis_yaxis_title      = hist.yaxis.GetTitle()
         except:
-            print "Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
+            print "(Setting axis title) Unexpected error:", sys.exc_info()[0], sys.exc_info()[1]
             self._histaxis_xaxis_title      = 'bla'
             self._histaxis_yaxis_title      = '#epsilon'
 
@@ -273,6 +273,9 @@ class style_container():
 
     def Get_axis_title_font_size(self):
         return self._axis_title_font_size
+
+    def Set_y_label_offset(self, value):
+        self._y_label_offset = value
 
     def Set_add_lumi_text(self, value):
         self._add_lumi_text = value
