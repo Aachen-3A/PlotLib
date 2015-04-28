@@ -295,10 +295,13 @@ class plotter():
                 else:
                     self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
-                if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                if self._Style_cont.Get_lumi_val()!=0:
+                    if len(self._hist_axis) > 0:
+                        self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    else:
+                        self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else:
-                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.945, 0.955, '$(%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
         if self._Style_cont.Get_add_cms_text():
             if self._Style_cont.Get_cms_text_alignment() == 'row':
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
@@ -405,6 +408,35 @@ class plotter():
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
+        elif self._Style_cont.Get_kind() == 'Linegraphs':
+            for item in self._hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+            for item in self._sig_hist:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+            for item in self._hist_axis:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                handle_list.append(col_patch)
+                label_list.append(item.GetTitle())
+            if self._add_error_bands:
+                for i in range(0,len(self._error_hist)):
+                    col_patch = mpatches.Patch(facecolor = self._Style_cont.Get_error_bands_fcol()[i], edgecolor = self._Style_cont.Get_error_bands_ecol()[i] , alpha = self._Style_cont.Get_error_bands_alph(), lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append(self._Style_cont.Get_error_bands_labl()[i])
+                if self._Style_cont.Get_error_stacking() == 'No':
+                    col_patch = mpatches.Patch(facecolor = 'grey', edgecolor = 'black' , alpha = 0.4 , lw = 0.7)
+                    handle_list.append(col_patch)
+                    label_list.append('syst. sum')
+            if self._data:
+                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                                  marker = self._Style_cont.Get_marker_style(),
+                                  color = self._Style_cont.Get_marker_color(),
+                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+                handle_list.append(dat_line)
+                label_list.append(self._data_hist.GetTitle())
         self.leg = plt.legend(handle_list, label_list,
                     loc = self._Style_cont.Get_LegendPosition().get_positiontext(),
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
@@ -427,6 +459,11 @@ class plotter():
             self._add_plots[1] = ''
             self._add_plots[2] = ''
         if self._Style_cont.Get_kind() == 'Graphs':
+            self._add_plots[0] = ''
+            self._add_plots[1] = ''
+            self._add_plots[2] = ''
+            self._add_error_bands = False
+        if self._Style_cont.Get_kind() == 'Linegraphs':
             self._add_plots[0] = ''
             self._add_plots[1] = ''
             self._add_plots[2] = ''
@@ -843,6 +880,20 @@ class plotter():
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
+        elif self._Style_cont.Get_kind() == 'Linegraphs':
+            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
+                sys.exit(42)
+            else:
+                for item in self._allHists:
+                    if item is None:
+                        continue
+                    x,y=[],[]
+                    for i in item:
+                        x.append( i[0])
+                        y.append( i[1])
+                    self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
@@ -968,6 +1019,21 @@ class plotter():
                                    markerfacecolor = item.GetLineColor(),
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
+        elif self._Style_cont.Get_kind() == 'Linegraphs':
+            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
+                sys.exit(42)
+            else:
+                for item in self._hist+self._sig_hist+[self._data_hist]:
+                    for item in self._allHists:
+                        if item is None:
+                            continue
+                        x,y=[],[]
+                        for i in item:
+                            x.append( i[0])
+                            y.append( i[1])
+                        self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
@@ -1250,10 +1316,11 @@ class plotter():
 
         rnd=rounding(sigdigits=3)
         lumitext=""
-        if self._Style_cont.Get_lumi_val() > 1000:
+        if self._Style_cont.Get_lumi_val() >= 1000:
             lumitext='%s fb^{-1} (%.0f TeV)'%(rnd.latex(self._Style_cont.Get_lumi_val()/1000.),self._Style_cont.Get_cms_val())
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
+        lumitext=lumitext.replace(".00","")
         deco=rooLib.CmsDecoration(sc_obj=self._Style_cont ,extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, position=self._Style_cont.Get_cmsTextPosition(), pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()

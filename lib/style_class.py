@@ -9,12 +9,13 @@ class style_container():
     def __init__(self, style = 'Plain', kind = 'Standard', useRoot = False, cmsPositon = "upper right", legendPosition = "upper right", content = 'Histogram', lumi = 42000, cms = 13):
         self._style = style
 
-        if not (kind == 'Standard' or kind == 'Lines' or kind == 'Graphs'):
+        if not (kind == 'Standard' or kind == 'Lines' or kind == 'Graphs' or kind == 'Linegraphs'):
             print('\n\tThis kind of plot (' + kind + ') is not supported')
             print('\tThe allowed values are:')
-            print('\t  - \'Standard\' (Stacked backgrounds, signal lines and data points)')
-            print('\t  - \'Lines\'    (Only lines, like for a gen level plot)')
-            print('\t  - \'Graphs\'   (Only graphs, like for an efficiency plot)\n')
+            print('\t  - \'Standard\'   (Stacked backgrounds, signal lines and data points)')
+            print('\t  - \'Lines\'      (Only lines, like for a gen level plot)')
+            print('\t  - \'Graphs\'     (Only graphs, like for an efficiency plot)\n')
+            print('\t  - \'Linegraphs\' (Only graphs, like for an limit plot)\n')
             sys.exit(42)
         self._kind = kind
 

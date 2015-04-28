@@ -60,6 +60,20 @@ def getDictValue(hist,parmDict):
                 return True
         return False
 
+def scale_xaxis(hist,factor):
+    a=hist.GetXaxis()
+    if (a.IsVariableBinSize()):
+        import array
+        tmpArray=a.GetXbins()
+        bins=[tmpArray[i]*factor for i in range(tmpArray.GetSize())]
+        a.Set(len(bins)-1, array("d",bins))
+    else:
+        a.Set(a.GetNbins(),a.GetXmin()*factor,a.GetXmax()*factor)
+    return
+
+
+
+
 # stolen from rootpy
 # ignore_binns are hist if the bin values=0 the bins will be ignored
 def duke_errorbar(hists,
@@ -279,6 +293,13 @@ class HistStorageContainer():
     def rebin(self,width=0,factor=0,vector=None):
         for stored in self.allStored:
             stored.rebin(width=width,factor=factor,vector=vector)
+
+    ## Function scale xaxis by factor
+    #
+    # @param[in] factor to rescale
+    def scale_xaxis(self,factor):
+        for stored in self.allStored:
+            stored.scale_xaxis(factor)
 
     ## Function setTitle for the all hists
     #
@@ -598,7 +619,7 @@ class HistStorage(object):
 
     ## Function get hists from files
     #
-    # the hists ate added to .hists and joined if a joinList exist
+    # the hists are added to .hists and joined if a joinList exist
     # @param[in] hist string of the hist in the files
     def getHist(self,hist):
         self.clearHists()
@@ -613,6 +634,8 @@ class HistStorage(object):
         for hist in self.hists:
             if hist in self.style:
                 self.hists[hist].decorate(**self.style[hist])
+
+
 
     ## Function get hists via trees from files
     #
@@ -700,6 +723,15 @@ class HistStorage(object):
                 factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
             for name in self.hists:
                 self.hists[name].Rebin(factor)
+
+
+    ## Function scale xaxis by factor
+    #
+    # @param[in] factor to rescale
+    def scale_xaxis(self,factor):
+        for name in self.hists:
+            scale_xaxis(self.hists[name],factor)
+
 
     ## Function to make the hist cumulative
     #
