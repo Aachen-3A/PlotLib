@@ -91,3 +91,41 @@ def plot_gauss_fit(axis1, histo, xmin = 0, xmax = 0):
     y = gaussian(x, fit_res.Parameter(0), fit_res.Parameter(1), fit_res.Parameter(2))
     line, = axis1.plot(x, y, '-', linewidth=1, zorder = 0)
 
+def draw_lines(axis):
+    for idx_st in range(1,5):
+        nSectors = 12
+        if idx_st == 4: nSectors = 14
+        for idx_wh in range(-1,3):
+            xline = (idx_st - 1)*60 + (idx_wh + 2)*nSectors
+            axis.axvline(x = xline, color = 'slategray', linewidth = 1, linestyle = ':')
+
+    for idx in range(1,4):
+        xline = idx*60
+        axis.axvline(x = xline, color = 'dimgray', linewidth = 2, linestyle = '--')
+
+    for idx in range(1,5):
+        xlabel = (idx - 1)*60 + 20
+        a,b = axis.get_ylim()
+        ylabel = a + 0.63*(b -a)
+
+        strSt = "MB%d" % idx
+        axis.text(xlabel,ylabel, strSt, va='bottom', ha='left', size=12)
+
+    stations = (1,2,3,4)
+    wheels = (-2,-1,0,1,2)
+    bin_labels = [''] * 250
+    for st in stations:
+        for wh in wheels:
+            nSectors = 12
+            if st == 4: nSectors = 14 
+            for sec in range(1,nSectors+1):
+                if sec == 1:
+                    label = "Wheel %d" % wh
+                    if wh == -2: label += " MB%d" % st
+                    binHistoNew = (st - 1)*60 + (wh + 2)*nSectors + sec
+                    bin_labels[binHistoNew+2] = label
+
+    axis.xaxis.set_major_locator(mticker.MaxNLocator(nbins=len(bin_labels)))
+    xtickNames = plt.setp(axis, xticklabels=bin_labels)
+    plt.setp(xtickNames, rotation=-45, fontsize=8, va='top', ha='left')
+    axis.tick_params('x', length=0, width=0, which='major')
