@@ -468,6 +468,7 @@ class position():
         self._correctcms={"left":0.,
                     "middle":0.,
                     "right":-0.15,
+                    "outside":0.0,
                     "upper":-0.04,
                     "center":0.,
                     "lower":0.,
@@ -476,6 +477,7 @@ class position():
             self._correctcms={"left":0.,
                     "middle":0.,
                     "right": -0.025,
+                    "outside":0.0,
                     "upper": -0.05,
                     "center":0.,
                     "lower":0.08,
@@ -523,6 +525,7 @@ class position():
         if self._definedCoorinates:
             return self._y
         alignDict={
+                    "outside":0.96,
                     "upper":0.95,
                     "center":0.5,
                     "lower":0.12,
