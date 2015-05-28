@@ -431,6 +431,10 @@ class HistStorage(object):
         if self.Unit!="":
             return self.Unit
         xtitle=self.hists.values()[0].GetXaxis().GetTitle()
+        noUnit=["phi","eta","_{T}/E^{miss}"]
+        for veto in noUnit:
+            if veto in xtitle:
+                return ""
         t=""
         # this should cover all the usual cases, like [unit] /unit or *eV.
         prossibleUnits=['[\[\(]\S*[\]\)]','/\S*\}','\SeV']
@@ -628,7 +632,7 @@ class HistStorage(object):
                 self.hists[f]=self.views[f].Get(hist)
                 self.hists[f].Sumw2()
             except:
-                self.hists[f]=self.files[f].Get(hist)
+                self.hists[f]=Hist(100,0,100)
         if self._joinList is not False:
             self.joinList(self._joinList)
         for hist in self.hists:
@@ -786,7 +790,7 @@ class HistStorage(object):
                     width=self.hists.values()[-1].xwidth(2)
                 self.hists[key].yaxis.SetTitle("%s/(%s %s)"%(self.eventString,rnd.latex(width),self._getUnit()))
                 if self.isData:
-                    self.hists[key].SetTitle("data")
+                    self.hists[key].SetTitle("Data")
                 else:
                     self.hists[key].SetTitle(key)
             except:
@@ -801,7 +805,7 @@ class HistStorage(object):
         if style=="bg":
             self.applyStyleAll(fillstyle = 'solid',linewidth = 0)
         if style=="sg":
-            self.applyStyleAll(fillstyle = '0',linewidth = 1)
+            self.applyStyleAll(fillstyle = '0',linewidth = 2 )
         #nothing to do here yet
         if style=="data":
             pass

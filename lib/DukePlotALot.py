@@ -20,6 +20,10 @@ from plotlib import duke_errorbar
 from operator import methodcaller
 from rounding import rounding
 
+#add the hatched style to rootpy:
+from rootpy.plotting import base
+base.fillstyles_root2mpl[3244]="X"
+
 
 import style_class as sc
 
@@ -73,6 +77,7 @@ class plotter():
         self._annotations_modified = False
         self._add_error_bands      = False
         self._error_hist           = []
+        self._error_hist_modif_root = []
         self._fig                  = None
         self._allHists=self._hist+self._sig_hist+[self._data_hist]+self._hist_axis
         self._Style_cont = style
@@ -329,12 +334,12 @@ class plotter():
         handle_list = []
         label_list = []
         if self._Style_cont.Get_kind() == 'Standard':
-            for item in self._hist:
+            for item in self._hist[::-1]:
                 col_patch = mpatches.Patch(color = item.GetFillColor())
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
-            for item in self._sig_hist:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+            for item in self._sig_hist[::-1]:
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0 ,linewidth=item.GetLineWidth())
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._add_error_bands:
@@ -351,7 +356,7 @@ class plotter():
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._data:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -372,21 +377,21 @@ class plotter():
                 label_list.append(item.GetTitle())
         elif self._Style_cont.Get_kind() == 'Graphs':
             for item in self._hist:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
             for item in self._sig_hist:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
             for item in self._hist_axis:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -402,7 +407,7 @@ class plotter():
                     handle_list.append(col_patch)
                     label_list.append('syst. sum')
             if self._data:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -431,7 +436,7 @@ class plotter():
                     handle_list.append(col_patch)
                     label_list.append('syst. sum')
             if self._data:
-                dat_line=plt.errorbar([], [],xerr = False,yerr=True, markersize = self._Style_cont.Get_marker_size(),
+                dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -442,6 +447,7 @@ class plotter():
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
+                    ncol=self._Style_cont.Get_n_legend_collumns(),
                     frameon = False,
                     fontsize = self._Style_cont.Get_legend_font_size())
 
@@ -512,6 +518,10 @@ class plotter():
             self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio()
+        elif plot == 'DiffRatio_width_increase':
+            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
+            self._add_plots_ref_line[pos] = 0.
+            return self._Calc_diffratio_width_increase()
         elif plot == 'SoverSplusB':
             self._add_plots_labels[pos] = '$\mathdefault{\\frac{Signal}{\sqrt{Signal + MC}}}$'
             self._add_plots_ref_line[pos] = 0.
@@ -606,6 +616,58 @@ class plotter():
                 if sum_hist.GetBinContent(i) > 0:
                     err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
                     err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                else:
+                    err_i.append(0)
+                    err_i.append(0)
+
+            x.append(np.array(x_i))
+            y.append(np.array(y_i))
+            err.append(np.array(err_i))
+        return diff, x, y, err
+
+    def _Calc_diffratio_width_increase(self):
+        diff = self._data_hist.Clone('diffratio')
+
+        sum_hist = sum(self._hist)
+
+        binning=[]
+        content=0.
+        for ibin in sum_hist.bins():
+            if (content+ibin.value)<1:
+                content+=ibin.value
+            else:
+                binning.append(ibin.x.low)
+                content=0.
+        binning.append(ibin.x.high)
+
+        diff=diff.rebinned(binning)
+        sum_hist=sum_hist.rebinned(binning)
+        _data_hist_local=self._data_hist.rebinned(binning)
+
+        diff.Add(sum_hist,-1)
+        diff.Divide(sum_hist)
+        self.cleanUnwantedBins(diff,[sum_hist,_data_hist_local])
+
+
+        x = []
+        y = []
+        err = []
+        for j in range(0,len(self._error_hist)):
+            x_i = []
+            y_i = []
+            err_i = []
+            for i in range(sum_hist.GetNbinsX()+1):
+                x_i.append(sum_hist.GetBinLowEdge(i))
+                x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
+                if self._Style_cont.Get_error_bands_center() == 'ref':
+                    y_i.append(0.)
+                    y_i.append(0.)
+                elif self._Style_cont.Get_error_bands_center() == 'val':
+                    y_i.append(diff.GetBinContent(i))
+                    y_i.append(diff.GetBinContent(i))
+                if sum_hist.GetBinContent(i) > 0:
+                    err_i.append(_data_hist_local.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))))
+                    err_i.append(_data_hist_local.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))))
                 else:
                     err_i.append(0)
                     err_i.append(0)
@@ -720,8 +782,8 @@ class plotter():
                 y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
                 y_i.append(sum_hist.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(i)))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(i)))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -733,7 +795,8 @@ class plotter():
                          alpha = self._Style_cont.Get_error_bands_alph(),
                          edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
                          facecolor = self._Style_cont.Get_error_bands_fcol()[0],
-                         lw = 0.7, axes = axis, zorder = 2.1)
+                         lw = self._Style_cont.Get_error_line_width(),
+                         axes = axis, zorder = 2.1)
         dummy_y_p = np.copy(y[0])
         dummy_y_m = np.copy(y[0])
         dummy_err_sum = np.copy(np.square(err[0]))
@@ -745,12 +808,12 @@ class plotter():
                              alpha = self._Style_cont.Get_error_bands_alph(),
                              edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
                              facecolor = self._Style_cont.Get_error_bands_fcol()[i],
-                             lw = 0.7, axes = axis, zorder = 2.1)
+                             lw = self._Style_cont.Get_error_line_width(), axes = axis, zorder = 2.1)
             plt.fill_between(x_vals, dummy_y_m - np.absolute(err[i]), dummy_y_m,
                              alpha = self._Style_cont.Get_error_bands_alph(),
                              edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
                              facecolor = self._Style_cont.Get_error_bands_fcol()[i],
-                             lw = 0.7, axes = axis, zorder = 2.1)
+                             lw = self._Style_cont.Get_error_line_width(), axes = axis, zorder = 2.1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
                 dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
@@ -762,7 +825,7 @@ class plotter():
                              alpha = 0.4,
                              edgecolor = 'black',
                              facecolor = 'grey',
-                             lw = 0.7, axes = axis, zorder = 2.2)
+                             lw = self._Style_cont.Get_error_line_width(), axes = axis, zorder = 2.2)
 
     def _Draw_0(self):
         ## Plot a derived distribution on top of the main distribution on axis 0
@@ -779,7 +842,7 @@ class plotter():
             self._ax0.tick_params(axis='y', colors = self._Style_cont.Get_tick_color())
             self._ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes=self._ax0,
+            duke_errorbar(add_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes=self._ax0,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[0],
                           marker = self._Style_cont.Get_marker_style(),
@@ -791,9 +854,13 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax0, x, y, err)
-            self._ax0.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
+
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+                add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+            ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
+            ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            self._ax0.set_ylim(ymin = ymin, ymax = ymax)
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
             self._ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
@@ -828,7 +895,7 @@ class plotter():
                     print('\tthere are no background, signal or data histograms.\n')
                     sys.exit(42)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -840,7 +907,7 @@ class plotter():
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -848,7 +915,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
+                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1 )
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
             if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
@@ -857,7 +924,7 @@ class plotter():
                 sys.exit(42)
             else:
                 for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
+                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -865,7 +932,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
+                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -873,7 +940,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -957,7 +1024,7 @@ class plotter():
                     print('\tthere are no background, signal or data histograms.\n')
                     sys.exit(42)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -970,7 +1037,7 @@ class plotter():
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -988,7 +1055,7 @@ class plotter():
                 sys.exit(42)
             else:
                 for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
+                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -996,7 +1063,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = self._ax1,
+                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -1004,7 +1071,7 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = False, emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -1012,7 +1079,7 @@ class plotter():
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._hist_axis:
-                    axishist_handle = rplt.errorbar(item, xerr = False, emptybins = False, axes = par1,
+                    axishist_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = par1,
                                    markersize = self._Style_cont.Get_marker_size(),
                                    marker = self._Style_cont.Get_marker_style(),
                                    ecolor = item.GetLineColor(),
@@ -1079,7 +1146,7 @@ class plotter():
         if self._add_plots[1] != '':
             self._ax2 = plt.subplot2grid((100,1), (self._hist_start + self._hist_height,0), rowspan = self._add_plots_height[1], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[1],1)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax2,
+            duke_errorbar(add_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax2,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[1],
                           marker = self._Style_cont.Get_marker_style(),
@@ -1087,13 +1154,20 @@ class plotter():
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
-                          ignore_binns=[self._data_hist,sum(self._hist)],
+                          #ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax2, x, y, err)
-            self._ax2.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
+
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+                add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+            ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
+            ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            self._ax2.set_ylim(ymin = ymin, ymax = ymax)
+
+            #self._ax2.set_ylim(ymin = -10, ymax = 10)
+
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
             self._ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             self._ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
@@ -1125,7 +1199,7 @@ class plotter():
         if self._add_plots[2] != '':
             self._ax3 = plt.subplot2grid((100,1), (100 - self._add_plots_height[2],0), rowspan = self._add_plots_height[2], colspan = 1, sharex = self._ax1, axisbg = self._Style_cont.Get_bg_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[2],2)
-            duke_errorbar(add_hist, xerr = False, emptybins = False, axes = self._ax3,
+            duke_errorbar(add_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax3,
                           markersize = self._Style_cont.Get_marker_size(),
                           label = self._add_plots_labels[2],
                           marker = self._Style_cont.Get_marker_style(),
@@ -1137,9 +1211,12 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax3, x, y, err)
-            self._ax3.set_ylim(ymin = add_hist.min()*1.1, ymax = add_hist.max()*1.1)
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax3.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+                add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+            ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
+            ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            self._ax3.set_ylim(ymin = ymin, ymax = ymax)
             self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
             self._ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
             self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
@@ -1208,20 +1285,33 @@ class plotter():
         if self._Style_cont.Get_LegendPosition() == self._Style_cont.Get_cmsTextPosition():
             self._Style_cont.Get_LegendPosition().addYspace(self._Style_cont.Get_cmsTextPosition().getY()-self._Style_cont.Get_LegendPosition().getY()-0.02)
 
-        numberOfEntries=len(self._hist)+len(self._sig_hist)
+        numberOfEntries=len(self._hist)
         if self._data:
             numberOfEntries+=1
-        textSize=0.7*self._referenceHeight
-        self.leg = Legend(numberOfEntries,rightmargin=1.-self._Style_cont.Get_LegendPosition().getX(),topmargin=1.-self._Style_cont.Get_LegendPosition().getY(),textfont=self._Style_cont.additionalTextFont,textsize=self._Style_cont.legendTextSize,entryheight=textSize,entrysep=textSize*0.1)
+        if self._add_error_bands:
+            numberOfEntries+=len(self._error_hist)
+        textSize=0.5*self._referenceHeight
+        self.leg = Legend(numberOfEntries,rightmargin=1.-self._Style_cont.Get_LegendPosition().getX(),topmargin=1.-self._Style_cont.Get_LegendPosition().getY(),leftmargin=0.5,textfont=self._Style_cont.additionalTextFont,textsize=self._Style_cont.legendTextSize,entryheight=textSize,entrysep=textSize*0.1)
         self.leg.SetFillStyle(0)
         self.leg.SetBorderSize(0)
+        self.leg.SetNColumns(2)
         #self.leg.SetFillColor(ROOT.kWhite)
-        for h in self._hist:
+        for h in self._hist[::-1]:
             self.leg.AddEntry(h,h.GetTitle(), "f")
-        for h in self._sig_hist:
-            self.leg.AddEntry(h,h.GetTitle(), "l")
         if self._data:
-            self.leg.AddEntry(self._data_hist,"data","ep")
+            self.leg.AddEntry(self._data_hist,"Data","ep")
+        if self._add_error_bands:
+            for i,h in enumerate(self._error_hist_modif_root[::-1]):
+                self.leg.AddEntry(h,self._Style_cont.Get_error_bands_labl()[i], "f")
+
+        height = (textSize + textSize*0.1) * numberOfEntries #- textSize*0.1
+        self.sgleg = Legend(len(self._sig_hist),rightmargin=1.-self._Style_cont.Get_LegendPosition().getX(),topmargin=1.-self._Style_cont.Get_LegendPosition().getY()+height,leftmargin=0.5,textfont=self._Style_cont.additionalTextFont,textsize=self._Style_cont.legendTextSize,entryheight=textSize*1.1,entrysep=textSize*0.4)
+        self.sgleg.SetFillStyle(0)
+        self.sgleg.SetBorderSize(0)
+        #self.sgleg.SetNColumns(2)
+        for h in self._sig_hist[::-1]:
+            self.sgleg.AddEntry(h,h.GetTitle(), "l")
+
 
     def _AddPlotBelow(self):
         ## setup the window and pads to draw a ratio
@@ -1272,8 +1362,30 @@ class plotter():
                 add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[i],i)
                 self.additionalPad[i].cd()
                 add_hist.Draw()
+                if self._add_error_bands:
+                    for isyst in range(len(self._error_hist)):
+                        errhist=add_hist.empty_clone()
+                        for j in range(len(y[isyst])):
+                            ibin = errhist.FindBin(x[isyst][j])
+                            errhist[ibin].value=y[isyst][j]
+                            errhist[ibin].error=err[isyst][j]
+                        errhist.SetFillColor(ROOT.kGray +2)
+                        errhist.SetFillStyle(3244)
+                        #errhist.SetFillColorAlpha(ROOT.kGray +2, 0.7)
+                        errhist.markersize=0
+                        errhist.Draw("same e2")
+                    #line=Graph(2,add_hist.bounds(),[self._add_plots_ref_line[i],self._add_plots_ref_line[i]])
+                    line=Graph(2)
+                    line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
+                    line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
+
+                    line.SetLineColor(self._Style_cont.Get_ref_line_color())
+                    line.Draw("l same")
+
+                add_hist.GetYaxis().SetRangeUser(min(add_hist.min()*1.1,-0.5),max(add_hist.max()*1.1,0.5))
+
                 add_hist.GetXaxis().SetTitle(self._Style_cont._xaxis_title.replace("$\\mathsf{","").replace("}$",""))
-                add_hist.GetYaxis().SetTitle(self._add_plots_labels[i])
+                add_hist.GetYaxis().SetTitle(self._add_plots_labels[i].replace("$\\mathdefault{\\","#").replace("\\","#").replace("}$",""))
 
 
                 add_hist.GetXaxis().SetTitleFont(self._Style_cont.additionalTextFont)
@@ -1287,7 +1399,8 @@ class plotter():
                 add_hist.GetYaxis().SetLabelSize(self._Style_cont.axisLabelTextSize)
 
 
-                add_hist.GetYaxis().SetTitleOffset(self._Style_cont.axisOffsetY)
+                add_hist.GetYaxis().SetTitleOffset(self._Style_cont.axisOffsetY*0.8)
+                #add_hist.GetYaxis().SetTitleOffset(1.05)
                 add_hist.GetYaxis().SetNdivisions(205)
                 add_hist.GetXaxis().SetTitleOffset(self._Style_cont.axisOffsetX/addedPadheight/1.5)
         self._mainPad.cd()
@@ -1327,6 +1440,7 @@ class plotter():
         self._fig=self._canvas
 
     def _Draw_main_root(self):
+        #this also is needed to avoid the gc
         drawnObjects=[]
         same=""
         if len(self._hist)>0:
@@ -1336,14 +1450,33 @@ class plotter():
             hs=HistStack(hists=self._hist)
             hs.Draw("hist"+same)
             drawnObjects.append(hs)
+            if self._add_error_bands:
+                sumbg=sum(self._hist)
+                for syst in self._error_hist:
+                    self._error_hist_modif_root.append(sumbg.clone())
+                    self._error_hist_modif_root[-1].decorate(**syst.decorators)
+                    for ibin in self._error_hist_modif_root[-1].bins():
+                        ibin.error=ibin.value*syst[syst.FindBin(ibin.x.low)].value
+                    self._error_hist_modif_root[-1].SetFillColor(ROOT.kGray +2)
+                    self._error_hist_modif_root[-1].SetFillStyle(3244)
+                    #syst_hists[-1].SetFillStyle(3245)
+                    self._error_hist_modif_root[-1].markersize=0
+                    self._error_hist_modif_root[-1].Draw("same e2")
+
         for sg_hist in self._sig_hist:
             sg_hist.Draw("hist"+same)
             drawnObjects.append(sg_hist)
             same=" same"
         if self._data:
-            self._data_hist.Draw("E"+same)
+            for ibin in self._data_hist.bins():
+                alpha = 1 - 0.6827
+                if ibin.value==0:
+                    #ibin.value=0
+                    ibin.error=ROOT.Math.gamma_quantile_c(alpha/2,1,1)/( ibin.x.width/20.)
+            self._data_hist.Draw("E0 "+same)
             drawnObjects.append(self._data_hist)
             same=" same"
+
         self._AddRootLegend()
         self._mainPad.SetLogy(self._Style_cont.Get_logy())
         self._mainPad.SetLogx(self._Style_cont.Get_logx())
@@ -1385,6 +1518,8 @@ class plotter():
 
         ROOT.gPad.RedrawAxis("g")
         self.leg.Draw()
+        self.sgleg.Draw()
+
 
         #for easy debug
         #self._canvas.Update()
