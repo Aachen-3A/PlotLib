@@ -289,7 +289,12 @@ class plotter():
     def _Write_additional_text(self):
         if self._Style_cont.Get_add_lumi_text():
             self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
-            if self._Style_cont.Get_lumi_val() >= 1000:
+            if self._Style_cont.Get_lumi_val() == 0:
+                if len(self._hist_axis) > 0:
+                    self._fig.text(0.915, 0.955, '$%%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                else:
+                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+            elif self._Style_cont.Get_lumi_val() >= 1000:
                 if len(self._hist_axis) > 0:
                     self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else:
