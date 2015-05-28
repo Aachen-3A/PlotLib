@@ -57,6 +57,7 @@ class style_container():
         self._no_legend=False
         self._grid = False
         self._batch_mode=True
+        self._legend_font_size = 0
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -287,6 +288,9 @@ class style_container():
     def Set_batch_mode(self,value):
         self._batch_mode=value
 
+    def Set_legend_font_size(self, value):
+        self._legend_font_size = value
+
     #to have the same syntax as root
     def SetBatchMode(self,value):
         self.Set_batch_mode(value)
@@ -352,7 +356,8 @@ class style_container():
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'row'
         self._show_minor_tick_labels = False
-        self._legend_font_size       = 9
+        if self._legend_font_size == 0:
+            self._legend_font_size       = 9
         self._axis_title_font_size   = 14
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
@@ -384,7 +389,8 @@ class style_container():
         self._marker_error_cap_width          = 1
         self._cms_text_alignment              = 'row'
         self._show_minor_tick_labels          = False
-        self._legend_font_size                = 10
+        if self._legend_font_size == 0:
+            self._legend_font_size                = 10
         self._axis_title_font_size   = 9
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
@@ -416,7 +422,8 @@ class style_container():
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'column'
         self._show_minor_tick_labels = False
-        self._legend_font_size       = 9
+        if self._legend_font_size == 0:
+            self._legend_font_size       = 9
         self._axis_title_font_size   = 9
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
