@@ -281,6 +281,7 @@ def tdrStyle():
     tdrStyle.SetHistLineWidth(1)
     # tdrStyle.SetLegoInnerR(Float_t rad = 0.5)
     # tdrStyle.SetNumberContours(Int_t number = 20)
+    #tdrStyle.SetHatchesLineWidth(4)
 
     tdrStyle.SetEndErrorSize(2)
     #tdrStyle.SetErrorMarker(20)
@@ -367,6 +368,9 @@ def tdrStyle():
     tdrStyle.SetOptLogx(0)
     tdrStyle.SetOptLogy(0)
     tdrStyle.SetOptLogz(0)
+
+
+
 
     # Postscript options:
     # tdrStyle.SetPaperSize(15.,15.)
