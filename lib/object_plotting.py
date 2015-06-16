@@ -4,6 +4,7 @@ import sys
 import matplotlib
 import numpy as np
 import rootpy
+import ROOT as r
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -91,6 +92,72 @@ def plot_gauss_fit(axis1, histo, xmin = 0, xmax = 0):
     x = np.linspace(xmin, xmax)
     y = gaussian(x, fit_res.Parameter(0), fit_res.Parameter(1), fit_res.Parameter(2))
     line, = axis1.plot(x, y, '-', linewidth=1, zorder = 0)
+
+def eff_function(x, par):
+    return par[0] + par[1] / (x[0] + par[2]) + par[3] * x[0]
+
+def plot_efficiency_fit(axis1, histo, xmin = 0, xmax = 0, startvals = [], plottrange = [], color = 'black'):
+    print('Now fitting a efficiency curve to %s and plotting it'%histo.GetTitle())
+    if xmin == 0 and xmax == 0:
+        xmin, xmax = axis1.get_xlim()
+
+    func = r.TF1('func',eff_function,xmin,xmax,4)
+
+    if startvals != []:
+        func.SetParameter(0, startvals[0])
+        func.SetParameter(1, startvals[1])
+        func.SetParameter(2, startvals[2])
+        func.SetParameter(3, startvals[3])
+
+    try:
+        fit_res = histo.Fit(func, 'N0S', '', xmin, xmax)
+        dummy = fit_res.Parameter(0)
+    except rootpy.ROOTError as bla:
+        print('\n\terror in the Chi2 fitting: ')
+        print('\t'+str(bla))
+        print('\ttrying again with binned likelihood method\n')
+        try:
+            fit_res = histo.Fit(func, 'WLN0S', '', xmin, xmax)
+            dummy = fit_res.Parameter(0)
+        except rootpy.ROOTError as bla:
+            print('\n\terror in the binned likelihood fitting: ')
+            print('\t' + str(bla))
+            print('\tThis doesn\'t seem to work either, I think you have to fix something!\n')
+            sys.exit(42)
+        except:
+            print('An unexpected error occured in the binned likelihood fitting:')
+            print(sys.exc_info()[0], sys.exc_info()[1])
+            sys.exit(42)
+    except:
+        print('An unexpected error occured in the Chi2 fitting:')
+        print(sys.exc_info()[0], sys.exc_info()[1])
+        sys.exit(42)
+
+    print('Chi2/Ndf: %.2f/%.0f = %.2f'%(fit_res.Chi2(),fit_res.Ndf(),fit_res.Chi2()/fit_res.Ndf()))
+
+    if plottrange != []:
+        x = np.linspace(plottrange[0], plottrange[1])
+    else:
+        x = np.linspace(xmin, xmax)
+    y = eff_function([x], [fit_res.Parameter(0), fit_res.Parameter(1), fit_res.Parameter(2), fit_res.Parameter(3)])
+    line, = axis1.plot(x, y, '-', linewidth=2, zorder = 0, color = color)
+
+    text = r'''Fit of $A + \frac{B}{C + M} + D \cdot M$
+    
+$ \chi^2/Ndf = %.2f/%.0f = %.2f$
+
+$ A = %.4f \pm %.4f$
+$ B = %.1f \pm %.1f$
+$ C = %f \pm %f$
+$ D = %f \pm %f$'''%(fit_res.Chi2(),
+                             fit_res.Ndf(),
+                             fit_res.Chi2()/fit_res.Ndf(),
+                             fit_res.Parameter(0),fit_res.ParError(0),
+                             fit_res.Parameter(1),fit_res.ParError(1),
+                             fit_res.Parameter(2),fit_res.ParError(2),
+                             fit_res.Parameter(3),fit_res.ParError(3))
+
+    plt.text(2000, 0.25, text)
 
 def draw_lines(axis):
     for idx_st in range(1,5):

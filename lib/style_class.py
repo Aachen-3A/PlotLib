@@ -273,6 +273,12 @@ class style_container():
     def Get_zmax(self):
         return self._zmax
 
+    def Set_error_bands_ecol(self, value):
+        self._error_bands_ecol = value
+
+    def Set_error_bands_fcol(self, value):
+        self._error_bands_fcol = value
+
     def Get_axis_title_font_size(self):
         return self._axis_title_font_size
 
