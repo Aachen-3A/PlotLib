@@ -140,12 +140,12 @@ def Creat_standard_plot():
         else:
             test.Set_axis(ymin = 1., ymax = 1e5)
 
-        if False:
+        if True:
             test.Add_plot('Signi',pos=0, height=15)
             test.Add_plot('Ratio',pos=1, height=15)
             test.Add_plot('DiffRatio',pos=2, height=15)
 
-        if False:
+        if True:
             tfile = root_open(root_directory + "/sys.root", "READ")
             sys_hist = tfile.Get('systematics')
             test.Add_error_hist([sys_hist], band_center = 'ref', stacking = 'No')
