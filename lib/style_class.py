@@ -39,7 +39,9 @@ class style_container():
         self._error_bands_labl = ['Sys. uncert. 1','Sys. uncert. 2']
         self._error_bands_center = 'ref'
         self._error_stacking = 'No'
+        self._line_width    =0.7
         self._spine_line_width = 0.5
+        self._xerr = False
         self._logx = False
         self._logy = True
         self._ymin = -1
@@ -55,6 +57,7 @@ class style_container():
         self._cms_val = cms
         self._add_lumi_text = True
         self._no_legend=False
+        self._legend_ncol= 1
         self._grid = False
         self._batch_mode=True
         self._legend_font_size = 0
@@ -153,6 +156,9 @@ class style_container():
     def Get_error_stacking(self):
         return self._error_stacking
 
+    def Get_error_line_width(self):
+        return self._line_width
+
     def Get_spine_line_width(self):
         return self._spine_line_width
 
@@ -173,6 +179,9 @@ class style_container():
 
     def Get_xmax(self):
         return self._xmax
+
+    def Get_xerr(self):
+        return self._xerr
 
     def Get_histaxis_logy(self):
         return self._histaxis_logy
@@ -243,6 +252,9 @@ class style_container():
     def Get_no_legend(self):
         return self._no_legend
 
+    def Get_n_legend_collumns(self):
+        return self._legend_ncol
+
     def Get_kind(self):
         return self._kind
 
@@ -310,11 +322,20 @@ class style_container():
     def Set_error_stacking(self, stacking):
         self._error_stacking = stacking
 
+    def Set_error_line_width(self,width):
+        self._line_width=width
+
+    def Set_xerr(self):
+        self._xerr=True
+
     def Set_no_legend(self):
         self._no_legend=True
 
     def Set_additional_text(self, text):
         self._additional_text = text
+
+    def Set_n_legend_collumns(self,n):
+        self._legend_ncol=n
 
     ## Function to set properties of the plotting axis
     #
@@ -445,7 +466,7 @@ class style_container():
         self.lumiTextSize         = 20
         self.extraTextSize        = 20
         self.additionalTextSize   = 20
-        self.legendTextSize       = 16
+        self.legendTextSize       = 14
         self.lumiTextOffset       = 0.2
         self.extraTextOffset      = 2.5  # only used in outOfFrame version
         self.axisLabelTextSize    = 18
