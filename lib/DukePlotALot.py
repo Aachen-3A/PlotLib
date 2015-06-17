@@ -428,7 +428,7 @@ class plotter():
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._hist_axis:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0, linestyle = ':')
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._add_error_bands:
@@ -1106,7 +1106,7 @@ class plotter():
                     for i in item:
                         x.append( i[0])
                         y.append( i[1])
-                    self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+                    self._ax1.plot(x,y,linestyle=self._Style_cont.Get_line_style(), markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
                 for item in self._hist_axis:
                     if item is None:
                         continue
@@ -1114,7 +1114,7 @@ class plotter():
                     for i in item:
                         x.append( i[0])
                         y.append( i[1])
-                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())    							    												        
+                    par1.plot(x,y,linestyle=':', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())    							    												        
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)

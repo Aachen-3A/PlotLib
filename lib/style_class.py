@@ -225,6 +225,9 @@ class style_container():
     def Get_marker_style(self):
         return self._marker_style
 
+    def Get_line_style(self):
+        return self._line_style
+
     def Get_marker_size(self):
         return self._marker_size
 
@@ -284,6 +287,9 @@ class style_container():
 
     def Get_zmax(self):
         return self._zmax
+
+    def Set_line_style(self, value):
+        self._line_style = value
 
     def Set_error_bands_ecol(self, value):
         self._error_bands_ecol = value
@@ -378,6 +384,7 @@ class style_container():
         self._grid_color             = 'black'
         self._tick_color             = 'black'
         self._marker_style           = 'o'
+        self._line_style             = '-'
         self._marker_size            = 3
         self._marker_color           = 'black'
         self._marker_error_cap_width = 0
@@ -411,6 +418,7 @@ class style_container():
         self._grid_color                      = 'black'
         self._tick_color                      = 'black'
         self._marker_style                    = 'o'
+        self._line_style                      = '-'
         self._marker_size                     = 4
         self._marker_color                    = 'black'
         self._marker_error_cap_width          = 1
@@ -444,6 +452,7 @@ class style_container():
         self._grid_color             = '#5998ff'
         self._tick_color             = 'w'
         self._marker_style           = 'o'
+        self._line_style             = '-'
         self._marker_size            = 3
         self._marker_color           = 'lightgray'
         self._marker_error_cap_width = 0
