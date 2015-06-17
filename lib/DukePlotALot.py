@@ -296,7 +296,7 @@ class plotter():
             self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
             if self._Style_cont.Get_lumi_val() == 0:
                 if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else:
                     self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             elif self._Style_cont.Get_lumi_val() >= 1000:
@@ -1098,14 +1098,21 @@ class plotter():
                 sys.exit(42)
             else:
                 for item in self._hist+self._sig_hist+[self._data_hist]:
-                    for item in self._allHists:
-                        if item is None:
-                            continue
-                        x,y=[],[]
-                        for i in item:
-                            x.append( i[0])
-                            y.append( i[1])
-                        self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+                    if item is None:
+                        continue
+                    x,y=[],[]
+                    for i in item:
+                        x.append( i[0])
+                        y.append( i[1])
+                    self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+                for item in self._hist_axis:
+                    if item is None:
+                        continue
+                    x,y=[],[]
+                    for i in item:
+                        x.append( i[0])
+                        y.append( i[1])
+                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())    							    												        
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
