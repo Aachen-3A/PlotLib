@@ -198,7 +198,7 @@ class plotter():
     # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
     #                        or 'val' around the e.g. ratio value) (default = 'ref')
     # @param[in] stacking String to identify how to stack different systematic uncertainties ('No' stacking,
-    #                     'linear' stacking) (Default = 'No')
+    #                     'linear' stacking, 'Nosum' no sum at all) (Default = 'No')
     def Add_error_hist(self, histo = [], labels = [], band_center = 'ref', stacking = 'No'):
         self._add_error_bands = True
         self._error_hist = histo
@@ -296,7 +296,7 @@ class plotter():
             self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
             if self._Style_cont.Get_lumi_val() == 0:
                 if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
                 else:
                     self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             elif self._Style_cont.Get_lumi_val() >= 1000:
@@ -782,13 +782,15 @@ class plotter():
             x_i = []
             y_i = []
             err_i = []
-            for i in range(sum_hist.GetNbinsX()+1):
+            for i in range(1,sum_hist.GetNbinsX()-450):
                 x_i.append(sum_hist.GetBinLowEdge(i))
                 y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
                 y_i.append(sum_hist.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
+            # for (item1,item2,item3) in zip(x_i,y_i,err_i):
+                # print(item1,item2,item3)
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
