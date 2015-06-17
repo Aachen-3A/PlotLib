@@ -782,7 +782,7 @@ class plotter():
             x_i = []
             y_i = []
             err_i = []
-            for i in range(1,sum_hist.GetNbinsX()-450):
+            for i in range(1,sum_hist.GetNbinsX()):
                 x_i.append(sum_hist.GetBinLowEdge(i))
                 y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
