@@ -13,6 +13,7 @@ from matplotlib.mlab import griddata
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from matplotlib.ticker import ScalarFormatter, FormatStrFormatter
 
 import rootpy.plotting.root2matplotlib as rplt
 
@@ -54,6 +55,36 @@ class plotter2D():
                 test.Set_axis(ymin = self._Style_cont.Get_zmin(), ymax = self._Style_cont.Get_zmax(), xmin = self._Style_cont.Get_ymin(), xmax = self._Style_cont.Get_ymax())
                 test.make_plot(out_name.replace('.','_y.'))
 
+    def create_plot(self):
+        self._hist = self._Get_rootpy_hist2d()
+        self._Draw_main()
+
+    def show_fig(self):
+        self._fig.show()
+        raw_input('bla')
+
+    def save_plot(self, out_name):
+        self._SavePlot(out_name)
+
+    def Get_2D_axis(self):
+        return self._ax1
+
+    def Get_x_projection_axis(self):
+        return self._ax2
+
+    def Get_y_projection_axis(self):
+        return self._ax3
+
+    def Get_z_axis(self):
+        return self._z_axis
+
+    def Get_x_projection_hist(self):
+        ret_hist = self._x_projection
+        return ret_hist
+
+    def Get_y_projection_hist(self):
+        return self._y_projection
+
     def Add_x_projection(self, size = 15):
         self._x_projection_size = size
         self._x_starting_point = size
@@ -68,10 +99,12 @@ class plotter2D():
     def _Write_additional_text(self):
         if self._Style_cont.Get_add_lumi_text():
             self._Style_cont.Set_lumi_val(float(self._Style_cont.Get_lumi_val()))
-            if self._Style_cont.Get_lumi_val() >= 1000:
-                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+            if self._Style_cont.Get_lumi_val() == 0:
+                self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+            elif self._Style_cont.Get_lumi_val() >= 1000:
+                self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             else:
-                    self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
         if self._Style_cont.Get_add_cms_text():
             self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
             self._fig.text(self._Style_cont.Get_cmsTextPosition().getX() + 0.08, self._Style_cont.Get_cmsTextPosition().getY(), self._Style_cont.Get_additional_text(), va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=10, style = 'italic')
@@ -93,51 +126,49 @@ class plotter2D():
 
     def _Draw_main(self):
         self._fig = plt.figure(figsize=(7, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
-        ax1 = plt.subplot2grid((100,100), (0, self._y_starting_point), rowspan = 100 - self._x_projection_size, colspan = 100 - self._y_projection_size, axisbg = self._Style_cont.Get_bg_color())
-        ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        self._plotted_hist = rplt.imshow(self._hist, axes = ax1, cmap=mpl.cm.YlGnBu)
+        self._ax1 = plt.subplot2grid((100,100), (0, self._y_starting_point), rowspan = 100 - self._x_projection_size, colspan = 100 - self._y_projection_size, axisbg = self._Style_cont.Get_bg_color())
+        self._ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._plotted_hist = rplt.imshow(self._hist, axes = self._ax1, cmap=mpl.cm.YlGnBu)
         # self._plotted_hist.set_interpolation('nearest')
 
-        ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
 
         if self._x_projection_size > 0:
-            self._Draw_x_projection(ax1)
-            plt.setp(ax1.get_xticklabels(), visible = False)
+            self._Draw_x_projection()
+            plt.setp(self._ax1.get_xticklabels(), visible = False)
         else:
-            ax1.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax1.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
         if self._y_projection_size > 0:
-            self._Draw_y_projection(ax1)
-            plt.setp(ax1.get_yticklabels(), visible = False)
+            self._Draw_y_projection()
+            plt.setp(self._ax1.get_yticklabels(), visible = False)
         else:
-            ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
-            ax1.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+            self._ax1.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
-            ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+            self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-            ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
+            self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
 
         plt.subplots_adjust(left = .10, bottom = .08, right =  .85, top = .95, wspace = .2, hspace = .0)
 
         self._Write_additional_text()
 
-        cbar_ax = self._fig.add_axes([0.87, 0.08, 0.05, 0.87])
-        self._fig.colorbar(self._plotted_hist, cax = cbar_ax)
+        self._z_axis = self._fig.add_axes([0.87, 0.08, 0.05, 0.87])
+        self._fig.colorbar(self._plotted_hist, cax = self._z_axis)
 
-        cbar_ax.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._z_axis.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
-        cbar_ax.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-
-        plt.show()
+        self._z_axis.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
 
     def _Calc_x_projection(self):
         if self._Style_cont.Get_content() == 'Efficiencies':
@@ -145,27 +176,27 @@ class plotter2D():
         else:
             self._x_projection = self._hist.ProjectionX('test_name_x', 0, -1, 'e')
 
-    def _Draw_x_projection(self, axis1):
+    def _Draw_x_projection(self):
         self._Calc_x_projection()
-        ax2 = plt.subplot2grid((100,100), (100 - self._x_projection_size, self._y_starting_point), rowspan = self._x_projection_size, colspan = 100 - self._y_projection_size, axisbg = self._Style_cont.Get_bg_color(), sharex = axis1)
-        rplt.hist(self._Get_rootpy_hist1d(self._x_projection), axes = ax2)
+        self._ax2 = plt.subplot2grid((100,100), (100 - self._x_projection_size, self._y_starting_point), rowspan = self._x_projection_size, colspan = 100 - self._y_projection_size, axisbg = self._Style_cont.Get_bg_color(), sharex = self._ax1)
+        rplt.hist(self._Get_rootpy_hist1d(self._x_projection), axes = self._ax2)
         
-        ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax2.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        ax2.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax2.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        ax2.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax2.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        ax2.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        self._ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax2.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        self._ax2.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax2.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        self._ax2.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax2.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        self._ax2.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
 
-        ax2.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax2.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
 
         if self._y_projection_size > 0:
-            ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
+            self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
 
-        ax2.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax2.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
     def _Calc_y_projection(self):
         if self._Style_cont.Get_content() == 'Efficiencies':
@@ -173,35 +204,35 @@ class plotter2D():
         else:
             self._y_projection = self._hist.ProjectionY('test_name_y', 0, -1, 'e')
 
-    def _Draw_y_projection(self, axis1):
+    def _Draw_y_projection(self):
         self._Calc_y_projection()
-        ax3 = plt.subplot2grid((100,100), (0, 0), rowspan = 100 - self._x_projection_size, colspan = self._y_projection_size, axisbg = self._Style_cont.Get_bg_color(), sharey = axis1)
+        self._ax3 = plt.subplot2grid((100,100), (0, 0), rowspan = 100 - self._x_projection_size, colspan = self._y_projection_size, axisbg = self._Style_cont.Get_bg_color(), sharey = self._ax1)
         x_i = []
         x_ii = []
         for i in range(0, self._y_projection.GetNbinsX()):
             x_i.append(self._y_projection.GetBinContent(i))
             x_ii.append(i*self._y_projection.GetBinWidth(i))
-        plt.hist(x_ii, weights = x_i, histtype = 'step', orientation='horizontal', axes = ax3)
-        for label in ax3.xaxis.get_ticklabels():
+        plt.hist(x_ii, weights = x_i, histtype = 'step', orientation='horizontal', axes = self._ax3)
+        for label in self._ax3.xaxis.get_ticklabels():
             label.set_rotation(270)
 
-        ax3.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        ax3.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax3.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        ax3.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax3.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        ax3.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ax3.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax3.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
+        self._ax3.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax3.spines['top'].set_color(self._Style_cont.Get_spine_color())
+        self._ax3.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax3.spines['left'].set_color(self._Style_cont.Get_spine_color())
+        self._ax3.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
+        self._ax3.spines['right'].set_color(self._Style_cont.Get_spine_color())
+        self._ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
 
-        ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
 
         if self._x_projection_size > 0:
-            ax3.xaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
+            self._ax3.xaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
 
-        ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset() - 0.3, 0.9)
-        ax3.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset() - 0.3, 0.9)
+        self._ax3.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
 
     def _Get_rootpy_hist2d(self):
         dummy_hist = Hist2D(self._hist.GetNbinsX(), self._hist.GetXaxis().GetXmin(), self._hist.GetXaxis().GetXmax(), self._hist.GetNbinsY(), self._hist.GetYaxis().GetXmin(), self._hist.GetYaxis().GetXmax())
@@ -225,6 +256,7 @@ class plotter2D():
 
     def _Get_rootpy_hist1d(self, temp_hist):
         dummy_hist = Hist(temp_hist.GetNbinsX(), temp_hist.GetXaxis().GetXmin(), temp_hist.GetXaxis().GetXmax())
+        dummy_hist.SetTitle(temp_hist.GetName())
         for i in range(0, temp_hist.GetNbinsX()):
             dummy_hist.SetBinContent(i, temp_hist.GetBinContent(i))
             dummy_hist.SetBinError(i, temp_hist.GetBinError(i))
@@ -244,6 +276,17 @@ def grid(x, y, z, resX=100, resY=100):
     Z = griddata(x, y, z, xi, yi)
     X, Y = meshgrid(xi, yi)
     return X, Y, Z
+
+class FixedOrderFormatter(ScalarFormatter):
+    """Formats axis ticks using scientific notation with a constant order of 
+    magnitude"""
+    def __init__(self, order_of_mag=0, useOffset=True, useMathText=False):
+        self._order_of_mag = order_of_mag
+        ScalarFormatter.__init__(self, useOffset=useOffset, 
+                                 useMathText=useMathText)
+    def _set_orderOfMagnitude(self, range):
+        """Over-riding this to avoid having orderOfMagnitude reset elsewhere"""
+        self.orderOfMagnitude = self._order_of_mag
 
 
 def contourplot(xlist, ylist, zlist, levels=[], labels=[], overlay=True, resolution=100, interactive=True, showPoints=True, logz=False, filename="", contoursAlpha=0.5, contourLineWidth=4, CMSLabel=True, CMSLabelCoords=[5,87,5,84], xlabel="x", ylabel="y", zlabel="z", xyrange=[0,100,0,100], LegendLocation="upper right", LegendTitle="contourplot",LegendColumns=1):

@@ -18,7 +18,7 @@ def Latex(pad=None):
 
 class CmsDecoration(object):
 
-    def __init__(self,sc_obj=sc.style_container(), extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", align=None, valign=None, vspace=0, hspace=0, referenceHeight=None, pad=None):
+    def __init__(self,sc_obj=sc.style_container(), extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", position=None, vspace=0, hspace=0, referenceHeight=None, pad=None):
         self._style=sc_obj
         self.relPosX    = 0.055  #relative padding
         self.relPosY    = 0.035#55
@@ -47,11 +47,8 @@ class CmsDecoration(object):
                 if repr(self.pad)!="<ROOT.TVirtualPad object at 0x(nil)>": break
 
 
-        if align!=None and valign!=None:
-            self._style._cmsTextPosition=sc.position(positiontext="%s %s"(align,valign), isText=True)
-        #self._style._cmsTextPosition.addXspace(self.pad.GetLeftMargin())
-        #self._style._cmsTextPosition.addXspace(-0.02)
-        #self._style._cmsTextPosition.addYspace(0.08)
+        if position is None:
+            self._style._cmsTextPosition=sc.position(positiontext="top left", isText=True)
 
         self.align_=2
         if self._style._cmsTextPosition.getX()<=0.3:
@@ -284,6 +281,7 @@ def tdrStyle():
     tdrStyle.SetHistLineWidth(1)
     # tdrStyle.SetLegoInnerR(Float_t rad = 0.5)
     # tdrStyle.SetNumberContours(Int_t number = 20)
+    #tdrStyle.SetHatchesLineWidth(4)
 
     tdrStyle.SetEndErrorSize(2)
     #tdrStyle.SetErrorMarker(20)
@@ -370,6 +368,9 @@ def tdrStyle():
     tdrStyle.SetOptLogx(0)
     tdrStyle.SetOptLogy(0)
     tdrStyle.SetOptLogz(0)
+
+
+
 
     # Postscript options:
     # tdrStyle.SetPaperSize(15.,15.)
