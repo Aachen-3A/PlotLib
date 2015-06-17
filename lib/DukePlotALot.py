@@ -199,7 +199,7 @@ class plotter():
     # @param[in] band_center Parameter where the error band should be centered ('ref', at the reference line,
     #                        or 'val' around the e.g. ratio value) (default = 'ref')
     # @param[in] stacking String to identify how to stack different systematic uncertainties ('No' stacking,
-    #                     'linear' stacking) (Default = 'No')
+    #                     'linear' stacking, 'Nosum' no sum at all) (Default = 'No')
     def Add_error_hist(self, histo = [], labels = [], band_center = 'ref', stacking = 'No'):
         self._add_error_bands = True
         self._error_hist = histo
@@ -789,13 +789,15 @@ class plotter():
             x_i = []
             y_i = []
             err_i = []
-            for i in range(sum_hist.GetNbinsX()+1):
+            for i in range(1,sum_hist.GetNbinsX()):
                 x_i.append(sum_hist.GetBinLowEdge(i))
                 y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
                 y_i.append(sum_hist.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(x_i[-1]))))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
+                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
+            # for (item1,item2,item3) in zip(x_i,y_i,err_i):
+                # print(item1,item2,item3)
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -1131,7 +1133,7 @@ class plotter():
                     for i in item:
                         x.append( i[0])
                         y.append( i[1])  							    												        
-                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())    							    												        
+                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())  
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
