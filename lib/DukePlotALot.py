@@ -368,7 +368,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
@@ -453,7 +453,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
@@ -879,7 +879,7 @@ class plotter():
                           label = self._add_plots_labels[0],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
-                          linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                          #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
@@ -932,7 +932,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -945,7 +945,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -981,7 +981,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -1066,7 +1066,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -1080,7 +1080,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -1117,7 +1117,7 @@ class plotter():
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
-                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   markerfacecolor = self._Style_cont.Get_marker_color(),
                                   markeredgecolor = self._Style_cont.Get_marker_color(),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
@@ -1150,8 +1150,8 @@ class plotter():
                     x,y=[],[]
                     for i in item:
                         x.append( i[0])
-                        y.append( i[1])  							    												        
-                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())  
+                        y.append( i[1])
+                    par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
@@ -1202,7 +1202,7 @@ class plotter():
                           label = self._add_plots_labels[1],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
-                          linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                          #linestyle = convert_linestyle(add_hist.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
@@ -1256,7 +1256,7 @@ class plotter():
                           label = self._add_plots_labels[2],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
-                          linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                          #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
