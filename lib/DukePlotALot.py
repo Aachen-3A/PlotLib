@@ -98,7 +98,10 @@ class plotter():
     #
     # This deletes the main objects nedded to not get a crash at the end!
     def __del__(self):
-        plt.close()
+        try:
+            plt.close()
+        except:
+            pass
         del self._hist
         del self._sig_hist
         del self._data_hist
@@ -644,14 +647,29 @@ class plotter():
 
         binning=[]
         content=0.
+        if self._Style_cont._forceBinWidth:
+            minwidth=self._Style_cont._forceBinWidth
+        else:
+            minwidth=1.
         for ibin in sum_hist.bins():
-            if (content+ibin.value)<1:
-                content+=ibin.value
+            if (content+ibin.value*ibin.x.width/minwidth)<1:
+                content+=ibin.value*ibin.x.width/minwidth
             else:
-                binning.append(ibin.x.low)
-                content=0.
-        binning.append(ibin.x.high)
 
+                if  self._Style_cont.Get_xmax()==-1:
+                    binning.append(ibin.x.low)
+                elif self._Style_cont.Get_xmax()>ibin.x.low:
+                    binning.append(ibin.x.low)
+                else:
+                    break
+                content=0.
+        if self._Style_cont.Get_xmax() != -1:
+            if self._Style_cont.Get_xmax()<ibin.x.high:
+                binning.append(self._Style_cont.Get_xmax())
+            else:
+                binning.append(ibin.x.high)
+        else:
+            binning.append(ibin.x.high)
         diff=diff.rebinned(binning)
         sum_hist=sum_hist.rebinned(binning)
         _data_hist_local=self._data_hist.rebinned(binning)
@@ -1406,18 +1424,19 @@ class plotter():
                             errhist[ibin].error=err[isyst][j]
                         errhist.SetFillColor(ROOT.kGray +2)
                         errhist.SetFillStyle(3244)
-                        #errhist.SetFillColorAlpha(ROOT.kGray +2, 0.7)
                         errhist.markersize=0
                         errhist.Draw("same e2")
-                    #line=Graph(2,add_hist.bounds(),[self._add_plots_ref_line[i],self._add_plots_ref_line[i]])
-                    line=Graph(2)
-                    line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
-                    line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
+                if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
+                    add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+                line=Graph(2)
+                line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
+                line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
 
-                    line.SetLineColor(self._Style_cont.Get_ref_line_color())
-                    line.Draw("l same")
+                line.SetLineColor(self._Style_cont.Get_ref_line_color())
+                line.Draw("l same")
 
                 add_hist.GetYaxis().SetRangeUser(min(add_hist.min()*1.1,-0.5),max(add_hist.max()*1.1,0.5))
+
 
                 add_hist.GetXaxis().SetTitle(self._Style_cont._xaxis_title.replace("$\\mathsf{","").replace("}$",""))
                 add_hist.GetYaxis().SetTitle(self._add_plots_labels[i].replace("$\\mathdefault{\\","#").replace("\\","#").replace("}$",""))
@@ -1469,6 +1488,7 @@ class plotter():
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
         lumitext=lumitext.replace(".00","")
+
         deco=rooLib.CmsDecoration(sc_obj=self._Style_cont ,extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, position=self._Style_cont.Get_cmsTextPosition(), pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
@@ -1503,13 +1523,44 @@ class plotter():
             drawnObjects.append(sg_hist)
             same=" same"
         if self._data:
-            for ibin in self._data_hist.bins():
+            nonUniform=False
+            if not self._data_hist.uniform():
+                nonUniform=True
+                if self._Style_cont._forceBinWidth:
+                    minwidth=self._Style_cont._forceBinWidth
+                else:
+                    minwidth=1.
+            if self._Style_cont._poisson_error:
+                if same=="":
+                    same="a"
+                g = ROOT.TGraphAsymmErrors(self._data_hist)
                 alpha = 1 - 0.6827
-                if ibin.value==0:
-                    #ibin.value=0
-                    ibin.error=ROOT.Math.gamma_quantile_c(alpha/2,1,1)/( ibin.x.width/20.)
-            self._data_hist.Draw("E0 "+same)
-            drawnObjects.append(self._data_hist)
+                for i in range(g.GetN()+1):
+                    N = g.GetY()[i]
+                    if N<0:
+                        N=0
+                    if nonUniform:
+                        N*=self._data_hist.GetBinWidth(i)/minwidth
+                    L = 0
+                    if not N==0:
+                        print N,alpha
+                        L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
+                    U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+                    if nonUniform:
+                        g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
+                        g.SetPointEYhigh(i, (U-N)/(self._data_hist.GetBinWidth(i)/minwidth))
+                    else:
+                        g.SetPointEYlow(i, (N-L))
+                        g.SetPointEYhigh(i, (U-N))
+                    g.SetPointEXlow(i, self._data_hist.GetBinWidth(i)/2.)
+                    g.SetPointEXhigh(i, self._data_hist.GetBinWidth(i)/2.)
+                self._data_hist_graph=g
+            else:
+                self._data_hist_graph=self._data_hist
+
+
+            self._data_hist_graph.Draw("P"+same)
+            drawnObjects.append(self._data_hist_graph)
             same=" same"
 
         self._AddRootLegend()

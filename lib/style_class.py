@@ -61,6 +61,8 @@ class style_container():
         self._grid = False
         self._batch_mode=True
         self._legend_font_size = 0
+        self._forceBinWidth=False
+        self._poisson_error=False
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
