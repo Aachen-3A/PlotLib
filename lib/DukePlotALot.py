@@ -965,6 +965,7 @@ class plotter():
                                    ecolor = item.GetLineColor(),
                                    linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                    markerfacecolor = item.GetLineColor(),
+                                   color = item.GetLineColor(),
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 for item in self._sig_hist:
