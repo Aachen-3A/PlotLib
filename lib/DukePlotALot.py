@@ -807,15 +807,16 @@ class plotter():
             x_i = []
             y_i = []
             err_i = []
-            for i in range(1,sum_hist.GetNbinsX()):
+            for i in range(1,sum_hist.GetNbinsX()-1):
                 x_i.append(sum_hist.GetBinLowEdge(i))
-                y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-                y_i.append(sum_hist.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
-            # for (item1,item2,item3) in zip(x_i,y_i,err_i):
-                # print(item1,item2,item3)
+                temp_content = sum_hist.GetBinContent(i)
+                y_i.append(temp_content)
+                y_i.append(temp_content)
+                err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                err_i.append(temp_content * abs(temp_error))
+                err_i.append(temp_content * abs(temp_error))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
