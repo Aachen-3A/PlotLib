@@ -240,6 +240,7 @@ $ D = %f \pm %f$'''%(fit_res.Chi2(),
                              fit_res.Parameter(3),fit_res.ParError(3))
 
     plt.text(2500, 0.015, text)
+    return func
 
 def draw_lines(axis):
     for idx_st in range(1,5):
