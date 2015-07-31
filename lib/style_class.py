@@ -302,6 +302,9 @@ class style_container():
     def Get_axis_title_font(self):
         return self._axis_title_font
 
+    def Get_axis_text_main_to_sub_ratio(self):
+        return self._axis_text_main_to_sub_ratio
+
     def Set_y_label_offset(self, value):
         self._y_label_offset = value
 
@@ -399,6 +402,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 12,
                                  }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -429,6 +433,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 9,
                                  }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -459,6 +464,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 12,
                                  }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:

@@ -545,7 +545,7 @@ class plotter():
             self._add_plots_ref_line[pos] = 1.
             return self._Calc_ratio()
         elif plot == 'Diff':
-            self._add_plots_labels[pos] = 'Data - MC'
+            self._add_plots_labels[pos] = '$\Delta$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diff()
         elif plot == 'Signi':
@@ -553,11 +553,11 @@ class plotter():
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_signi()
         elif plot == 'DiffRatio':
-            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
+            self._add_plots_labels[pos] = '$\Delta$ / MC'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio()
         elif plot == 'DiffRatio_width_increase':
-            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
+            self._add_plots_labels[pos] = '$\Delta$ / MC'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio_width_increase()
         elif plot == 'SoverSplusB':
@@ -921,7 +921,8 @@ class plotter():
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
             self._ax0.set_ylabel(self._add_plots_labels[0],
                                  va='top', ha='left',
-                                 fontdict = self._Style_cont.Get_axis_title_font())
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(self._ax0.get_xticklabels(), visible=False)
@@ -1110,7 +1111,8 @@ class plotter():
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
             self._ax2.set_ylabel(self._add_plots_labels[1],
                                  fontdict = self._Style_cont.Get_axis_title_font(),
-                                 va='top', ha='left')
+                                 va='top', ha='left',
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             self._ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
@@ -1166,7 +1168,8 @@ class plotter():
             self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
             self._ax3.set_ylabel(self._add_plots_labels[2],
                                  fontdict = self._Style_cont.Get_axis_title_font(),
-                                 va = 'top', ha = 'left')
+                                 va = 'top', ha = 'left',
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             #self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
