@@ -36,12 +36,7 @@ import style_class as sc
 # like ratio or siginficance can be added.
 #
 # @TODO Include handling of overflow bins
-# @TODO Include cumulative distributions
-# @TODO Functionallity for rebinning/variable binning
 # @TODO Handling of asymetric errors (systematics)
-# @TODO Handling of the data error bars
-# @TODO Include file reading functionallity
-# @TODO Include hist reweighting
 #
 # written by Soeren Erdweg 2014-2015
 class plotter():
@@ -911,7 +906,6 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax0, x, y, err)
-
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
