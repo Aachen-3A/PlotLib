@@ -922,10 +922,6 @@ class plotter():
             self._ax0.set_ylabel(self._add_plots_labels[0],
                                  va='top', ha='left',
                                  fontdict = self._Style_cont.Get_axis_title_font())
-                                 # color = self._Style_cont.Get_label_text_color(),
-                                 # 
-                                 # size = self._Style_cont.Get_axis_title_font_size(),
-                                 # weight = 'medium')
             self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(self._ax0.get_xticklabels(), visible=False)
@@ -1061,7 +1057,9 @@ class plotter():
             par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                       fontdict = self._Style_cont.Get_axis_title_font(),
+                       position = (1., -0.1), va = 'top', ha = 'right')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
@@ -1102,7 +1100,6 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax2, x, y, err)
-
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
@@ -1135,7 +1132,9 @@ class plotter():
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                           fontdict = self._Style_cont.Get_axis_title_font(),
+                           position = (1., -0.1), va = 'top', ha = 'right')
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             return None
         return None
