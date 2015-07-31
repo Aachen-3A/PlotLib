@@ -299,8 +299,8 @@ class style_container():
     def Set_error_bands_fcol(self, value):
         self._error_bands_fcol = value
 
-    def Get_axis_title_font_size(self):
-        return self._axis_title_font_size
+    def Get_axis_title_font(self):
+        return self._axis_title_font
 
     def Set_y_label_offset(self, value):
         self._y_label_offset = value
@@ -394,7 +394,11 @@ class style_container():
         self._show_minor_tick_labels = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
-        self._axis_title_font_size   = 14
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'black',
+                                  'weight' : 'medium',
+                                  'size'   : 12,
+                                 }
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -420,7 +424,11 @@ class style_container():
         self._show_minor_tick_labels          = False
         if self._legend_font_size == 0:
             self._legend_font_size                = 10
-        self._axis_title_font_size   = 9
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'black',
+                                  'weight' : 'medium',
+                                  'size'   : 9,
+                                 }
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -446,7 +454,11 @@ class style_container():
         self._show_minor_tick_labels = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
-        self._axis_title_font_size   = 9
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'white',
+                                  'weight' : 'medium',
+                                  'size'   : 12,
+                                 }
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:

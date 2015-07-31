@@ -25,7 +25,6 @@ from rounding import rounding
 from rootpy.plotting import base
 base.fillstyles_root2mpl[3244]="X"
 
-
 import style_class as sc
 
 ##@class plotter
@@ -109,7 +108,6 @@ class plotter():
         del self._data_hist
         del self._hist_axis
         del self._fig
-
 
     ##------------------------------------------------------------------
     ## Public functions
@@ -921,7 +919,13 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax0.set_ylim(ymin = ymin, ymax = ymax)
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
-            self._ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax0.set_ylabel(self._add_plots_labels[0],
+                                 va='top', ha='left',
+                                 fontdict = self._Style_cont.Get_axis_title_font())
+                                 # color = self._Style_cont.Get_label_text_color(),
+                                 # 
+                                 # size = self._Style_cont.Get_axis_title_font_size(),
+                                 # weight = 'medium')
             self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(self._ax0.get_xticklabels(), visible=False)
@@ -1046,10 +1050,14 @@ class plotter():
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(),
+                             fontdict = self._Style_cont.Get_axis_title_font(),
+                             va='top', ha='left')
         self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
         if len(self._hist_axis) > 0:
-            par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(),
+                            fontdict = self._Style_cont.Get_axis_title_font(),
+                            va='top', ha='left')
             par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
@@ -1102,10 +1110,10 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax2.set_ylim(ymin = ymin, ymax = ymax)
 
-            #self._ax2.set_ylim(ymin = -10, ymax = 10)
-
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
-            self._ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax2.set_ylabel(self._add_plots_labels[1],
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 va='top', ha='left')
             self._ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             self._ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
@@ -1120,7 +1128,9 @@ class plotter():
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                           fontdict = self._Style_cont.Get_axis_title_font(),
+                           position = (1., -0.1), va = 'top', ha = 'right')
             else:
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1155,7 +1165,9 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax3.set_ylim(ymin = ymin, ymax = ymax)
             self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
-            self._ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax3.set_ylabel(self._add_plots_labels[2],
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 va = 'top', ha = 'left')
             self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             #self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1170,7 +1182,9 @@ class plotter():
             self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             plt.setp(self._ax1.get_xticklabels(), visible = False)
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                       fontdict = self._Style_cont.Get_axis_title_font(),
+                       position = (1., -0.1), va = 'top', ha = 'right')
             return None
         return None
 
@@ -1245,7 +1259,6 @@ class plotter():
         #self.sgleg.SetNColumns(2)
         for h in self._sig_hist[::-1]:
             self.sgleg.AddEntry(h,h.GetTitle(), "l")
-
 
     def _AddPlotBelow(self):
         ## setup the window and pads to draw a ratio
@@ -1340,7 +1353,6 @@ class plotter():
                 add_hist.GetYaxis().SetNdivisions(205)
                 add_hist.GetXaxis().SetTitleOffset(self._Style_cont.axisOffsetX/addedPadheight/1.5)
         self._mainPad.cd()
-
 
     def DrawRoot(self):
         import rootplotlib as rooLib
