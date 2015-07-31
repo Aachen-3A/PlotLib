@@ -91,6 +91,7 @@ class plotter():
         if len(self._hist_axis) > 0:
             self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
             self._Style_cont.InitStyle(histaxis = self._hist_axis)
+            self._Style_cont._cmsTextPosition.addXspace(  -0.04)
         else:
             self._Style_cont.InitStyle()
         self.additionalPad          = []
@@ -183,6 +184,12 @@ class plotter():
             else:
                 self._add_plots_labels[pos] = label
             self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height)
+            if pos==0:
+                self._Style_cont._cmsTextPosition.addYspace(  -0.9 * height / 100.)
+            if pos==1:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
+            if pos==2:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
         else:
             print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
             sys.exit(42)
@@ -855,7 +862,7 @@ class plotter():
         dummy_err_sum = np.copy(np.square(err[0]))
         if self._Style_cont.Get_error_stacking() == 'linear':
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
-            dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
+            #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
             positive1 = y[i] - np.absolute(err[i]) > 0
             plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
@@ -867,7 +874,7 @@ class plotter():
                              where = positive1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
-                dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
+                #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
             elif self._Style_cont.Get_error_stacking() == 'No':
                 dummy_err_sum = np.add(dummy_err_sum,np.square(err[i]))
         if self._Style_cont.Get_error_stacking() == 'No':
@@ -1137,7 +1144,7 @@ class plotter():
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
-                          ignore_binns=[self._data_hist,sum(self._hist)],
+                          #ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax3, x, y, err)
@@ -1288,6 +1295,7 @@ class plotter():
             if self._add_plots[i] !='':
                 add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[i],i)
                 self.additionalPad[i].cd()
+                add_hist.decorate(**self._data_hist.decorators)
                 add_hist.Draw()
                 if self._add_error_bands:
                     for isyst in range(len(self._error_hist)):

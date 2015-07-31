@@ -399,14 +399,6 @@ class style_container():
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
             self._histaxis_label_text_color='red'
-        if self.addplots[0] != '':
-            self._cmsTextPosition.addYspace(  -0.9 * self.addheights[0] / 100.)
-        if self.addplots[1] != '':
-            self._cmsTextPosition.addYspace(  0.9 * self.addheights[1] / 100.)
-        if self.addplots[2] != '':
-            self._cmsTextPosition.addYspace(  0.9 * self.addheights[2] / 100.)
-        if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Plain_style(self):
         self._add_cms_text                    = False
@@ -433,14 +425,6 @@ class style_container():
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
             self._histaxis_label_text_color='red'
-        if self.addplots[0] != '':
-            self._cmsTextPosition.addYspace(  -0.8 * self.addheights[0] / 100.)
-        if self.addplots[1] != '':
-            self._cmsTextPosition.addYspace(  0.8 * self.addheights[1] / 100.)
-        if self.addplots[2] != '':
-            self._cmsTextPosition.addYspace(  0.8 * self.addheights[2] / 100.)
-        if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Cool_style(self):
         self._add_cms_text           = True
@@ -484,8 +468,6 @@ class style_container():
         self.axisTitleTextSize    = 20
         self.axisOffsetY          = 1.5
         self.axisOffsetX          = 1.5
-        #self._ratio_pad           ={}
-        #self.rootMemory           =[]
 
 class position():
     def __init__(self,positiontext="upper right", refference="", isText=False ,useRoot=False):
