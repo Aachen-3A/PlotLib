@@ -90,6 +90,7 @@ class plotter():
         if len(self._hist_axis) > 0:
             self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
             self._Style_cont.InitStyle(histaxis = self._hist_axis)
+            self._Style_cont._cmsTextPosition.addXspace(  -0.04)
         else:
             self._Style_cont.InitStyle()
         self.additionalPad          = []
@@ -182,6 +183,12 @@ class plotter():
             else:
                 self._add_plots_labels[pos] = label
             self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height)
+            if pos==0:
+                self._Style_cont._cmsTextPosition.addYspace(  -0.9 * height / 100.)
+            if pos==1:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
+            if pos==2:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
         else:
             print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
             sys.exit(42)
