@@ -844,7 +844,7 @@ class plotter():
         dummy_err_sum = np.copy(np.square(err[0]))
         if self._Style_cont.Get_error_stacking() == 'linear':
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
-            dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
+            #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
             positive1 = y[i] - np.absolute(err[i]) > 0
             plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
@@ -856,7 +856,7 @@ class plotter():
                              where = positive1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
-                dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
+                #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
             elif self._Style_cont.Get_error_stacking() == 'No':
                 dummy_err_sum = np.add(dummy_err_sum,np.square(err[i]))
         if self._Style_cont.Get_error_stacking() == 'No':
@@ -1269,7 +1269,7 @@ class plotter():
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
-                          ignore_binns=[self._data_hist,sum(self._hist)],
+                          #ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax3, x, y, err)
