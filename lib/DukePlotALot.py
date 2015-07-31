@@ -501,12 +501,6 @@ class plotter():
             self._calc_data_graph_from_hist()
         # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
-        #matplotlib draws no errorbars in logy when the lower error = 0
-        # if self._Style_cont.Get_logy() and self._data:
-            # for ibin in self._data_hist.bins():
-                # pass
-                # if ibin.value==1:
-                    # ibin.error=1.-1e-12
 
     def _calc_data_graph_from_hist(self):
         x_err = []
