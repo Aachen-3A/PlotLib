@@ -68,6 +68,7 @@ class plotter():
         ## Data histograms
         self._data                 = data
         self._data_hist            = data_hist
+        self._data_graph           = None
         ## Second axis histograms
         self._hist_axis            = hist_axis
         ## Additional plots
@@ -496,13 +497,36 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
+        if self._data:
+            self._calc_data_graph_from_hist()
         # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
         #matplotlib draws no errorbars in logy when the lower error = 0
-        if self._Style_cont.Get_logy() and self._data:
-            for ibin in self._data_hist.bins():
-                if ibin.error==1:
-                    ibin.error=1.-1e-12
+        # if self._Style_cont.Get_logy() and self._data:
+            # for ibin in self._data_hist.bins():
+                # pass
+                # if ibin.value==1:
+                    # ibin.error=1.-1e-12
+
+    def _calc_data_graph_from_hist(self):
+        x_err = []
+        y_err = []
+        x = np.array(list(self._data_hist.x()))
+        y = np.array(list(self._data_hist.y()))
+        for i, ibin in enumerate(self._data_hist.bins()):
+            binweight = float(self._data_hist.GetBinWidth(ibin.idx))
+            N = ibin.value*binweight
+            L = 0.0
+            alpha = 1 - 0.6827
+            if N != 0:
+                L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
+            U = ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+            y_err.append([(N-L)/binweight, (U-N)/binweight])
+            x_err.append([x[i] - 1, x[i] + 1])
+        self._data_graph = Graph(type='asymm')
+        for i, (xx, yy, xerr, yerr) in enumerate(zip(x, y, x_err, y_err)):
+            self._data_graph.SetPoint(i, xx, yy)
+            self._data_graph.SetPointError(i, xerr[0], xerr[1], yerr[0], yerr[1])
 
     def cleanUnwantedBins(self,hist,toCleanHists):
         #remove=[]
@@ -929,7 +953,10 @@ class plotter():
                     print('\tthere are no background, signal or data histograms.\n')
                     sys.exit(42)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist,
+                                  xerr = self._Style_cont.Get_xerr(),
+                                  emptybins = False,
+                                  axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -942,7 +969,10 @@ class plotter():
             else:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_graph,
+                                  xerr = self._Style_cont.Get_xerr(),
+                                  emptybins = False,
+                                  axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
@@ -979,7 +1009,10 @@ class plotter():
                                    markeredgecolor = item.GetLineColor(),
                                    capthick = self._Style_cont.Get_marker_error_cap_width())
                 if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
+                    data_handle = rplt.errorbar(self._data_hist,
+                                  xerr = self._Style_cont.Get_xerr(),
+                                  emptybins = False,
+                                  axes = self._ax1,
                                   markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   ecolor = self._Style_cont.Get_marker_color(),
