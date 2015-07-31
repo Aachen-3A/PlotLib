@@ -926,6 +926,9 @@ class plotter():
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
         ## Create the subplot for the main distribution
         self._ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        par1 = None
+        if len(self._hist_axis) > 0:
+            par1 = self._ax1.twinx()
         ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
             self._ax1.set_yscale('log')
@@ -945,10 +948,9 @@ class plotter():
                 print('\tthere are no background, signal or data histograms.\n')
                 sys.exit(42)
         ## Plot the data if is checked in and the style fits
-        if (self._Style_cont.Get_kind() == 'Standard' or
+        if self._data and (self._Style_cont.Get_kind() == 'Standard' or
            self._Style_cont.Get_kind() == 'Lines' or
-           self._Style_cont.Get_kind() == 'Graphs') and
-           self._data:
+           self._Style_cont.Get_kind() == 'Graphs'):
             data_handle = rplt.errorbar(self._data_graph,
                           xerr = self._Style_cont.Get_xerr(),
                           emptybins = False,
@@ -968,6 +970,8 @@ class plotter():
             ## Plot potential background histograms
             if len(self._hist) != 0:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
+            if len(self._hist_axis) > 0:
+                rplt.hist(self._hist_axis, stacked = False, axes = par1)
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
             ## Plot all potential background histograms as Graphs
@@ -997,6 +1001,15 @@ class plotter():
                                markerfacecolor = item.GetLineColor(),
                                markeredgecolor = item.GetLineColor(),
                                capthick = self._Style_cont.Get_marker_error_cap_width())
+            for item in self._hist_axis:
+                axishist_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = par1,
+                               markersize = self._Style_cont.Get_marker_size(),
+                               marker = self._Style_cont.Get_marker_style(),
+                               ecolor = item.GetLineColor(),
+                               # linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                               markerfacecolor = item.GetLineColor(),
+                               markeredgecolor = item.GetLineColor(),
+                               capthick = self._Style_cont.Get_marker_error_cap_width())
         ## Plot all checke in histograms as linegraphs
         elif self._Style_cont.Get_kind() == 'Linegraphs':
             for item in self._allHists:
@@ -1007,17 +1020,30 @@ class plotter():
                     x.append( i[0])
                     y.append( i[1])
                 self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+            for item in self._hist_axis:
+                if item is None:
+                    continue
+                x,y=[],[]
+                for i in item:
+                    x.append( i[0])
+                    y.append( i[1])
+                par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
         ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
+        if len(self._hist_axis) > 0 and self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
+            par1.set_ylim(ymin = self._Style_cont.Get_histaxis_ymin(), ymax = self._Style_cont.Get_histaxis_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
         self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
         self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
+        if len(self._hist_axis) > 0:
+            par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
@@ -1037,6 +1063,8 @@ class plotter():
         ## Set the properties of the tick marks
         self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
         self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        if len(self._hist_axis) > 0:
+            par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         ## Add the legend
         self._Add_legend()
         return None
@@ -1199,7 +1227,6 @@ class plotter():
         self._Add_legend()
         return None
 
-
     def _Draw_2(self):
         ## Plot a derived distribution below the main distribution on axis 2
         if self._add_plots[1] != '':
@@ -1303,10 +1330,12 @@ class plotter():
             self.DrawRoot()
             return
 
-        if len(self._hist_axis) > 0:
-            self._Draw_main_axis()
-        else:
-            self._Draw_main()
+        self._Draw_main()
+
+        # if len(self._hist_axis) > 0:
+            # self._Draw_main_axis()
+        # else:
+            # self._Draw_main()
 
         self._Draw_0()
 
