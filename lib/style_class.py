@@ -61,6 +61,8 @@ class style_container():
         self._grid = False
         self._batch_mode=True
         self._legend_font_size = 0
+        self._forceBinWidth=False
+        self._poisson_error=False
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -297,8 +299,11 @@ class style_container():
     def Set_error_bands_fcol(self, value):
         self._error_bands_fcol = value
 
-    def Get_axis_title_font_size(self):
-        return self._axis_title_font_size
+    def Get_axis_title_font(self):
+        return self._axis_title_font
+
+    def Get_axis_text_main_to_sub_ratio(self):
+        return self._axis_text_main_to_sub_ratio
 
     def Set_y_label_offset(self, value):
         self._y_label_offset = value
@@ -392,19 +397,16 @@ class style_container():
         self._show_minor_tick_labels = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
-        self._axis_title_font_size   = 14
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'black',
+                                  'weight' : 'medium',
+                                  'size'   : 12,
+                                 }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
             self._histaxis_label_text_color='red'
-        if self.addplots[0] != '':
-            self._cmsTextPosition.addYspace(  -0.9 * self.addheights[0] / 100.)
-        if self.addplots[1] != '':
-            self._cmsTextPosition.addYspace(  0.9 * self.addheights[1] / 100.)
-        if self.addplots[2] != '':
-            self._cmsTextPosition.addYspace(  0.9 * self.addheights[2] / 100.)
-        if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Plain_style(self):
         self._add_cms_text                    = False
@@ -426,19 +428,16 @@ class style_container():
         self._show_minor_tick_labels          = False
         if self._legend_font_size == 0:
             self._legend_font_size                = 10
-        self._axis_title_font_size   = 9
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'black',
+                                  'weight' : 'medium',
+                                  'size'   : 9,
+                                 }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
             self._histaxis_label_text_color='red'
-        if self.addplots[0] != '':
-            self._cmsTextPosition.addYspace(  -0.8 * self.addheights[0] / 100.)
-        if self.addplots[1] != '':
-            self._cmsTextPosition.addYspace(  0.8 * self.addheights[1] / 100.)
-        if self.addplots[2] != '':
-            self._cmsTextPosition.addYspace(  0.8 * self.addheights[2] / 100.)
-        if len(self.histaxis) > 0:
-            self._cmsTextPosition.addXspace(  -0.04)
 
     def _Set_Cool_style(self):
         self._add_cms_text           = True
@@ -460,7 +459,12 @@ class style_container():
         self._show_minor_tick_labels = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
-        self._axis_title_font_size   = 9
+        self._axis_title_font =  {'family' : 'serif',
+                                  'color'  : 'white',
+                                  'weight' : 'medium',
+                                  'size'   : 12,
+                                 }
+        self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
         else:
@@ -482,8 +486,6 @@ class style_container():
         self.axisTitleTextSize    = 20
         self.axisOffsetY          = 1.5
         self.axisOffsetX          = 1.5
-        #self._ratio_pad           ={}
-        #self.rootMemory           =[]
 
 class position():
     def __init__(self,positiontext="upper right", refference="", isText=False ,useRoot=False):

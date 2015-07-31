@@ -281,9 +281,9 @@ class HistStorageContainer():
         for stored in self.allStored:
             stored.getHist(hist)
 
-    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree):
+    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
         for stored in self.allStored:
-            stored.getHistFromTree(binns,xmin,xmax,xtitle,cut,value,tree)
+            stored.getHistFromTree(binns,xmin,xmax,xtitle,cut,value,tree,weight=weight)
 
     ## Function rebin the all hists
     #
@@ -304,9 +304,9 @@ class HistStorageContainer():
     ## Function setTitle for the all hists
     #
     # @param[in] xtitle
-    def setTitle(self,xtitle):
+    def setTitle(self,xtitle,ytitle=""):
         for stored in self.allStored:
-            stored.setTitle(xtitle)
+            stored.setTitle(xtitle,ytitle)
 
     ## Function to set the style of the histograms
     #
@@ -478,6 +478,9 @@ class HistStorage(object):
                             weight=self.xs[name].as_float("crosssection")*self.lumi/self.genNumber[name]
                 if self.configxs=="music":
                     weight=self.xs.as_float("%s.XSec"%(name))*self.xs.as_float("%s.FilterEff"%(name))*self.xs.as_float("%s.kFactor"%(name))*self.xs.as_float("Lumi")/self.genNumber[name]
+                if self.configxs=="music_scaled":
+                    raise Exception('not implemented music n_files getter yet!!')
+                    weight=1/self._getNjobs()
                 if self.configxs==None:
                     weight=1.
             if name in self.additionalWeight:
@@ -632,7 +635,11 @@ class HistStorage(object):
                 self.hists[f]=self.views[f].Get(hist)
                 self.hists[f].Sumw2()
             except:
-                self.hists[f]=Hist(100,0,100)
+                #self.hists[f]=self.files[f].Get(hist)
+                log_plotlib.warning( "No %s in %s"%(hist,f))
+                self.hists[f]=self.hists.values()[0].empty_clone()
+                self.hists[f].Sumw2()
+                #self.hists[f]=Hist(100,0,100)
         if self._joinList is not False:
             self.joinList(self._joinList)
         for hist in self.hists:
@@ -645,7 +652,7 @@ class HistStorage(object):
     #
     # the hists ate added to .hists and joined if a joinList exist
     # @param[in] hist string of the hist in the files
-    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree):
+    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
         self.clearHists()
         for f in self.files:
             try:
@@ -658,7 +665,13 @@ class HistStorage(object):
             self.hists[f]=Hist(binns,xmin,xmax)
             self.hists[f].GetXaxis().SetTitle(xtitle)
             try:
+            #if weight is None:
                 _tree.Draw(value,selection=cut,hist=self.hists[f])
+            #else:
+                #tmpFile=File("tmp.root", "recreate")
+                #sel_tree=_tree.copy_tree(selection=cut)
+                #print weight
+                #sel_tree.Draw(value,selection=weight,hist=self.hists[f])
             except:
                 log_plotlib.info( "Perhaps try this one:")
                 for i in _tree.glob("*"):
@@ -701,11 +714,15 @@ class HistStorage(object):
     #
     # @param[in] joinList add all files that are in the (ordered)dict to one hist with the name of the key
     def joinList(self,joinList):
+        #import ROOT
         for name in joinList:
             self.hists[name]=self.hists[joinList[name][0]]
             self.hists.pop(joinList[name][0])
             for h in joinList[name][1:]:
-                self.hists[name]+=self.hists[h]
+                try:
+                    self.hists[name]+=(self.hists[h])
+                except:
+                    self.hists[name].Add(self.hists[h])
                 self.hists.pop(h)
 
     ## Function rebin the all hists
@@ -722,6 +739,11 @@ class HistStorage(object):
                 self.hists[name]=rebinnedHist
                 if name in self.style:
                     self.hists[name].decorate(**self.style[name])
+                if width!=0:
+                    for ibin in self.hists[name]:
+                        ibin.value=ibin.value/(ibin.x.width/width)
+                        ibin.error=ibin.error/(ibin.x.width/width)
+                    self.forcedWidth=width
         else:
             if width!=0:
                 factor=int(width/self.hists.values()[-1].xwidth(1)+0.5)
@@ -768,9 +790,11 @@ class HistStorage(object):
     ## Function to set x axis title for all hists
     #
     # @param[in] xtitle
-    def setTitle(self,xtitle):
+    def setTitle(self,xtitle,ytitle=""):
         for h in self.hists.values():
             h.GetXaxis().SetTitle(xtitle)
+            if ytitle!="":
+                h.GetYaxis().SetTitle(ytitle)
 
 
     ## Function to set the style of the histograms

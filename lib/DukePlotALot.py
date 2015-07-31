@@ -9,7 +9,8 @@ matplotlib.use('Qt4Agg')
 import ROOT
 import subprocess
 import numpy as np
-from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad
+from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad, Style
+from rootpy.plotting.base import convert_linestyle
 import matplotlib.ticker as mticker
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
@@ -24,7 +25,6 @@ from rounding import rounding
 from rootpy.plotting import base
 base.fillstyles_root2mpl[3244]="X"
 
-
 import style_class as sc
 
 ##@class plotter
@@ -36,12 +36,7 @@ import style_class as sc
 # like ratio or siginficance can be added.
 #
 # @TODO Include handling of overflow bins
-# @TODO Include cumulative distributions
-# @TODO Functionallity for rebinning/variable binning
 # @TODO Handling of asymetric errors (systematics)
-# @TODO Handling of the data error bars
-# @TODO Include file reading functionallity
-# @TODO Include hist reweighting
 #
 # written by Soeren Erdweg 2014-2015
 class plotter():
@@ -67,6 +62,7 @@ class plotter():
         ## Data histograms
         self._data                 = data
         self._data_hist            = data_hist
+        self._data_graph           = None
         ## Second axis histograms
         self._hist_axis            = hist_axis
         ## Additional plots
@@ -89,6 +85,7 @@ class plotter():
         if len(self._hist_axis) > 0:
             self._Style_cont.AddAxisTitle_histaxis(self._hist_axis[0])
             self._Style_cont.InitStyle(histaxis = self._hist_axis)
+            self._Style_cont._cmsTextPosition.addXspace(  -0.04)
         else:
             self._Style_cont.InitStyle()
         self.additionalPad          = []
@@ -97,13 +94,15 @@ class plotter():
     #
     # This deletes the main objects nedded to not get a crash at the end!
     def __del__(self):
-        plt.close()
+        try:
+            plt.close()
+        except:
+            pass
         del self._hist
         del self._sig_hist
         del self._data_hist
         del self._hist_axis
         del self._fig
-
 
     ##------------------------------------------------------------------
     ## Public functions
@@ -178,6 +177,12 @@ class plotter():
             else:
                 self._add_plots_labels[pos] = label
             self._Style_cont.InitStyle(addplots = self._add_plots, addheights = self._add_plots_height)
+            if pos==0:
+                self._Style_cont._cmsTextPosition.addYspace(  -0.9 * height / 100.)
+            if pos==1:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
+            if pos==2:
+                self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
         else:
             print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
             sys.exit(42)
@@ -344,7 +349,7 @@ class plotter():
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._sig_hist[::-1]:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0 ,linewidth=item.GetLineWidth())
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0 ,linewidth=item.GetLineWidth())
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._add_error_bands:
@@ -357,27 +362,28 @@ class plotter():
                     handle_list.append(col_patch)
                     label_list.append('syst. sum')
             for item in self._hist_axis:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._data:
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
         elif self._Style_cont.Get_kind() == 'Lines':
             for item in self._hist:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._sig_hist:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._hist_axis:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
         elif self._Style_cont.Get_kind() == 'Graphs':
@@ -385,6 +391,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
+                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
@@ -392,6 +399,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
+                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
@@ -399,6 +407,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = item.GetLineColor(),
+                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(item.GetTitle())
@@ -415,20 +424,21 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
+                                  linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
         elif self._Style_cont.Get_kind() == 'Linegraphs':
             for item in self._hist:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._sig_hist:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0)
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             for item in self._hist_axis:
-                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), markersize = 0, linestyle = ':')
+                col_patch = mlines.Line2D([], [], color = item.GetLineColor(), linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'), markersize = 0)
                 handle_list.append(col_patch)
                 label_list.append(item.GetTitle())
             if self._add_error_bands:
@@ -444,6 +454,7 @@ class plotter():
                 dat_line=plt.errorbar([], [],xerr = self._Style_cont.Get_xerr(),yerr=True, markersize = self._Style_cont.Get_marker_size(),
                                   marker = self._Style_cont.Get_marker_style(),
                                   color = self._Style_cont.Get_marker_color(),
+                                  #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                                   capthick = self._Style_cont.Get_marker_error_cap_width())
                 handle_list.append(dat_line)
                 label_list.append(self._data_hist.GetTitle())
@@ -486,13 +497,30 @@ class plotter():
             self._hist_height -= self._add_plots_height[1]
         if self._add_plots[2] != '':
             self._hist_height -= self._add_plots_height[2]
+        if self._data:
+            self._calc_data_graph_from_hist()
         # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
-        #matplotlib draws no errorbars in logy when the lower error = 0
-        if self._Style_cont.Get_logy() and self._data:
-            for ibin in self._data_hist.bins():
-                if ibin.error==1:
-                    ibin.error=1.-1e-12
+
+    def _calc_data_graph_from_hist(self):
+        x_err = []
+        y_err = []
+        x = np.array(list(self._data_hist.x()))
+        y = np.array(list(self._data_hist.y()))
+        for i, ibin in enumerate(self._data_hist.bins()):
+            binweight = float(self._data_hist.GetBinWidth(ibin.idx))
+            N = ibin.value*binweight
+            L = 0.0
+            alpha = 1 - 0.6827
+            if N != 0:
+                L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
+            U = ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+            y_err.append([(N-L)/binweight, (U-N)/binweight])
+            x_err.append([x[i] - 1, x[i] + 1])
+        self._data_graph = Graph(type='asymm')
+        for i, (xx, yy, xerr, yerr) in enumerate(zip(x, y, x_err, y_err)):
+            self._data_graph.SetPoint(i, xx, yy)
+            self._data_graph.SetPointError(i, xerr[0], xerr[1], yerr[0], yerr[1])
 
     def cleanUnwantedBins(self,hist,toCleanHists):
         #remove=[]
@@ -512,7 +540,7 @@ class plotter():
             self._add_plots_ref_line[pos] = 1.
             return self._Calc_ratio()
         elif plot == 'Diff':
-            self._add_plots_labels[pos] = 'Data - MC'
+            self._add_plots_labels[pos] = '$\Delta$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diff()
         elif plot == 'Signi':
@@ -520,11 +548,11 @@ class plotter():
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_signi()
         elif plot == 'DiffRatio':
-            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
+            self._add_plots_labels[pos] = '$\Delta$ / MC'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio()
         elif plot == 'DiffRatio_width_increase':
-            self._add_plots_labels[pos] = '$\mathdefault{\\frac{Data - MC}{MC}}$'
+            self._add_plots_labels[pos] = '$\Delta$ / MC'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_diffratio_width_increase()
         elif plot == 'SoverSplusB':
@@ -637,14 +665,29 @@ class plotter():
 
         binning=[]
         content=0.
+        if self._Style_cont._forceBinWidth:
+            minwidth=self._Style_cont._forceBinWidth
+        else:
+            minwidth=1.
         for ibin in sum_hist.bins():
-            if (content+ibin.value)<1:
-                content+=ibin.value
+            if (content+ibin.value*ibin.x.width/minwidth)<1:
+                content+=ibin.value*ibin.x.width/minwidth
             else:
-                binning.append(ibin.x.low)
-                content=0.
-        binning.append(ibin.x.high)
 
+                if  self._Style_cont.Get_xmax()==-1:
+                    binning.append(ibin.x.low)
+                elif self._Style_cont.Get_xmax()>ibin.x.low:
+                    binning.append(ibin.x.low)
+                else:
+                    break
+                content=0.
+        if self._Style_cont.Get_xmax() != -1:
+            if self._Style_cont.Get_xmax()<ibin.x.high:
+                binning.append(self._Style_cont.Get_xmax())
+            else:
+                binning.append(ibin.x.high)
+        else:
+            binning.append(ibin.x.high)
         diff=diff.rebinned(binning)
         sum_hist=sum_hist.rebinned(binning)
         _data_hist_local=self._data_hist.rebinned(binning)
@@ -782,15 +825,16 @@ class plotter():
             x_i = []
             y_i = []
             err_i = []
-            for i in range(1,sum_hist.GetNbinsX()):
+            for i in range(1,sum_hist.GetNbinsX()-1):
                 x_i.append(sum_hist.GetBinLowEdge(i))
-                y_i.append(sum_hist.GetBinContent(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
-                y_i.append(sum_hist.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
-                err_i.append(sum_hist.GetBinContent(i)*abs(self._error_hist[j].GetBinContent(self._error_hist[j].FindBin(sum_hist.GetBinCenter(i)))))
-            # for (item1,item2,item3) in zip(x_i,y_i,err_i):
-                # print(item1,item2,item3)
+                temp_content = sum_hist.GetBinContent(i)
+                y_i.append(temp_content)
+                y_i.append(temp_content)
+                err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                err_i.append(temp_content * abs(temp_error))
+                err_i.append(temp_content * abs(temp_error))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -798,32 +842,32 @@ class plotter():
 
     def _Draw_Any_uncertainty_band(self, axis, x, y, err):
         x_vals = x[0]
-        plt.fill_between(x_vals, y[0] - np.absolute(err[0]), y[0] + np.absolute(err[0]),
+        dummy_y_p = np.copy(y[0])
+        err_i = np.absolute(err[0])
+        positive = dummy_y_p - err_i > 0
+        plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
                          alpha = self._Style_cont.Get_error_bands_alph(),
                          edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
                          facecolor = self._Style_cont.Get_error_bands_fcol()[0],
                          lw = self._Style_cont.Get_error_line_width(),
-                         axes = axis, zorder = 2.1)
-        dummy_y_p = np.copy(y[0])
-        dummy_y_m = np.copy(y[0])
+                         axes = axis, zorder = 2.1,
+                         where = positive)
         dummy_err_sum = np.copy(np.square(err[0]))
         if self._Style_cont.Get_error_stacking() == 'linear':
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
-            dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
+            #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
-            plt.fill_between(x_vals, dummy_y_p, dummy_y_p + np.absolute(err[i]),
+            positive1 = y[i] - np.absolute(err[i]) > 0
+            plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
                              alpha = self._Style_cont.Get_error_bands_alph(),
                              edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
                              facecolor = self._Style_cont.Get_error_bands_fcol()[i],
-                             lw = self._Style_cont.Get_error_line_width(), axes = axis, zorder = 2.1)
-            plt.fill_between(x_vals, dummy_y_m - np.absolute(err[i]), dummy_y_m,
-                             alpha = self._Style_cont.Get_error_bands_alph(),
-                             edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
-                             facecolor = self._Style_cont.Get_error_bands_fcol()[i],
-                             lw = self._Style_cont.Get_error_line_width(), axes = axis, zorder = 2.1)
+                             lw = self._Style_cont.Get_error_line_width(),
+                             axes = axis, zorder = 2.1,
+                             where = positive1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
-                dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
+                #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
             elif self._Style_cont.Get_error_stacking() == 'No':
                 dummy_err_sum = np.add(dummy_err_sum,np.square(err[i]))
         if self._Style_cont.Get_error_stacking() == 'No':
@@ -854,6 +898,7 @@ class plotter():
                           label = self._add_plots_labels[0],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
+                          #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
@@ -861,7 +906,6 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax0, x, y, err)
-
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax0.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
@@ -869,7 +913,10 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax0.set_ylim(ymin = ymin, ymax = ymax)
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
-            self._ax0.set_ylabel(self._add_plots_labels[0], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax0.set_ylabel(self._add_plots_labels[0],
+                                 va='top', ha='left',
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax0.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax0.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
             plt.setp(self._ax0.get_xticklabels(), visible=False)
@@ -881,6 +928,9 @@ class plotter():
         self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
         ## Create the subplot for the main distribution
         self._ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
+        par1 = None
+        if len(self._hist_axis) > 0:
+            par1 = self._ax1.twinx()
         ## If specified in the style container set logarithmic axis
         if self._Style_cont.Get_logy():
             self._ax1.set_yscale('log')
@@ -894,245 +944,117 @@ class plotter():
                 line.set_linestyle(self._Style_cont.Get_grid_style())
                 line.set_linewidth(self._Style_cont.Get_grid_width())
                 line.set_color(self._Style_cont.Get_grid_color())
+        ## Check if there is actually something to plot, otherwise exit
+        if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
+                print('\n\tyou have to add some histogram that should be plotted,')
+                print('\tthere are no background, signal or data histograms.\n')
+                sys.exit(42)
+        ## Plot the data if is checked in and the style fits
+        if self._data and (self._Style_cont.Get_kind() == 'Standard' or
+           self._Style_cont.Get_kind() == 'Lines' or
+           self._Style_cont.Get_kind() == 'Graphs'):
+            data_handle = rplt.errorbar(self._data_graph,
+                          xerr = self._Style_cont.Get_xerr(),
+                          emptybins = False,
+                          axes = self._ax1,
+                          markersize = self._Style_cont.Get_marker_size(),
+                          marker = self._Style_cont.Get_marker_style(),
+                          ecolor = self._Style_cont.Get_marker_color(),
+                          #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
+                          markerfacecolor = self._Style_cont.Get_marker_color(),
+                          markeredgecolor = self._Style_cont.Get_marker_color(),
+                          capthick = self._Style_cont.Get_marker_error_cap_width())
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
-            if len(self._hist) == 0:
-                if not self._data and len(self._sig_hist) == 0:
-                    print('\n\tyou have to add some histogram that should be plotted,')
-                    print('\tthere are no background, signal or data histograms.\n')
-                    sys.exit(42)
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
-                if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
-            else:
+            ## Plot potential signal histograms
+            if len(self._sig_hist) > 0:
+                rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
+            ## Plot potential background histograms
+            if len(self._hist) != 0:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
-                if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1 )
+            if len(self._hist_axis) > 0:
+                rplt.hist(self._hist_axis, stacked = False, axes = par1)
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
-            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
-                print('\n\tyou have to add some histogram that should be plotted,')
-                print('\tthere are no background, signal or data histograms.\n')
-                sys.exit(42)
-            else:
-                for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                   markersize = self._Style_cont.Get_marker_size(),
-                                   marker = self._Style_cont.Get_marker_style(),
-                                   ecolor = item.GetLineColor(),
-                                   markerfacecolor = item.GetLineColor(),
-                                   markeredgecolor = item.GetLineColor(),
-                                   capthick = self._Style_cont.Get_marker_error_cap_width())
-                for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                   markersize = self._Style_cont.Get_marker_size(),
-                                   marker = self._Style_cont.Get_marker_style(),
-                                   ecolor = item.GetLineColor(),
-                                   markerfacecolor = item.GetLineColor(),
-                                   markeredgecolor = item.GetLineColor(),
-                                   capthick = self._Style_cont.Get_marker_error_cap_width())
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
+            ## Plot all potential background histograms as Graphs
+            for item in self._hist:
+                graph_handle = rplt.errorbar(item,
+                               xerr = self._Style_cont.Get_xerr(),
+                               emptybins = False,
+                               axes = self._ax1,
+                               markersize = self._Style_cont.Get_marker_size(),
+                               marker = self._Style_cont.Get_marker_style(),
+                               ecolor = item.GetLineColor(),
+                               # linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                               markerfacecolor = item.GetLineColor(),
+                               color = item.GetLineColor(),
+                               markeredgecolor = item.GetLineColor(),
+                               capthick = self._Style_cont.Get_marker_error_cap_width())
+            ## Plot all potential signal histograms as Graphs
+            for item in self._sig_hist:
+                graph_handle = rplt.errorbar(item,
+                               xerr = self._Style_cont.Get_xerr(),
+                               emptybins = False,
+                               axes = self._ax1,
+                               markersize = self._Style_cont.Get_marker_size(),
+                               marker = self._Style_cont.Get_marker_style(),
+                               ecolor = item.GetLineColor(),
+                               # linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                               markerfacecolor = item.GetLineColor(),
+                               markeredgecolor = item.GetLineColor(),
+                               capthick = self._Style_cont.Get_marker_error_cap_width())
+            for item in self._hist_axis:
+                axishist_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = par1,
+                               markersize = self._Style_cont.Get_marker_size(),
+                               marker = self._Style_cont.Get_marker_style(),
+                               ecolor = item.GetLineColor(),
+                               # linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
+                               markerfacecolor = item.GetLineColor(),
+                               markeredgecolor = item.GetLineColor(),
+                               capthick = self._Style_cont.Get_marker_error_cap_width())
+        ## Plot all checke in histograms as linegraphs
         elif self._Style_cont.Get_kind() == 'Linegraphs':
-            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
-                print('\n\tyou have to add some histogram that should be plotted,')
-                print('\tthere are no background, signal or data histograms.\n')
-                sys.exit(42)
-            else:
-                for item in self._allHists:
-                    if item is None:
-                        continue
-                    x,y=[],[]
-                    for i in item:
-                        x.append( i[0])
-                        y.append( i[1])
-                    self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+            for item in self._allHists:
+                if item is None:
+                    continue
+                x,y=[],[]
+                for i in item:
+                    x.append( i[0])
+                    y.append( i[1])
+                self._ax1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
+            for item in self._hist_axis:
+                if item is None:
+                    continue
+                x,y=[],[]
+                for i in item:
+                    x.append( i[0])
+                    y.append( i[1])
+                par1.plot(x,y,'o-', markeredgewidth=0, color=item.GetLineColor(),linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
         ## If defined draw error bands
         if self._add_error_bands:
             self._Draw_Error_Bands(self._ax1)
         ## If specified change the axis ranges
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
-        if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
-            self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
-        ## Set the y-axis title and its options
-        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-        self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
-        ## If no other additional plots, set the x-axis title
-        if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-        ## If defined show the minor tick marks
-        if self._Style_cont.Get_show_minor_tick_labels():
-            self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
-            self._ax1.yaxis.set_minor_formatter(plt.FuncFormatter(self._show_only_some))
-        ## Set the properties of the plot spine
-        self._ax1.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
-        self._ax1.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        self._ax1.spines['top'].set_color(self._Style_cont.Get_spine_color())
-        self._ax1.spines['top'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        self._ax1.spines['left'].set_color(self._Style_cont.Get_spine_color())
-        self._ax1.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        self._ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
-        self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-        ## Set the properties of the tick marks
-        self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
-        ## Add the legend
-        self._Add_legend()
-        return None
-
-    def _Draw_main_axis(self):
-        ## Create the figure for all subplots
-        self._fig = plt.figure(figsize=(6, 6), dpi=100, facecolor=self._Style_cont.Get_bg_color())
-        ## Create the subplot for the main distribution
-        self._ax1 = plt.subplot2grid((100,1), (self._hist_start,0), rowspan = self._hist_height, colspan = 1, axisbg = self._Style_cont.Get_bg_color())
-        par1 = self._ax1.twinx()
-        ## If specified in the style container set logarithmic axis
-        if self._Style_cont.Get_logy():
-            self._ax1.set_yscale('log')
-        if self._Style_cont.Get_histaxis_logy():
-            par1.set_yscale('log')
-        if self._Style_cont.Get_logx():
-            self._ax1.set_xscale('log')
-        if self._Style_cont.Get_grid():
-            self._ax1.grid(True)
-            gridlines = self._ax1.get_xgridlines()
-            gridlines.extend( self._ax1.get_ygridlines() )
-            for line in gridlines:
-                line.set_linestyle(self._Style_cont.Get_grid_style())
-                line.set_linewidth(self._Style_cont.Get_grid_width())
-                line.set_color(self._Style_cont.Get_grid_color())
-        ## Crete the standard plots with histograms
-        if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
-            if len(self._hist) == 0:
-                if not self._data and len(self._sig_hist) == 0:
-                    print('\n\tyou have to add some histogram that should be plotted,')
-                    print('\tthere are no background, signal or data histograms.\n')
-                    sys.exit(42)
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
-                if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
-                rplt.hist(self._hist_axis, stacked = False, axes = par1)
-            else:
-                hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
-                if len(self._sig_hist) > 0:
-                    rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
-                rplt.hist(self._hist_axis, stacked = False, axes = par1)
-        ## Create the main plot with graphs
-        elif self._Style_cont.Get_kind() == 'Graphs':
-            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
-                print('\n\tyou have to add some histogram that should be plotted,')
-                print('\tthere are no background, signal or data histograms.\n')
-                sys.exit(42)
-            else:
-                for item in self._hist:
-                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                   markersize = self._Style_cont.Get_marker_size(),
-                                   marker = self._Style_cont.Get_marker_style(),
-                                   ecolor = item.GetLineColor(),
-                                   markerfacecolor = item.GetLineColor(),
-                                   markeredgecolor = item.GetLineColor(),
-                                   capthick = self._Style_cont.Get_marker_error_cap_width())
-                for item in self._sig_hist:
-                    graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                   markersize = self._Style_cont.Get_marker_size(),
-                                   marker = self._Style_cont.Get_marker_style(),
-                                   ecolor = item.GetLineColor(),
-                                   markerfacecolor = item.GetLineColor(),
-                                   markeredgecolor = item.GetLineColor(),
-                                   capthick = self._Style_cont.Get_marker_error_cap_width())
-                if self._data:
-                    data_handle = rplt.errorbar(self._data_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
-                                  markersize = self._Style_cont.Get_marker_size(),
-                                  marker = self._Style_cont.Get_marker_style(),
-                                  ecolor = self._Style_cont.Get_marker_color(),
-                                  markerfacecolor = self._Style_cont.Get_marker_color(),
-                                  markeredgecolor = self._Style_cont.Get_marker_color(),
-                                  capthick = self._Style_cont.Get_marker_error_cap_width())
-                for item in self._hist_axis:
-                    axishist_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = par1,
-                                   markersize = self._Style_cont.Get_marker_size(),
-                                   marker = self._Style_cont.Get_marker_style(),
-                                   ecolor = item.GetLineColor(),
-                                   markerfacecolor = item.GetLineColor(),
-                                   markeredgecolor = item.GetLineColor(),
-                                   capthick = self._Style_cont.Get_marker_error_cap_width())
-        elif self._Style_cont.Get_kind() == 'Linegraphs':
-            if len(self._hist) == 0 and not self._data and len(self._sig_hist) == 0:
-                print('\n\tyou have to add some histogram that should be plotted,')
-                print('\tthere are no background, signal or data histograms.\n')
-                sys.exit(42)
-            else:
-                for item in self._hist+self._sig_hist+[self._data_hist]:
-                    if item is None:
-                        continue
-                    x,y=[],[]
-                    for i in item:
-                        x.append( i[0])
-                        y.append( i[1])
-                    self._ax1.plot(x,y,linestyle=self._Style_cont.Get_line_style(), markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())
-                for item in self._hist_axis:
-                    if item is None:
-                        continue
-                    x,y=[],[]
-                    for i in item:
-                        x.append( i[0])
-                        y.append( i[1])
-                    par1.plot(x,y,linestyle=':', markeredgewidth=0, color=item.GetLineColor(),markersize = self._Style_cont.Get_marker_size(),marker = self._Style_cont.Get_marker_style())    							    												        
-        ## If defined draw error bands
-        if self._add_error_bands:
-            self._Draw_Error_Bands(self._ax1)
-        ## If specified change the axis ranges
-        if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
-            self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
-        if self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
+        if len(self._hist_axis) > 0 and self._Style_cont.Get_histaxis_ymin() != -1 and self._Style_cont.Get_histaxis_ymax() != -1:
             par1.set_ylim(ymin = self._Style_cont.Get_histaxis_ymin(), ymax = self._Style_cont.Get_histaxis_ymax())
         if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
             self._ax1.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
         ## Set the y-axis title and its options
-        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax1.set_ylabel(self._Style_cont.Get_yaxis_title(),
+                             fontdict = self._Style_cont.Get_axis_title_font(),
+                             va='top', ha='left')
         self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
-        par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(), color=self._Style_cont.Get_histaxis_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
-        par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
+        if len(self._hist_axis) > 0:
+            par1.set_ylabel(self._Style_cont.Get_histaxis_yaxis_title(),
+                            fontdict = self._Style_cont.Get_axis_title_font(),
+                            va='top', ha='left')
+            par1.yaxis.set_label_coords(self._Style_cont.Get_histaxis_y_label_offset(),0.9)
         ## If no other additional plots, set the x-axis title
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                       fontdict = self._Style_cont.Get_axis_title_font(),
+                       position = (1., -0.1), va = 'top', ha = 'right')
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
@@ -1148,12 +1070,12 @@ class plotter():
         self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ## Set the properties of the tick marks
         self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
-        par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        if len(self._hist_axis) > 0:
+            par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         ## Add the legend
         self._Add_legend()
         return None
-
 
     def _Draw_2(self):
         ## Plot a derived distribution below the main distribution on axis 2
@@ -1165,6 +1087,7 @@ class plotter():
                           label = self._add_plots_labels[1],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
+                          #linestyle = convert_linestyle(add_hist.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
@@ -1172,7 +1095,6 @@ class plotter():
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax2, x, y, err)
-
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
@@ -1180,10 +1102,11 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax2.set_ylim(ymin = ymin, ymax = ymax)
 
-            #self._ax2.set_ylim(ymin = -10, ymax = 10)
-
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
-            self._ax2.set_ylabel(self._add_plots_labels[1], color = self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax2.set_ylabel(self._add_plots_labels[1],
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 va='top', ha='left',
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax2.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             self._ax2.spines['bottom'].set_color(self._Style_cont.Get_spine_color())
             self._ax2.spines['bottom'].set_linewidth(self._Style_cont.Get_spine_line_width())
@@ -1198,12 +1121,16 @@ class plotter():
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                           fontdict = self._Style_cont.Get_axis_title_font(),
+                           position = (1., -0.1), va = 'top', ha = 'right')
             else:
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
-                plt.xlabel(self._Style_cont.Get_xaxis_title(), color=self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+                plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                           fontdict = self._Style_cont.Get_axis_title_font(),
+                           position = (1., -0.1), va = 'top', ha = 'right')
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             return None
         return None
@@ -1218,10 +1145,11 @@ class plotter():
                           label = self._add_plots_labels[2],
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
+                          #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
                           capthick = self._Style_cont.Get_marker_error_cap_width(),
-                          ignore_binns=[self._data_hist,sum(self._hist)],
+                          #ignore_binns=[self._data_hist,sum(self._hist)],
                           zorder = 2.2)
             if self._add_error_bands:
                 self._Draw_Any_uncertainty_band(self._ax3, x, y, err)
@@ -1232,7 +1160,10 @@ class plotter():
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             self._ax3.set_ylim(ymin = ymin, ymax = ymax)
             self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
-            self._ax3.set_ylabel(self._add_plots_labels[2], color = self._Style_cont.Get_label_text_color(), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax3.set_ylabel(self._add_plots_labels[2],
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 va = 'top', ha = 'left',
+                                 size = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Get_axis_title_font()['size'])
             self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),1.)
             #self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='upper'))
             self._ax3.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1247,7 +1178,9 @@ class plotter():
             self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             plt.setp(self._ax1.get_xticklabels(), visible = False)
-            plt.xlabel(self._Style_cont.Get_xaxis_title(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            plt.xlabel(self._Style_cont.Get_xaxis_title(),
+                       fontdict = self._Style_cont.Get_axis_title_font(),
+                       position = (1., -0.1), va = 'top', ha = 'right')
             return None
         return None
 
@@ -1256,10 +1189,7 @@ class plotter():
             self.DrawRoot()
             return
 
-        if len(self._hist_axis) > 0:
-            self._Draw_main_axis()
-        else:
-            self._Draw_main()
+        self._Draw_main()
 
         self._Draw_0()
 
@@ -1326,7 +1256,6 @@ class plotter():
         for h in self._sig_hist[::-1]:
             self.sgleg.AddEntry(h,h.GetTitle(), "l")
 
-
     def _AddPlotBelow(self):
         ## setup the window and pads to draw a ratio
 
@@ -1375,6 +1304,7 @@ class plotter():
             if self._add_plots[i] !='':
                 add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[i],i)
                 self.additionalPad[i].cd()
+                add_hist.decorate(**self._data_hist.decorators)
                 add_hist.Draw()
                 if self._add_error_bands:
                     for isyst in range(len(self._error_hist)):
@@ -1385,18 +1315,19 @@ class plotter():
                             errhist[ibin].error=err[isyst][j]
                         errhist.SetFillColor(ROOT.kGray +2)
                         errhist.SetFillStyle(3244)
-                        #errhist.SetFillColorAlpha(ROOT.kGray +2, 0.7)
                         errhist.markersize=0
                         errhist.Draw("same e2")
-                    #line=Graph(2,add_hist.bounds(),[self._add_plots_ref_line[i],self._add_plots_ref_line[i]])
-                    line=Graph(2)
-                    line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
-                    line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
+                if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
+                    add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+                line=Graph(2)
+                line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
+                line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
 
-                    line.SetLineColor(self._Style_cont.Get_ref_line_color())
-                    line.Draw("l same")
+                line.SetLineColor(self._Style_cont.Get_ref_line_color())
+                line.Draw("l same")
 
                 add_hist.GetYaxis().SetRangeUser(min(add_hist.min()*1.1,-0.5),max(add_hist.max()*1.1,0.5))
+
 
                 add_hist.GetXaxis().SetTitle(self._Style_cont._xaxis_title.replace("$\\mathsf{","").replace("}$",""))
                 add_hist.GetYaxis().SetTitle(self._add_plots_labels[i].replace("$\\mathdefault{\\","#").replace("\\","#").replace("}$",""))
@@ -1418,7 +1349,6 @@ class plotter():
                 add_hist.GetYaxis().SetNdivisions(205)
                 add_hist.GetXaxis().SetTitleOffset(self._Style_cont.axisOffsetX/addedPadheight/1.5)
         self._mainPad.cd()
-
 
     def DrawRoot(self):
         import rootplotlib as rooLib
@@ -1448,6 +1378,7 @@ class plotter():
         else:
             lumitext='%.1f pb^{-1} (%.0f TeV)'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val())
         lumitext=lumitext.replace(".00","")
+
         deco=rooLib.CmsDecoration(sc_obj=self._Style_cont ,extraText=self._Style_cont.Get_additional_text(), additionalText=None, lumiText=lumitext, position=self._Style_cont.Get_cmsTextPosition(), pad=ROOT.gPad)
         deco.Draw()
         self._canvas.Update()
@@ -1482,13 +1413,44 @@ class plotter():
             drawnObjects.append(sg_hist)
             same=" same"
         if self._data:
-            for ibin in self._data_hist.bins():
+            nonUniform=False
+            if not self._data_hist.uniform():
+                nonUniform=True
+                if self._Style_cont._forceBinWidth:
+                    minwidth=self._Style_cont._forceBinWidth
+                else:
+                    minwidth=1.
+            if self._Style_cont._poisson_error:
+                if same=="":
+                    same="a"
+                g = ROOT.TGraphAsymmErrors(self._data_hist)
                 alpha = 1 - 0.6827
-                if ibin.value==0:
-                    #ibin.value=0
-                    ibin.error=ROOT.Math.gamma_quantile_c(alpha/2,1,1)/( ibin.x.width/20.)
-            self._data_hist.Draw("E0 "+same)
-            drawnObjects.append(self._data_hist)
+                for i in range(g.GetN()+1):
+                    N = g.GetY()[i]
+                    if N<0:
+                        N=0
+                    if nonUniform:
+                        N*=self._data_hist.GetBinWidth(i)/minwidth
+                    L = 0
+                    if not N==0:
+                        print N,alpha
+                        L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
+                    U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+                    if nonUniform:
+                        g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
+                        g.SetPointEYhigh(i, (U-N)/(self._data_hist.GetBinWidth(i)/minwidth))
+                    else:
+                        g.SetPointEYlow(i, (N-L))
+                        g.SetPointEYhigh(i, (U-N))
+                    g.SetPointEXlow(i, self._data_hist.GetBinWidth(i)/2.)
+                    g.SetPointEXhigh(i, self._data_hist.GetBinWidth(i)/2.)
+                self._data_hist_graph=g
+            else:
+                self._data_hist_graph=self._data_hist
+
+
+            self._data_hist_graph.Draw("P"+same)
+            drawnObjects.append(self._data_hist_graph)
             same=" same"
 
         self._AddRootLegend()
