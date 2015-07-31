@@ -944,21 +944,24 @@ class plotter():
                 print('\n\tyou have to add some histogram that should be plotted,')
                 print('\tthere are no background, signal or data histograms.\n')
                 sys.exit(42)
+        ## Plot the data if is checked in and the style fits
+        if (self._Style_cont.Get_kind() == 'Standard' or
+           self._Style_cont.Get_kind() == 'Lines' or
+           self._Style_cont.Get_kind() == 'Graphs') and
+           self._data:
+            data_handle = rplt.errorbar(self._data_graph,
+                          xerr = self._Style_cont.Get_xerr(),
+                          emptybins = False,
+                          axes = self._ax1,
+                          markersize = self._Style_cont.Get_marker_size(),
+                          marker = self._Style_cont.Get_marker_style(),
+                          ecolor = self._Style_cont.Get_marker_color(),
+                          #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
+                          markerfacecolor = self._Style_cont.Get_marker_color(),
+                          markeredgecolor = self._Style_cont.Get_marker_color(),
+                          capthick = self._Style_cont.Get_marker_error_cap_width())
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
-            ## Plot the data, if data is checked in
-            if self._data:
-                data_handle = rplt.errorbar(self._data_graph,
-                              xerr = self._Style_cont.Get_xerr(),
-                              emptybins = False,
-                              axes = self._ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
             ## Plot potential signal histograms
             if len(self._sig_hist) > 0:
                 rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
@@ -967,8 +970,12 @@ class plotter():
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
         ## Create the main plot with graphs
         elif self._Style_cont.Get_kind() == 'Graphs':
+            ## Plot all potential background histograms as Graphs
             for item in self._hist:
-                graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
+                graph_handle = rplt.errorbar(item,
+                               xerr = self._Style_cont.Get_xerr(),
+                               emptybins = False,
+                               axes = self._ax1,
                                markersize = self._Style_cont.Get_marker_size(),
                                marker = self._Style_cont.Get_marker_style(),
                                ecolor = item.GetLineColor(),
@@ -977,8 +984,12 @@ class plotter():
                                color = item.GetLineColor(),
                                markeredgecolor = item.GetLineColor(),
                                capthick = self._Style_cont.Get_marker_error_cap_width())
+            ## Plot all potential signal histograms as Graphs
             for item in self._sig_hist:
-                graph_handle = rplt.errorbar(item, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes = self._ax1,
+                graph_handle = rplt.errorbar(item,
+                               xerr = self._Style_cont.Get_xerr(),
+                               emptybins = False,
+                               axes = self._ax1,
                                markersize = self._Style_cont.Get_marker_size(),
                                marker = self._Style_cont.Get_marker_style(),
                                ecolor = item.GetLineColor(),
@@ -986,18 +997,7 @@ class plotter():
                                markerfacecolor = item.GetLineColor(),
                                markeredgecolor = item.GetLineColor(),
                                capthick = self._Style_cont.Get_marker_error_cap_width())
-            if self._data:
-                data_handle = rplt.errorbar(self._data_hist,
-                              xerr = self._Style_cont.Get_xerr(),
-                              emptybins = False,
-                              axes = self._ax1,
-                              markersize = self._Style_cont.Get_marker_size(),
-                              marker = self._Style_cont.Get_marker_style(),
-                              ecolor = self._Style_cont.Get_marker_color(),
-                              #linestyle = convert_linestyle(item.GetLineStyle(), 'mpl'),
-                              markerfacecolor = self._Style_cont.Get_marker_color(),
-                              markeredgecolor = self._Style_cont.Get_marker_color(),
-                              capthick = self._Style_cont.Get_marker_error_cap_width())
+        ## Plot all checke in histograms as linegraphs
         elif self._Style_cont.Get_kind() == 'Linegraphs':
             for item in self._allHists:
                 if item is None:
