@@ -1423,6 +1423,7 @@ class plotter():
             if self._add_plots[i] !='':
                 add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[i],i)
                 self.additionalPad[i].cd()
+                add_hist.decorate(**self._data_hist.decorators)
                 add_hist.Draw()
                 if self._add_error_bands:
                     for isyst in range(len(self._error_hist)):

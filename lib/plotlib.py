@@ -635,8 +635,10 @@ class HistStorage(object):
                 self.hists[f]=self.views[f].Get(hist)
                 self.hists[f].Sumw2()
             except:
-                self.hists[f]=self.files[f].Get(hist)
-                #log_plotlib.warning( "No %s in %s"%(hist,f))
+                #self.hists[f]=self.files[f].Get(hist)
+                log_plotlib.warning( "No %s in %s"%(hist,f))
+                self.hists[f]=self.hists.values()[0].empty_clone()
+                self.hists[f].Sumw2()
                 #self.hists[f]=Hist(100,0,100)
         if self._joinList is not False:
             self.joinList(self._joinList)
