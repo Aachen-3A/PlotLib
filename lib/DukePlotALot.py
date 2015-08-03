@@ -858,27 +858,43 @@ class plotter():
         x_vals = x[0]
         dummy_y_p = np.copy(y[0])
         err_i = np.absolute(err[0])
-        positive = dummy_y_p - err_i > 0
-        plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
-                         alpha = self._Style_cont.Get_error_bands_alph(),
-                         edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
-                         facecolor = self._Style_cont.Get_error_bands_fcol()[0],
-                         lw = self._Style_cont.Get_error_line_width(),
-                         axes = axis, zorder = 2.1,
-                         where = positive)
+        if axis.get_yscale() == 'log':
+            positive = dummy_y_p - err_i > 0
+            plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
+                             alpha = self._Style_cont.Get_error_bands_alph(),
+                             edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
+                             facecolor = self._Style_cont.Get_error_bands_fcol()[0],
+                             lw = self._Style_cont.Get_error_line_width(),
+                             axes = axis, zorder = 2.1,
+                             where = positive)
+        else:
+            plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
+                             alpha = self._Style_cont.Get_error_bands_alph(),
+                             edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
+                             facecolor = self._Style_cont.Get_error_bands_fcol()[0],
+                             lw = self._Style_cont.Get_error_line_width(),
+                             axes = axis, zorder = 2.1)
         dummy_err_sum = np.copy(np.square(err[0]))
         if self._Style_cont.Get_error_stacking() == 'linear':
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
             #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
-            positive1 = y[i] - np.absolute(err[i]) > 0
-            plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
-                             alpha = self._Style_cont.Get_error_bands_alph(),
-                             edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
-                             facecolor = self._Style_cont.Get_error_bands_fcol()[i],
-                             lw = self._Style_cont.Get_error_line_width(),
-                             axes = axis, zorder = 2.1,
-                             where = positive1)
+            if axis.get_yscale() == 'log':
+                positive1 = y[i] - np.absolute(err[i]) > 0
+                plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
+                                 alpha = self._Style_cont.Get_error_bands_alph(),
+                                 edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
+                                 facecolor = self._Style_cont.Get_error_bands_fcol()[i],
+                                 lw = self._Style_cont.Get_error_line_width(),
+                                 axes = axis, zorder = 2.1,
+                                 where = positive1)
+            else:
+                plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
+                                 alpha = self._Style_cont.Get_error_bands_alph(),
+                                 edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
+                                 facecolor = self._Style_cont.Get_error_bands_fcol()[i],
+                                 lw = self._Style_cont.Get_error_line_width(),
+                                 axes = axis, zorder = 2.1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
                 #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
