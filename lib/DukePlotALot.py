@@ -585,8 +585,10 @@ class plotter():
                 elif self._Style_cont.Get_error_bands_center() == 'val':
                     y_i.append(ratio.GetBinContent(i))
                     y_i.append(ratio.GetBinContent(i))
-                err_i.append(ratio.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
-                err_i.append(ratio.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                err_i.append(ratio.GetBinContent(i) * abs(temp_error))
+                err_i.append(ratio.GetBinContent(i) * abs(temp_error))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -615,8 +617,10 @@ class plotter():
                 elif self._Style_cont.Get_error_bands_center() == 'val':
                     y_i.append(diff.GetBinContent(i))
                     y_i.append(diff.GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
-                err_i.append(sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                err_i.append(sum_hist.GetBinContent(i) * abs(temp_error))
+                err_i.append(sum_hist.GetBinContent(i) * abs(temp_error))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
@@ -647,8 +651,10 @@ class plotter():
                     y_i.append(diff.GetBinContent(i))
                     y_i.append(diff.GetBinContent(i))
                 if sum_hist.GetBinContent(i) > 0:
-                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
-                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * self._error_hist[j].GetBinContent(i))
+                    err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                    temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * abs(temp_error))
+                    err_i.append(self._data_hist.GetBinContent(i) / sum_hist.GetBinContent(i) * abs(temp_error))
                 else:
                     err_i.append(0)
                     err_i.append(0)
@@ -738,6 +744,12 @@ class plotter():
                     value /= denominator
                     signi.SetBinContent(i,value)
                     signi.SetBinError(i,1)
+                else:
+                    signi.SetBinContent(i,0)
+                    signi.SetBinError(i,0)
+            else:
+                signi.SetBinContent(i,0)
+                signi.SetBinError(i,0)
         x = []
         y = []
         err = []
@@ -757,8 +769,10 @@ class plotter():
                     y_i.append(signi.GetBinContent(i))
                 denominator = np.sqrt(float(pow(self._data_hist.GetBinError(i),2) + pow(sum_hist.GetBinError(i),2)))
                 if denominator!=0:
-                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
-                    err_i.append(sum_hist.GetBinContent(i) / denominator * self._error_hist[j].GetBinContent(i))
+                    err_bin_number = self._error_hist[j].FindBin(sum_hist.GetBinCenter(i))
+                    temp_error = self._error_hist[j].GetBinContent(err_bin_number)
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * abs(temp_error))
+                    err_i.append(sum_hist.GetBinContent(i) / denominator * abs(temp_error))
                 else:
                     err_i.append(0.)
                     err_i.append(0.)
