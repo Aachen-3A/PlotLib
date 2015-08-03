@@ -145,14 +145,18 @@ class plotter2D():
             self._Draw_x_projection()
             plt.setp(self._ax1.get_xticklabels(), visible = False)
         else:
-            self._ax1.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax1.set_xlabel(self._hist.xaxis.GetTitle(),
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 position = (1., -0.1), va = 'top', ha = 'right')
 
         if self._y_projection_size > 0:
             self._Draw_y_projection()
             plt.setp(self._ax1.get_yticklabels(), visible = False)
         else:
             self._ax1.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset(),0.9)
-            self._ax1.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+            self._ax1.set_ylabel(self._hist.yaxis.GetTitle(),
+                                 fontdict = self._Style_cont.Get_axis_title_font(),
+                                 va='top', ha='left')
 
         if self._Style_cont.Get_ymin() != -1 and self._Style_cont.Get_ymax() != -1:
             self._ax1.set_ylim(ymin = self._Style_cont.Get_ymin(), ymax = self._Style_cont.Get_ymax())
@@ -166,7 +170,9 @@ class plotter2D():
         self._z_axis = self._fig.add_axes([0.87, 0.08, 0.05, 0.87])
         self._fig.colorbar(self._plotted_hist, cax = self._z_axis)
 
-        self._z_axis.set_ylabel(self._hist.zaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (-0.1, 0.9), va = 'top', ha = 'left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._z_axis.set_ylabel(self._hist.zaxis.GetTitle(),
+                                fontdict = self._Style_cont.Get_axis_title_font(),
+                                position = (-0.1, 0.9), va = 'top', ha = 'left')
 
         self._z_axis.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
 
@@ -196,7 +202,9 @@ class plotter2D():
         if self._y_projection_size > 0:
             self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
 
-        self._ax2.set_xlabel(self._hist.xaxis.GetTitle(), color = self._Style_cont.Get_label_text_color(), position = (1., -0.1), va = 'top', ha = 'right', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax2.set_xlabel(self._hist.xaxis.GetTitle(),
+                             fontdict = self._Style_cont.Get_axis_title_font(),
+                             position = (1., -0.1), va = 'top', ha = 'right')
 
     def _Calc_y_projection(self):
         if self._Style_cont.Get_content() == 'Efficiencies':
@@ -232,7 +240,9 @@ class plotter2D():
             self._ax3.xaxis.set_major_locator(mticker.MaxNLocator(nbins=3, prune='upper'))
 
         self._ax3.yaxis.set_label_coords(self._Style_cont.Get_y_label_offset() - 0.3, 0.9)
-        self._ax3.set_ylabel(self._hist.yaxis.GetTitle(), color=self._Style_cont.Get_label_text_color(), va='top', ha='left', size = self._Style_cont.Get_axis_title_font_size(), weight = 'medium')
+        self._ax3.set_ylabel(self._hist.yaxis.GetTitle(),
+                             fontdict = self._Style_cont.Get_axis_title_font(),
+                             va='top', ha='left')
 
     def _Get_rootpy_hist2d(self):
         dummy_hist = Hist2D(self._hist.GetNbinsX(), self._hist.GetXaxis().GetXmin(), self._hist.GetXaxis().GetXmax(), self._hist.GetNbinsY(), self._hist.GetYaxis().GetXmin(), self._hist.GetYaxis().GetXmax())
