@@ -224,6 +224,9 @@ class style_container():
     def Get_tick_color(self):
         return self._tick_color
 
+    def Gets_tick_font_size(self):
+        return self._tick_font_size
+
     def Get_marker_style(self):
         return self._marker_style
 
@@ -402,6 +405,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 12,
                                  }
+        self._tick_font_size = 10
         self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
@@ -433,6 +437,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 9,
                                  }
+        self._tick_font_size = 8
         self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor
@@ -464,6 +469,7 @@ class style_container():
                                   'weight' : 'medium',
                                   'size'   : 12,
                                  }
+        self._tick_font_size = 10
         self._axis_text_main_to_sub_ratio = 0.8
         if len(self.histaxis) > 0:
             self._histaxis_label_text_color= self.histaxis[0].linecolor

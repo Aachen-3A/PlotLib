@@ -890,7 +890,9 @@ class plotter():
             self._ax0.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax0.spines['right'].set_color(self._Style_cont.Get_spine_color())
             self._ax0.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            self._ax0.tick_params(axis='y', colors = self._Style_cont.Get_tick_color())
+            self._ax0.tick_params(axis='y',
+                                  colors = self._Style_cont.Get_tick_color(),
+                                  labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color())
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
             duke_errorbar(add_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes=self._ax0,
@@ -1069,7 +1071,9 @@ class plotter():
         self._ax1.spines['right'].set_color(self._Style_cont.Get_spine_color())
         self._ax1.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
         ## Set the properties of the tick marks
-        self._ax1.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'y',
+                              colors = self._Style_cont.Get_tick_color(),
+                              labelsize = self._Style_cont.Gets_tick_font_size())
         self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
         if len(self._hist_axis) > 0:
             par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
@@ -1116,7 +1120,9 @@ class plotter():
             self._ax2.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax2.spines['right'].set_color(self._Style_cont.Get_spine_color())
             self._ax2.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            self._ax2.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+            self._ax2.tick_params(axis = 'y',
+                                  colors = self._Style_cont.Get_tick_color(),
+                                  labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
@@ -1175,7 +1181,9 @@ class plotter():
             self._ax3.spines['left'].set_linewidth(self._Style_cont.Get_spine_line_width())
             self._ax3.spines['right'].set_color(self._Style_cont.Get_spine_color())
             self._ax3.spines['right'].set_linewidth(self._Style_cont.Get_spine_line_width())
-            self._ax3.tick_params(axis = 'y', colors = self._Style_cont.Get_tick_color())
+            self._ax3.tick_params(axis = 'y',
+                                  colors = self._Style_cont.Get_tick_color(),
+                                  labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
