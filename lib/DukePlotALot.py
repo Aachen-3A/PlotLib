@@ -508,7 +508,10 @@ class plotter():
         x = np.array(list(self._data_hist.x()))
         y = np.array(list(self._data_hist.y()))
         for i, ibin in enumerate(self._data_hist.bins()):
-            binweight = float(self._data_hist.GetBinWidth(ibin.idx))
+            if not self._data_hist.uniform():
+                binweight = float(self._data_hist.GetBinWidth(ibin.idx))
+            else:
+                binweight = 1.
             N = ibin.value*binweight
             L = 0.0
             alpha = 1 - 0.6827
