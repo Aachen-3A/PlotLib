@@ -409,7 +409,7 @@ class style_container():
         self._axis_title_font =  {'family' : 'serif',
                                   'color'  : 'black',
                                   'weight' : 'medium',
-                                  'size'   : 12,
+                                  'size'   : 14,
                                  }
         self._tick_font_size = 10
         self._axis_text_main_to_sub_ratio = 0.8

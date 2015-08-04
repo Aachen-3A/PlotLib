@@ -306,17 +306,17 @@ class plotter():
                     self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{TeV}$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
             elif self._Style_cont.Get_lumi_val() >= 1000:
                 if len(self._hist_axis) > 0:
-                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.915, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=self._Style_cont.Get_axis_title_font()["size"])
                 else:
-                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.945, 0.955, '$%.1f\,\mathrm{fb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val()/1000,self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=self._Style_cont.Get_axis_title_font()["size"])
             else:
                 if self._Style_cont.Get_lumi_val()!=0:
                     if len(self._hist_axis) > 0:
-                        self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                        self._fig.text(0.915, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=self._Style_cont.Get_axis_title_font()["size"])
                     else:
-                        self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                        self._fig.text(0.945, 0.955, '$%.0f\,\mathrm{pb^{-1}} (%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_lumi_val(),self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=self._Style_cont.Get_axis_title_font()["size"])
                 else:
-                    self._fig.text(0.945, 0.955, '$(%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=12)
+                    self._fig.text(0.945, 0.955, '$(%.0f\,\mathrm{TeV})$'%(self._Style_cont.Get_cms_val()), va='bottom', ha='right', color=self._Style_cont.Get_annotation_text_color(), size=self._Style_cont.Get_axis_title_font()["size"])
         if self._Style_cont.Get_add_cms_text():
             if self._Style_cont.Get_cms_text_alignment() == 'row':
                 self._fig.text(self._Style_cont.Get_cmsTextPosition().getX(), self._Style_cont.Get_cmsTextPosition().getY(), 'CMS', va='bottom', ha='left', color=self._Style_cont.Get_annotation_text_color(), size=14, weight='bold')
@@ -465,10 +465,14 @@ class plotter():
                     numpoints = 1,
                     ncol=self._Style_cont.Get_n_legend_collumns(),
                     frameon = False,
-                    fontsize = self._Style_cont.Get_legend_font_size())
+                    #fontdict = self._Style_cont.Get_axis_title_font(),
+                    fontsize = self._Style_cont.Get_legend_font_size()
+                    )
 
         for text in self.leg.get_texts():
             text.set_color(self._Style_cont.Get_annotation_text_color())
+            text.set_family(self._Style_cont.Get_axis_title_font()["family"])
+            text.set_weight(self._Style_cont.Get_axis_title_font()["weight"])
 
     def _Compiler(self):
         if len(self._hist) == 0:
@@ -1002,8 +1006,8 @@ class plotter():
                 sys.exit(42)
         ## Plot the data if is checked in and the style fits
         if self._data and (self._Style_cont.Get_kind() == 'Standard' or
-           self._Style_cont.Get_kind() == 'Lines' or
-           self._Style_cont.Get_kind() == 'Graphs'):
+                                self._Style_cont.Get_kind() == 'Lines' or
+                                self._Style_cont.Get_kind() == 'Graphs'):
             data_handle = rplt.errorbar(self._data_graph,
                           xerr = self._Style_cont.Get_xerr(),
                           emptybins = False,
@@ -1387,7 +1391,7 @@ class plotter():
 
 
                 add_hist.GetXaxis().SetTitle(self._Style_cont._xaxis_title.replace("$\\mathsf{","").replace("}$",""))
-                add_hist.GetYaxis().SetTitle(self._add_plots_labels[i].replace("$\\mathdefault{\\","#").replace("\\","#").replace("}$",""))
+                add_hist.GetYaxis().SetTitle(self._add_plots_labels[i].replace("$\\mathdefault{\\","#").replace("\\","#").replace("}$","").replace("$",""))
 
 
                 add_hist.GetXaxis().SetTitleFont(self._Style_cont.additionalTextFont)

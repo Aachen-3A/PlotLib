@@ -805,7 +805,7 @@ class HistStorage(object):
             try:
                 if self.matplotlibStyle:
                     if "$" not in self.hists[key].xaxis.GetTitle():
-                        self.hists[key].xaxis.SetTitle("$\\mathsf{"+self.hists[key].xaxis.GetTitle().replace("#","\\")+"}$")
+                        self.hists[key].xaxis.SetTitle("$\\mathrm{"+self.hists[key].xaxis.GetTitle().replace("#","\\")+"}$")
                 if self.isCumulative and ">" not in self.eventString:
                     self.eventString+=">%s"%(self.hists[key].xaxis.GetTitle().translate(None,self._getUnit()+"[]/()"))
                 if self.forcedWidth is not False:
@@ -832,6 +832,7 @@ class HistStorage(object):
             self.applyStyleAll(fillstyle = '0',linewidth = 2 )
         #nothing to do here yet
         if style=="data":
+            self.applyStyleAll(markersize=0.5)
             pass
 
         iteratorList=self.views
