@@ -1109,7 +1109,8 @@ class plotter():
         if not (self._add_plots[1] != '' or self._add_plots[2] != ''):
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
                        fontdict = self._Style_cont.Get_axis_title_font(),
-                       position = (1., -0.1), va = 'top', ha = 'right')
+                       va = 'top', ha = 'right')
+            self._ax1.xaxis.set_label_coords(1.,-0.4)
         ## If defined show the minor tick marks
         if self._Style_cont.Get_show_minor_tick_labels():
             self._ax1.yaxis.set_minor_formatter(plt.FormatStrFormatter('%d'))
@@ -1189,7 +1190,8 @@ class plotter():
                 #self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='lower'))
                 plt.xlabel(self._Style_cont.Get_xaxis_title(),
                            fontdict = self._Style_cont.Get_axis_title_font(),
-                           position = (1., -0.1), va = 'top', ha = 'right')
+                           va = 'top', ha = 'right')
+                self._ax2.xaxis.set_label_coords(1.,-0.4)
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             return None
         return None
@@ -1241,7 +1243,8 @@ class plotter():
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
                        fontdict = self._Style_cont.Get_axis_title_font(),
-                       position = (1., -0.1), va = 'top', ha = 'right')
+                       va = 'top', ha = 'right')
+            self._ax3.xaxis.set_label_coords(1.,-0.4)
             return None
         return None
 
