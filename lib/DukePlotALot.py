@@ -501,9 +501,13 @@ class plotter():
             self._calc_data_graph_from_hist()
         # sort syst hist by the integral
         self._error_hist = sorted(self._error_hist, key=methodcaller('Integral'), reverse=True)
+        if self._Style_cont.Get_logy() and self._data:
+            for ibin in self._data_hist.bins():
+                if ibin.value==1:
+                    ibin.error=1.-1e-12
 
     def _calc_data_graph_from_hist(self):
-        if self._Style_cont._poisson_error:
+        if self._Style_cont.Get_poisson_error():
             nonUniform=False
             if not self._data_hist.uniform():
                 nonUniform=True
@@ -511,7 +515,6 @@ class plotter():
                     minwidth=self._Style_cont._forceBinWidth
                 else:
                     minwidth=1.
-            #g = ROOT.TGraphAsymmErrors(self._data_hist)
             g = Graph(self._data_hist,type='asymm')
             alpha = 1 - 0.6827
             for i in range(g.GetN()+1):
@@ -534,33 +537,8 @@ class plotter():
                 g.SetPointEXlow(i, self._data_hist.GetBinWidth(i)/2.)
                 g.SetPointEXhigh(i, self._data_hist.GetBinWidth(i)/2.)
             self._data_graph=g
-            x_err = []
-            y_err = []
-            x = np.array(list(self._data_hist.x()))
-            y = np.array(list(self._data_hist.y()))
-            #for i, ibin in enumerate(self._data_hist.bins()):
-                #if not self._data_hist.uniform():
-                    #binweight = float(self._data_hist.GetBinWidth(ibin.idx))
-                #else:
-                    #binweight = 1.
-                #N = ibin.value*binweight
-                #L = 0.0
-                #alpha = 1 - 0.6827
-                #if N != 0:
-                    #L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
-                #U = ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
-                #y_err.append([(N-L)/binweight, (U-N)/binweight])
-                #x_err.append([x[i] - 1, x[i] + 1])
-            #self._data_graph = Graph(type='asymm')
-            #for i, (xx, yy, xerr, yerr) in enumerate(zip(x, y, x_err, y_err)):
-                #self._data_graph.SetPoint(i, xx, yy)
-                #self._data_graph.SetPointError(i, xerr[0], xerr[1], yerr[0], yerr[1])
         else:
-            self._data_graph = Graph(type='asymm')
-            for i, ibin in enumerate(self._data_hist.bins()):
-                self._data_graph.SetPoint(i, ibin.x.center, ibin.value)
-                #lowErr=ibin.value-ibin.error
-                self._data_graph.SetPointError(i, ibin.x.low,ibin.x.high, ibin.error, ibin.error)
+            self._data_graph = self._data_hist
 
 
     def cleanUnwantedBins(self,hist,toCleanHists):
@@ -1492,42 +1470,43 @@ class plotter():
             drawnObjects.append(sg_hist)
             same=" same"
         if self._data:
-            nonUniform=False
-            if not self._data_hist.uniform():
-                nonUniform=True
-                if self._Style_cont._forceBinWidth:
-                    minwidth=self._Style_cont._forceBinWidth
-                else:
-                    minwidth=1.
-            if self._Style_cont._poisson_error:
-                if same=="":
-                    same="a"
-                g = ROOT.TGraphAsymmErrors(self._data_hist)
-                alpha = 1 - 0.6827
-                for i in range(g.GetN()+1):
-                    N = g.GetY()[i]
-                    if N<0:
-                        N=0
-                    if nonUniform:
-                        N*=self._data_hist.GetBinWidth(i)/minwidth
-                    L = 0
-                    if not N==0:
-                        print N,alpha
-                        L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
-                    U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
-                    if nonUniform:
-                        g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
-                        g.SetPointEYhigh(i, (U-N)/(self._data_hist.GetBinWidth(i)/minwidth))
-                    else:
-                        g.SetPointEYlow(i, (N-L))
-                        g.SetPointEYhigh(i, (U-N))
-                    g.SetPointEXlow(i, self._data_hist.GetBinWidth(i)/2.)
-                    g.SetPointEXhigh(i, self._data_hist.GetBinWidth(i)/2.)
-                self._data_graph=g
-            else:
-                self._data_graph=self._data_hist
+            self._calc_data_graph_from_hist()
+            #nonUniform=False
+            #if not self._data_hist.uniform():
+                #nonUniform=True
+                #if self._Style_cont._forceBinWidth:
+                    #minwidth=self._Style_cont._forceBinWidth
+                #else:
+                    #minwidth=1.
+            #if self._Style_cont.Get_poisson_error():
+                #if same=="":
+                    #same="a"
+                #g = ROOT.TGraphAsymmErrors(self._data_hist)
+                #alpha = 1 - 0.6827
+                #for i in range(g.GetN()+1):
+                    #N = g.GetY()[i]
+                    #if N<0:
+                        #N=0
+                    #if nonUniform:
+                        #N*=self._data_hist.GetBinWidth(i)/minwidth
+                    #L = 0
+                    #if not N==0:
+                        #print N,alpha
+                        #L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
+                    #U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+                    #if nonUniform:
+                        #g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
+                        #g.SetPointEYhigh(i, (U-N)/(self._data_hist.GetBinWidth(i)/minwidth))
+                    #else:
+                        #g.SetPointEYlow(i, (N-L))
+                        #g.SetPointEYhigh(i, (U-N))
+                    #g.SetPointEXlow(i, self._data_hist.GetBinWidth(i)/2.)
+                    #g.SetPointEXhigh(i, self._data_hist.GetBinWidth(i)/2.)
+                #self._data_graph=g
+            #else:
+                #self._data_graph=self._data_hist
 
-
+            self._data_graph.decorate(**self._data_hist.decorators)
             self._data_graph.Draw("P"+same)
             drawnObjects.append(self._data_graph)
             same=" same"

@@ -62,7 +62,7 @@ class style_container():
         self._batch_mode=True
         self._legend_font_size = 0
         self._forceBinWidth=False
-        self._poisson_error=False
+        self._poisson_error=True
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -184,6 +184,9 @@ class style_container():
 
     def Get_xerr(self):
         return self._xerr
+
+    def Get_poisson_error(self):
+        return self._poisson_error
 
     def Get_histaxis_logy(self):
         return self._histaxis_logy
@@ -350,6 +353,9 @@ class style_container():
 
     def Set_n_legend_collumns(self,n):
         self._legend_ncol=n
+
+    def Set_poisson_error_off(self):
+        self._poisson_error = False
 
     ## Function to set properties of the plotting axis
     #
