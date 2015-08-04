@@ -509,6 +509,11 @@ class plotter():
             for ibin in self._data_hist.bins():
                 if ibin.value==1:
                     ibin.error=1.-1e-12
+        if self._useRoot:
+            for i,height in enumerate(self._add_plots_height):
+                if height>1.:
+                    self._add_plots_height[i]=float(height)/self._hist_height*1.5
+
 
     def _calc_data_graph_from_hist(self):
         if self._Style_cont.Get_poisson_error():
@@ -1383,6 +1388,8 @@ class plotter():
                         errhist.Draw("same e2")
                 if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                     add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
+                else:
+                    add_hist.GetXaxis().SetRangeUser(self._allHists[0].bounds()[0],self._allHists[0].bounds()[1])
                 line=Graph(2)
                 line.SetPoint(0,add_hist.bounds()[0],self._add_plots_ref_line[i])
                 line.SetPoint(1,add_hist.bounds()[1],self._add_plots_ref_line[i])
