@@ -657,9 +657,10 @@ class HistStorage(object):
         for f in self.files:
             try:
                 _tree=self.files[f].Get(tree)
-            except:
+            except AttributeError as e:
                 log_plotlib.warning( "No %s in %s"%(tree,f))
                 log_plotlib.warning( "Will try without %s, and add an empty hist."%f)
+                log_plotlib.warning( e)
                 self.hists[f]=Hist(binns,xmin,xmax)
                 continue
             self.hists[f]=Hist(binns,xmin,xmax)

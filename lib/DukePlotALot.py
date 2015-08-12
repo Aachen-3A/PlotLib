@@ -11,7 +11,6 @@ import subprocess
 import numpy as np
 from rootpy.plotting import Hist, HistStack, Legend, Canvas, Graph, Pad, Style
 from rootpy.plotting.base import convert_linestyle
-import matplotlib.ticker as mticker
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -951,7 +950,7 @@ class plotter():
             self._ax0.tick_params(axis='y',
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
-            self._ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color())
+            self._ax0.tick_params(axis='x', colors = self._Style_cont.Get_tick_color(),length= 8)
             add_hist, x, y, err = self._Calc_additional_plot(self._add_plots[0],0)
             duke_errorbar(add_hist, xerr = self._Style_cont.Get_xerr(), emptybins = False, axes=self._ax0,
                           markersize = self._Style_cont.Get_marker_size(),
@@ -1133,7 +1132,9 @@ class plotter():
         self._ax1.tick_params(axis = 'y',
                               colors = self._Style_cont.Get_tick_color(),
                               labelsize = self._Style_cont.Gets_tick_font_size())
-        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+        self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color(), length= 8)
+        minorLocator   = mticker.AutoMinorLocator()
+        self._ax1.xaxis.set_minor_locator(minorLocator)
         if len(self._hist_axis) > 0:
             par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         ## Add the legend
@@ -1182,7 +1183,7 @@ class plotter():
             self._ax2.tick_params(axis = 'y',
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
-            self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+            self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color() ,length= 8)
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1244,7 +1245,7 @@ class plotter():
             self._ax3.tick_params(axis = 'y',
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
-            self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color())
+            self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color(),length= 8)
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
                        fontdict = self._Style_cont.Get_axis_title_font(),
@@ -1537,13 +1538,24 @@ class plotter():
             minimum=None
             for h in drawnObjects:
                 if maximum is None:
-                    maximum=h.max()
-                    minimum=h.min()
-                else:
-                    if maximum<h.max():
+                    try:
                         maximum=h.max()
-                    if minimum>h.min():
                         minimum=h.min()
+                    except:
+                        maximum=h.GetYmax()
+                        minimum=h.GetYmin()
+                else:
+                    try:
+                        if maximum<h.max():
+                            maximum=h.max()
+                        if minimum>h.min():
+                            minimum=h.min()
+                    except:
+                        if maximum<h.GetYmax():
+                            maximum=h.GetYmax()
+                        if minimum>h.GetYmin():
+                            minimum=h.GetYmin()
+
             if minimum<=0:
                 minimum=1
             drawnObjects[0].GetYaxis().SetRangeUser(minimum*0.02,maximum*100.)
