@@ -540,6 +540,19 @@ class HistStorage(object):
         self._getGenNumbers()
         self._addToScaledView()
 
+
+    ## Function to remove a single file
+    #
+    # Use setPath(path) to set the path if did not in the init.
+    # @param[in] name the name of the file that should be added!
+    def removeFile(self,name):
+        del self.files[name]
+        del self.views[name]
+        self._joinList = {key: value for key, value in self._joinList.items()
+                        if name not in value}
+
+
+
     ## Function to add files specified as a list or (ordered)dict
     #
     # Use setPath(path) to set the path if did not in the init.
@@ -553,7 +566,14 @@ class HistStorage(object):
             import itertools
             useList=list(itertools.chain.from_iterable(fileList.values()))
             for file in useList:
-                self.files[file]=File(self.basepath+"/"+file+".root", "read")
+                try:
+                    self.files[file]=File(self.basepath+"/"+file+".root", "read")
+                except:
+                    yesno=raw_input("file %s is not there continue? [y/n]"%(file))
+                    if yesno!="y":
+                        sys.exit(1)
+                    fileList={key: value for key, value in fileList.items()
+                        if file not in value}
             self._joinList=fileList
         self._getGenNumbers()
         self._addToScaledView()
@@ -637,9 +657,9 @@ class HistStorage(object):
             except:
                 #self.hists[f]=self.files[f].Get(hist)
                 log_plotlib.warning( "No %s in %s"%(hist,f))
-                self.hists[f]=self.hists.values()[0].empty_clone()
-                self.hists[f].Sumw2()
-                #self.hists[f]=Hist(100,0,100)
+                self.hists[f]=self.hists.values()[0].clone()
+                self.hists[f].Reset()
+
         if self._joinList is not False:
             self.joinList(self._joinList)
         for hist in self.hists:
