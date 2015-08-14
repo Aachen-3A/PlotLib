@@ -113,7 +113,11 @@ class style_container():
 
     def Get_xaxis_title(self):
         try:
-            return self._xaxis_title
+            #use the correct math font family (at least for one case)
+            if self._axis_title_font["family"]=='sans-serif':
+                return self._xaxis_title.replace("mathrm","mathsf")
+            else:
+                return self._xaxis_title
         except(AttributeError):
             print('\n\t It seems that no x-axis title is set, we will therefore use a dummy value\n')
             return 'dummy'
@@ -405,8 +409,8 @@ class style_container():
         self._cms_text_alignment     = 'row'
         self._show_minor_tick_labels = False
         if self._legend_font_size == 0:
-            self._legend_font_size       = 9
-        self._axis_title_font =  {'family' : 'serif',
+            self._legend_font_size       = 10
+        self._axis_title_font =  {'family' : 'sans-serif',
                                   'color'  : 'black',
                                   'weight' : 'medium',
                                   'size'   : 14,
@@ -438,7 +442,7 @@ class style_container():
         self._show_minor_tick_labels          = False
         if self._legend_font_size == 0:
             self._legend_font_size                = 10
-        self._axis_title_font =  {'family' : 'serif',
+        self._axis_title_font =  {'family' : 'sans-serif',
                                   'color'  : 'black',
                                   'weight' : 'medium',
                                   'size'   : 9,

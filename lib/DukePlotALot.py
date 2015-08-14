@@ -474,21 +474,7 @@ class plotter():
             text.set_weight(self._Style_cont.Get_axis_title_font()["weight"])
 
     def _Compiler(self):
-        if len(self._hist) == 0:
-            self._add_plots[0] = ''
-            self._add_plots[1] = ''
-            self._add_plots[2] = ''
-            self._add_error_bands = False
-        if self._Style_cont.Get_kind() == 'Lines':
-            self._add_plots[0] = ''
-            self._add_plots[1] = ''
-            self._add_plots[2] = ''
-        if self._Style_cont.Get_kind() == 'Graphs':
-            self._add_plots[0] = ''
-            self._add_plots[1] = ''
-            self._add_plots[2] = ''
-            self._add_error_bands = False
-        if self._Style_cont.Get_kind() == 'Linegraphs':
+        if len(self._hist) == 0 or self._Style_cont.Get_kind() == 'Lines' or self._Style_cont.Get_kind() == 'Graphs' or self._Style_cont.Get_kind() == 'Linegraphs':
             self._add_plots[0] = ''
             self._add_plots[1] = ''
             self._add_plots[2] = ''
@@ -970,6 +956,9 @@ class plotter():
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
             ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            if self._add_plots[0]=="Ratio":
+                ymin=max(ymin,0.0)
+                ymax=min(ymax,2.)
             self._ax0.set_ylim(ymin = ymin, ymax = ymax)
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
             self._ax0.set_ylabel(self._add_plots_labels[0],
@@ -1164,6 +1153,9 @@ class plotter():
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
             ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            if self._add_plots[1]=="Ratio":
+                ymin=max(ymin,0.0)
+                ymax=min(ymax,2.)
             self._ax2.set_ylim(ymin = ymin, ymax = ymax)
 
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
@@ -1184,6 +1176,8 @@ class plotter():
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color() ,length= 8)
+            minorLocator   = mticker.AutoMinorLocator()
+            self._ax2.xaxis.set_minor_locator(minorLocator)
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1225,6 +1219,9 @@ class plotter():
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
             ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            if self._add_plots[2]=="Ratio":
+                ymin=max(ymin,0.0)
+                ymax=min(ymax,2.)
             self._ax3.set_ylim(ymin = ymin, ymax = ymax)
             self._ax3.axhline(self._add_plots_ref_line[2], color = self._Style_cont.Get_ref_line_color())
             self._ax3.set_ylabel(self._add_plots_labels[2],
@@ -1246,6 +1243,8 @@ class plotter():
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color(),length= 8)
+            minorLocator   = mticker.AutoMinorLocator()
+            self._ax3.xaxis.set_minor_locator(minorLocator)
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
                        fontdict = self._Style_cont.Get_axis_title_font(),
