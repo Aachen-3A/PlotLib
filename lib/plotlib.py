@@ -401,9 +401,13 @@ class HistStorage(object):
     ## del function
     #
     # This deletes the main objects nedded to not get a crash at the end!
-    def __del__(self):
-        for name in  self.files:
-            self.files[name].Close()
+    #def __del__(self):
+        ##for name in self.views:
+            ##del self.views[name]
+        ##for name in self.hists:
+            ##del self.hists[name]
+        #for name in  self.files:
+            #self.files[name].Close()
     ##------------------------------------------------------------------
     ## Private functions
     ##------------------------------------------------------------------
@@ -657,8 +661,11 @@ class HistStorage(object):
             except:
                 #self.hists[f]=self.files[f].Get(hist)
                 log_plotlib.warning( "No %s in %s"%(hist,f))
-                self.hists[f]=self.hists.values()[0].clone()
-                self.hists[f].Reset()
+                if len(self.hists)>0:
+                    self.hists[f]=self.hists.values()[0].clone()
+                    self.hists[f].Reset()
+                else:
+                    self.hists[f]=Hist(100,0,100)
 
         if self._joinList is not False:
             self.joinList(self._joinList)

@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import sys
+import gc
 import matplotlib
 from matplotlib import rc
 
@@ -23,6 +24,7 @@ from rounding import rounding
 #add the hatched style to rootpy:
 from rootpy.plotting import base
 base.fillstyles_root2mpl[3244]="X"
+
 
 import style_class as sc
 
@@ -93,10 +95,6 @@ class plotter():
     #
     # This deletes the main objects nedded to not get a crash at the end!
     def __del__(self):
-        try:
-            plt.close()
-        except:
-            pass
         del self._hist
         del self._sig_hist
         del self._data_hist
