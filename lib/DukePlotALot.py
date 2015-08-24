@@ -472,11 +472,48 @@ class plotter():
             text.set_weight(self._Style_cont.Get_axis_title_font()["weight"])
 
     def _Compiler(self):
-        if len(self._hist) == 0 or self._Style_cont.Get_kind() == 'Lines' or self._Style_cont.Get_kind() == 'Graphs' or self._Style_cont.Get_kind() == 'Linegraphs':
+        if self._add_plots[0] != '' and self._add_plots[0] != 'Empty' and (len(self._hist) == 0 or
+           self._Style_cont.Get_kind() == 'Lines' or
+           self._Style_cont.Get_kind() == 'Graphs' or
+           self._Style_cont.Get_kind() == 'Linegraphs'):
             self._add_plots[0] = ''
+            self._add_error_bands = False
+            print('')
+            print('\tThis combination of parameters is not possible')
+            print('\tThere is either not background histogram')
+            print('\tOr the style is \'Lines\', \'Graphs\' or \'Linegraphs\'')
+            print('')
+            print('\tFor this combination of parameters the only allowed')
+            print('\textra plot is \'Empty\' at the moment')
+            print('')
+        if self._add_plots[1] != '' and self._add_plots[1] != 'Empty' and (len(self._hist) == 0 or
+           self._Style_cont.Get_kind() == 'Lines' or
+           self._Style_cont.Get_kind() == 'Graphs' or
+           self._Style_cont.Get_kind() == 'Linegraphs'):
             self._add_plots[1] = ''
+            self._add_error_bands = False
+            print('')
+            print('\tThis combination of parameters is not possible')
+            print('\tThere is either not background histogram')
+            print('\tOr the style is \'Lines\', \'Graphs\' or \'Linegraphs\'')
+            print('')
+            print('\tFor this combination of parameters the only allowed')
+            print('\textra plot is \'Empty\' at the moment')
+            print('')
+        if self._add_plots[2] != '' and self._add_plots[2] != 'Empty' and (len(self._hist) == 0 or
+           self._Style_cont.Get_kind() == 'Lines' or
+           self._Style_cont.Get_kind() == 'Graphs' or
+           self._Style_cont.Get_kind() == 'Linegraphs'):
             self._add_plots[2] = ''
             self._add_error_bands = False
+            print('')
+            print('\tThis combination of parameters is not possible')
+            print('\tThere is either not background histogram')
+            print('\tOr the style is \'Lines\', \'Graphs\' or \'Linegraphs\'')
+            print('')
+            print('\tFor this combination of parameters the only allowed')
+            print('\textra plot is \'Empty\' at the moment')
+            print('')
         if self._add_plots[0] != '':
             self._hist_start = self._add_plots_height[0]
             self._hist_height -= self._add_plots_height[0]
@@ -570,8 +607,21 @@ class plotter():
             self._add_plots_labels[pos] = '$\mathdefault{\\frac{Signal}{\sqrt{Signal + MC}}}$'
             self._add_plots_ref_line[pos] = 0.
             return self._Calc_SoverSpB()
+        elif plot == 'Empty':
+            self._add_plots_ref_line[pos] = 1.
+            return self._Calc_Empty()
         else:
             print('%s is not implemented yet as an additional plot, feel free to include this functionallity')
+
+    def _Calc_Empty(self):
+        if len(self._hist) != 0:
+            sum_hist = self._hist[0].Clone('sum_hist')
+        elif len(self._sig_hist) != 0:
+            sum_hist = self._sig_hist[0].Clone('sum_hist')
+        x = []
+        y = []
+        err = []
+        return [], x, y, err
 
     def _Calc_ratio(self):
         sum_hist = self._hist[0].Clone('sum_hist')
@@ -1149,8 +1199,12 @@ class plotter():
             if self._Style_cont.Get_xmin() != -1 and self._Style_cont.Get_xmax() != -1:
                 self._ax2.set_xlim(xmin = self._Style_cont.Get_xmin(), xmax = self._Style_cont.Get_xmax())
                 add_hist.GetXaxis().SetRangeUser(self._Style_cont.Get_xmin(),self._Style_cont.Get_xmax())
-            ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
-            ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            try:
+                ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
+                ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
+            except:
+                ymin=0.0
+                ymax=2.0
             if self._add_plots[1]=="Ratio":
                 ymin=max(ymin,0.0)
                 ymax=min(ymax,2.)
