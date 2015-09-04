@@ -146,7 +146,8 @@ class CmsDecoration(object):
 
 class Legend(object):
     def __init__(self, align="right", valign="top", pad=None, vspace=0, hspace=0,ncolumns=1):
-        self.textFont    = 43       #text font
+        #self.textFont    = 43       #text font
+        self.textFont    = 42       #text font
         self.textSize    = 0.6      #relative text size to top margin
         self.tickOffset  = 0.02     #offset for ticks
         self.relPosX     = 0.01#0.055;   #relative padding

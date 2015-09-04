@@ -1,5 +1,5 @@
 
-from rootpy.plotting import Hist
+from rootpy.plotting import Hist,Hist2D
 from rootpy.plotting.views import ScaleView,StyleView
 from rootpy.io import File
 try:
@@ -284,6 +284,11 @@ class HistStorageContainer():
     def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
         for stored in self.allStored:
             stored.getHistFromTree(binns,xmin,xmax,xtitle,cut,value,tree,weight=weight)
+
+
+    def getHistFromTree2d(self,xbinns,xmin,xmax,xtitle,ybins,ymin,ymax,ytitle,cut,value,tree,weight=None):
+        for stored in self.allStored:
+            stored.getHistFromTree2d(xbinns,xmin,xmax,xtitle,ybins,ymin,ymax,ytitle,cut,value,tree,weight=weight)
 
     ## Function rebin the all hists
     #
@@ -575,6 +580,7 @@ class HistStorage(object):
                 except:
                     yesno=raw_input("file %s is not there continue? [y/n]"%(file))
                     if yesno!="y":
+                        import sys
                         sys.exit(1)
                     fileList={key: value for key, value in fileList.items()
                         if file not in value}
@@ -679,7 +685,7 @@ class HistStorage(object):
     #
     # the hists ate added to .hists and joined if a joinList exist
     # @param[in] hist string of the hist in the files
-    def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
+    def getHistFromTree(self,bins,xmin,xmax,xtitle,cut,value,tree,weight=None):
         self.clearHists()
         for f in self.files:
             try:
@@ -690,8 +696,50 @@ class HistStorage(object):
                 log_plotlib.warning( e)
                 self.hists[f]=Hist(binns,xmin,xmax)
                 continue
-            self.hists[f]=Hist(binns,xmin,xmax)
+            self.hists[f]=Hist(bins,xmin,xmax)
             self.hists[f].GetXaxis().SetTitle(xtitle)
+            try:
+            #if weight is None:
+                _tree.Draw(value,selection=cut,hist=self.hists[f])
+            #else:
+                #tmpFile=File("tmp.root", "recreate")
+                #sel_tree=_tree.copy_tree(selection=cut)
+                #print weight
+                #sel_tree.Draw(value,selection=weight,hist=self.hists[f])
+            except:
+                log_plotlib.info( "Perhaps try this one:")
+                for i in _tree.glob("*"):
+                    log_plotlib.info( i)
+                raise RuntimeError("Will stop here!")
+            self.hists[f].Scale(self._getWeight(f))
+            self.hists[f].Sumw2()
+        if self._joinList is not False:
+            self.joinList(self._joinList)
+        for hist in self.hists:
+            if hist in self.style:
+                self.hists[hist].decorate(**self.style[hist])
+
+
+    ## Function get hists via trees from files
+    #
+    # the hists ate added to .hists and joined if a joinList exist
+    # @param[in] hist string of the hist in the files
+    def getHistFromTree2d(self,xbins,xmin,xmax,xtitle,ybins,ymin,ymax,ytitle,cut,value,tree,weight=None):
+        self.clearHists()
+        for f in self.files:
+            try:
+                _tree=self.files[f].Get(tree)
+            except AttributeError as e:
+                log_plotlib.warning( "No %s in %s"%(tree,f))
+                log_plotlib.warning( "Will try without %s, and add an empty hist."%f)
+                log_plotlib.warning( e)
+                self.hists[f]=Hist(binns,xmin,xmax)
+                continue
+                #TH2F(const char* name, const char* title, Int_t nbinsx, const Float_t* xbins, Int_t nbinsy, const Float_t* ybins)
+                #TH2F(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup)
+            self.hists[f]=Hist2D(xbins,xmin,xmax,ybins,ymin,ymax)
+            self.hists[f].GetXaxis().SetTitle(xtitle)
+            self.hists[f].GetXaxis().SetTitle(ytitle)
             try:
             #if weight is None:
                 _tree.Draw(value,selection=cut,hist=self.hists[f])
