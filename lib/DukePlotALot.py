@@ -533,6 +533,7 @@ class plotter():
             for i,height in enumerate(self._add_plots_height):
                 if height>1.:
                     self._add_plots_height[i]=float(height)/self._hist_height*1.5
+        return
 
 
     def _calc_data_graph_from_hist(self):
@@ -546,8 +547,10 @@ class plotter():
                     minwidth=1.
             g = Graph(self._data_hist,type='asymm')
             alpha = 1 - 0.6827
-            for i in range(g.GetN()+1):
+            for i in range(g.GetN()):
                 N = g.GetY()[i]
+                if N!=N:
+                    continue
                 if N<0:
                     N=0
                 if nonUniform:
@@ -556,7 +559,9 @@ class plotter():
                 if not N==0:
                     #print N,alpha
                     L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
-                U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+                    U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
+                else:
+                    U=1.84105476095
                 if nonUniform:
                     g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
                     g.SetPointEYhigh(i, (U-N)/(self._data_hist.GetBinWidth(i)/minwidth))
@@ -568,6 +573,7 @@ class plotter():
             self._data_graph=g
         else:
             self._data_graph = self._data_hist
+        return
 
 
     def cleanUnwantedBins(self,hist,toCleanHists):
@@ -1323,6 +1329,7 @@ class plotter():
         else:
             plt.subplots_adjust(left = .10, bottom = .08, right =  .95, top = .95, wspace = .2, hspace = .0)
         self._Write_additional_text()
+        return
 
     def _SavePlot(self, out_name):
         if self._useRoot:
@@ -1506,6 +1513,7 @@ class plotter():
         deco.Draw()
         self._canvas.Update()
         self._fig=self._canvas
+        return
 
     def _Draw_main_root(self):
         #this also is needed to avoid the gc
