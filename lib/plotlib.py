@@ -557,8 +557,7 @@ class HistStorage(object):
     def removeFile(self,name):
         del self.files[name]
         del self.views[name]
-        self._joinList = {key: value for key, value in self._joinList.items()
-                        if name not in value}
+        self._joinList = {key: value for key, value in self._joinList.items() if name not in value}
 
 
 
