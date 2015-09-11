@@ -267,7 +267,7 @@ class style_container():
     def Get_no_legend(self):
         return self._no_legend
 
-    def Get_n_legend_collumns(self):
+    def Get_n_legend_columns(self):
         return self._legend_ncol
 
     def Get_kind(self):
@@ -355,7 +355,7 @@ class style_container():
     def Set_additional_text(self, text):
         self._additional_text = text
 
-    def Set_n_legend_collumns(self,n):
+    def Set_n_legend_columns(self,n):
         self._legend_ncol=n
 
     def Set_poisson_error_off(self):
