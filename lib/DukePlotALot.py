@@ -1366,12 +1366,12 @@ class plotter():
         self.leg = Legend(numberOfEntries,rightmargin=1.-self._Style_cont.Get_LegendPosition().getX(),topmargin=1.-self._Style_cont.Get_LegendPosition().getY(),leftmargin=0.5,textfont=self._Style_cont.additionalTextFont,textsize=self._Style_cont.legendTextSize,entryheight=textSize,entrysep=textSize*0.1)
         self.leg.SetFillStyle(0)
         self.leg.SetBorderSize(0)
-        self.leg.SetNColumns(2)
+        self.leg.SetNColumns(self._Style_cont.Get_n_legend_columns())
         #self.leg.SetFillColor(ROOT.kWhite)
         for h in self._hist[::-1]:
             self.leg.AddEntry(h,h.GetTitle(), "f")
         if self._data:
-            self.leg.AddEntry(self._data_hist,"Data","ep")
+            self.leg.AddEntry(self._data_hist,self._data_hist.GetTitle(),"ep")
         if self._add_error_bands:
             for i,h in enumerate(self._error_hist_modif_root[::-1]):
                 self.leg.AddEntry(h,self._Style_cont.Get_error_bands_labl()[i], "f")
