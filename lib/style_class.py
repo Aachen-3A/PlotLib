@@ -270,6 +270,9 @@ class style_container():
     def Get_n_legend_columns(self):
         return self._legend_ncol
 
+    def Get_do_minor_ticks(self):
+        return self._do_minor_ticks
+
     def Get_kind(self):
         return self._kind
 
@@ -361,6 +364,9 @@ class style_container():
     def Set_poisson_error_off(self):
         self._poisson_error = False
 
+    def Set_minor_ticks(self):
+        self._do_minor_ticks = True
+
     ## Function to set properties of the plotting axis
     #
     # This function sets axis properties like the y-range or
@@ -408,6 +414,7 @@ class style_container():
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'row'
         self._show_minor_tick_labels = False
+        self._do_minor_ticks         = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 10
         self._axis_title_font =  {'family' : 'sans-serif',
@@ -440,6 +447,7 @@ class style_container():
         self._marker_error_cap_width          = 1
         self._cms_text_alignment              = 'row'
         self._show_minor_tick_labels          = False
+        self._do_minor_ticks                  = False
         if self._legend_font_size == 0:
             self._legend_font_size                = 10
         self._axis_title_font =  {'family' : 'sans-serif',
@@ -472,6 +480,7 @@ class style_container():
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'column'
         self._show_minor_tick_labels = False
+        self._do_minor_ticks         = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
         self._axis_title_font =  {'family' : 'serif',

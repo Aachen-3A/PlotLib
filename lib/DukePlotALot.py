@@ -460,7 +460,7 @@ class plotter():
                     bbox_to_anchor=(self._Style_cont.Get_LegendPosition().getX(),self._Style_cont.Get_LegendPosition().getY()),
                     bbox_transform=plt.gcf().transFigure,
                     numpoints = 1,
-                    ncol=self._Style_cont.Get_n_legend_collumns(),
+                    ncol=self._Style_cont.Get_n_legend_columns(),
                     frameon = False,
                     #fontdict = self._Style_cont.Get_axis_title_font(),
                     fontsize = self._Style_cont.Get_legend_font_size()
@@ -1176,8 +1176,9 @@ class plotter():
                               colors = self._Style_cont.Get_tick_color(),
                               labelsize = self._Style_cont.Gets_tick_font_size())
         self._ax1.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color(), length= 8)
-        minorLocator   = mticker.AutoMinorLocator()
-        self._ax1.xaxis.set_minor_locator(minorLocator)
+        if self._Style_cont.Get_do_minor_ticks():
+            minorLocator   = mticker.AutoMinorLocator()
+            self._ax1.xaxis.set_minor_locator(minorLocator)
         if len(self._hist_axis) > 0:
             par1.tick_params(axis = 'y', colors = self._Style_cont.Get_histaxis_label_text_color())
         ## Add the legend
@@ -1234,8 +1235,9 @@ class plotter():
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax2.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color() ,length= 8)
-            minorLocator   = mticker.AutoMinorLocator()
-            self._ax2.xaxis.set_minor_locator(minorLocator)
+            if self._Style_cont.Get_do_minor_ticks():
+                minorLocator   = mticker.AutoMinorLocator()
+                self._ax2.xaxis.set_minor_locator(minorLocator)
             if self._add_plots[2] != '':
                 plt.setp(self._ax2.get_xticklabels(), visible = False)
                 self._ax2.yaxis.set_major_locator(mticker.MaxNLocator(nbins=5, prune='both'))
@@ -1301,8 +1303,9 @@ class plotter():
                                   colors = self._Style_cont.Get_tick_color(),
                                   labelsize = self._Style_cont.Get_axis_text_main_to_sub_ratio() * self._Style_cont.Gets_tick_font_size())
             self._ax3.tick_params(axis = 'x', colors = self._Style_cont.Get_tick_color(),length= 8)
-            minorLocator   = mticker.AutoMinorLocator()
-            self._ax3.xaxis.set_minor_locator(minorLocator)
+            if self._Style_cont.Get_do_minor_ticks():
+                minorLocator   = mticker.AutoMinorLocator()
+                self._ax3.xaxis.set_minor_locator(minorLocator)
             plt.setp(self._ax1.get_xticklabels(), visible = False)
             plt.xlabel(self._Style_cont.Get_xaxis_title(),
                        fontdict = self._Style_cont.Get_axis_title_font(),
