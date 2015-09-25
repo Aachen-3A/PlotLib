@@ -425,7 +425,8 @@ class HistStorage(object):
                 continue
             try:
                 counter=self.files[name].Get("h_counters")
-                Nev=max(counter[1].value,counter[2].value)
+                #Nev=max(counter[1].value,counter[2].value)
+                Nev=counter[2].value
             except:
                 if self.verbosity==3:
                     log_plotlib.info("[Info] If you want to use Nev from the root file store 'h_counters'")
