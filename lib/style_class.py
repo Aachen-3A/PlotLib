@@ -63,6 +63,8 @@ class style_container():
         self._legend_font_size = 0
         self._forceBinWidth=False
         self._poisson_error=True
+        self._show_minor_tick_labels = False
+        self._do_minor_ticks         = False
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -413,8 +415,6 @@ class style_container():
         self._marker_color           = 'black'
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'row'
-        self._show_minor_tick_labels = False
-        self._do_minor_ticks         = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 10
         self._axis_title_font =  {'family' : 'sans-serif',
@@ -446,8 +446,6 @@ class style_container():
         self._marker_color                    = 'black'
         self._marker_error_cap_width          = 1
         self._cms_text_alignment              = 'row'
-        self._show_minor_tick_labels          = False
-        self._do_minor_ticks                  = False
         if self._legend_font_size == 0:
             self._legend_font_size                = 10
         self._axis_title_font =  {'family' : 'sans-serif',
@@ -479,8 +477,6 @@ class style_container():
         self._marker_color           = 'lightgray'
         self._marker_error_cap_width = 0
         self._cms_text_alignment     = 'column'
-        self._show_minor_tick_labels = False
-        self._do_minor_ticks         = False
         if self._legend_font_size == 0:
             self._legend_font_size       = 9
         self._axis_title_font =  {'family' : 'serif',
