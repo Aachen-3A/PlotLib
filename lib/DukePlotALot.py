@@ -76,7 +76,7 @@ class plotter():
         self._error_hist           = []
         self._error_hist_modif_root = []
         self._fig                  = None
-        self._allHists=self._hist+self._sig_hist+[self._data_hist]+self._hist_axis
+        self._allHists=self._hist+self._sig_hist+[self._data_hist]
         self._Style_cont = style
         self._useRoot = self._Style_cont.Get_useRoot()
         self._Style_cont.AddAxisTitle(self._allHists[0])
