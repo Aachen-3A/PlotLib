@@ -8,6 +8,7 @@ except ImportError:
     from ordered import OrderedDict
 import logging; logging.basicConfig(level=logging.DEBUG)
 from rootpy import log
+from rootpy import asrootpy
 from rounding import rounding
 import re
 from configobj import ConfigObj
@@ -277,9 +278,9 @@ class HistStorageContainer():
     # the hists ate added to .hists and joined if a joinList exist
     # the hist will be put in the corresponding HistStorage class
     # @param[in] hist string name of the hist
-    def getHist(self,hist):
+    def getHist(self,hist,noScale=False):
         for stored in self.allStored:
-            stored.getHist(hist)
+            stored.getHist(hist,noScale=noScale)
 
     def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
         for stored in self.allStored:
@@ -658,15 +659,18 @@ class HistStorage(object):
     #
     # the hists are added to .hists and joined if a joinList exist
     # @param[in] hist string of the hist in the files
-    def getHist(self,hist):
+    def getHist(self,hist,noScale=False):
         self.clearHists()
         for f in self.views:
             try:
-                self.hists[f]=self.views[f].Get(hist)
-                self.hists[f].Sumw2()
-            except:
+                if not "/eff_" in hist and not noScale:
+                    self.hists[f]=self.views[f].Get(hist)
+                    self.hists[f].Sumw2()
+                else:
+                    self.hists[f]=self.files[f].Get(hist)
+            except Exception as e:
                 #self.hists[f]=self.files[f].Get(hist)
-                log_plotlib.warning( "No %s in %s"%(hist,f))
+                log_plotlib.warning( "No %s in %s (error:%s)"%(hist,f,e))
                 if len(self.hists)>0:
                     self.hists[f]=self.hists.values()[0].clone()
                     self.hists[f].Reset()
@@ -699,14 +703,19 @@ class HistStorage(object):
             self.hists[f]=Hist(bins,xmin,xmax)
             self.hists[f].GetXaxis().SetTitle(xtitle)
             try:
-            #if weight is None:
-                _tree.Draw(value,selection=cut,hist=self.hists[f])
-            #else:
-                #tmpFile=File("tmp.root", "recreate")
-                #sel_tree=_tree.copy_tree(selection=cut)
-                #print weight
-                #sel_tree.Draw(value,selection=weight,hist=self.hists[f])
-            except:
+                if weight is None:
+                    _tree.Draw(value,selection=cut,hist=self.hists[f])
+                else:
+                    #_tree.Draw(value,selection="(%s)*(%s)"%(cut,weight),hist=self.hists[f])
+                    tmpFile=File("/tmp/tmp.root", "recreate")
+                    #sel_tree=_tree.copy_tree(selection=cut)
+                    sel_tree=asrootpy(_tree.CopyTree(cut))
+                    ##print weight
+                    sel_tree.Draw(value,selection=weight,hist=self.hists[f])
+                    tmpFile.Close()
+            except Exception as e:
+                log_plotlib.info( "error:%s"%(e))
+                log_plotlib.info( "file :%s"%(f))
                 log_plotlib.info( "Perhaps try this one:")
                 for i in _tree.glob("*"):
                     log_plotlib.info( i)
