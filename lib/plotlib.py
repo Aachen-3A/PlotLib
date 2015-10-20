@@ -239,7 +239,99 @@ def getRGBTColor(color):
     col=ROOT.gROOT.GetColor(color)
     return (col.GetRed(),col.GetGreen(),col.GetBlue())
 
+def makeTeXTable(dir_name,hist,histContainer):
+    rnd=rounding()
+    #make a nice tex table
+    mtBinOutTeX=open(dir_name+"/"+hist.replace("/","")+"output.tex","w+")
 
+
+    head=r"""\documentclass[a4paper,landscape]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[landscape]{geometry}
+\title{}
+\date{\today}
+\begin{document}
+
+
+"""
+    mtBinOutTeX.write(head)
+    mtBinOutTeX.write(r"\begin{table}[h]")
+    mtBinOutTeX.write(r"\begin{tabular}{"+" ".join(["l" for i in range(len(histContainer.bg.hists)+len(histContainer.sg.hists)+3)])+r"}"+"\n")
+
+
+
+    line=["$M^{min}_{T}$"]
+    for bg in histContainer.bg.hists:
+        line.append(bg)
+    line.append("Background")
+    line.append("Data")
+    for sg in histContainer.sg.hists:
+        line.append(sg)
+    mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+    emptylines=0
+    for ibin in range(1,histContainer.getData().GetNbinsX()):
+        #mt bin
+        line=[]
+        line.append( "{0}".format(histContainer.getData().xedgesl(ibin)))
+        for bg in histContainer.bg.hists:
+            line.append( rnd.latex(max(0,histContainer.bg.hists[bg].integral(xbin1=ibin))))
+        integ,err=histContainer.bg.getAllAdded().integral(xbin1=ibin,error=True)
+        line.append(rnd.latex(integ,err))
+        line.append(rnd.latex(histContainer.getData().integral(xbin1=ibin)))
+        for sg in histContainer.sg.hists:
+            line.append( rnd.latex(histContainer.sg.hists[sg].integral(xbin1=ibin)))
+        if (histContainer.getData().integral(xbin1=ibin)+histContainer.bg.getAllAdded().integral(xbin1=ibin)) < 0.01:
+            emptylines+=1
+        else:
+            mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+        if emptylines>0:
+            break
+    mtBinOutTeX.write("\n\n")
+
+
+    mtBinOutTeX.write(r"\end{tabular}"+"\n")
+    mtBinOutTeX.write(r"\caption{}"+"\n")
+    mtBinOutTeX.write(r"\label{tab:}"+"\n")
+    mtBinOutTeX.write(r"\end{table}"+"\n")
+    mtBinOutTeX.write(r"\begin{table}[h]"+"\n")
+    mtBinOutTeX.write(r"\begin{tabular}{"+" ".join(["l" for i in range(len(histContainer.bg.hists)+len(histContainer.sg.hists)+3)])+r"}"+"\n")
+
+    line=["$M_{T}$"]
+    for bg in histContainer.bg.hists:
+        line.append(bg)
+    line.append("Background")
+    line.append("Data")
+    for sg in histContainer.sg.hists:
+        line.append(sg)
+    mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+    emptylines=0
+    for ibin in range(1,histContainer.getData().GetNbinsX()):
+        #mt bin
+        line=[]
+        line.append( "{0} - {1}".format(histContainer.getData().xedgesl(ibin),histContainer.getData().xedgesh(ibin)))
+        for bg in histContainer.bg.hists:
+            line.append( rnd.latex(max(0,histContainer.bg.hists[bg][ibin].value)))
+        line.append(rnd.latex(histContainer.bg.getAllAdded()[ibin].value,histContainer.bg.getAllAdded()[ibin].error))
+        line.append(rnd.latex(histContainer.getData()[ibin].value))
+        for sg in histContainer.sg.hists:
+            line.append( rnd.latex(histContainer.sg.hists[sg][ibin].value))
+        if (histContainer.getData()[ibin].value+histContainer.bg.getAllAdded()[ibin].value) < 0.01:
+            emptylines+=1
+        else:
+            mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+        if emptylines>5:
+            break
+        tail="""
+\end{tabular}
+\caption{}
+\label{tab:}
+\end{table}
+
+
+\end{document}
+"""
+    mtBinOutTeX.write(tail)
+    mtBinOutTeX.close()
 
 ##@class HistSorageContainer Class to handle data, bg and sg HistStorages
 #
