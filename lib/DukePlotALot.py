@@ -561,6 +561,7 @@ class plotter():
                     L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
                     U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
                 else:
+                    g.SetPoint(i,g.GetX()[i],1e-9)
                     U=1.84105476095
                 if nonUniform:
                     g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
@@ -1062,6 +1063,7 @@ class plotter():
                           markersize = self._Style_cont.Get_marker_size(),
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
+                          markeredgewidth=0,
                           #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
@@ -1069,8 +1071,8 @@ class plotter():
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             ## Plot potential signal histograms
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
+            if len(self._sig_hist) != 0:
+                hist_handle = rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
             ## Plot potential background histograms
             if len(self._hist) != 0:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)

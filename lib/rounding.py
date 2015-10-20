@@ -33,14 +33,14 @@ class rounding:
     def latexValueError(self, n, error):
         a, b, expo = self.sdr(n, error)
         if expo != 0:
-            return '${0}\pm{1}\cdot10^{{{2}}}$'.format(a, b, exp )
+            return '${0}\pm{1}\cdot10^{{{2}}}$'.format(a, b, expo )
         else:
             return '${0}\pm{1}$'.format(a, b)
 
     def latexValueUpDownError( self, n, up, down ):
         a, b, c, expo = self.sdr( n, up, down )
         if expo != 0:
-            return '${0}^{{+{1}}}_{{-{2}}}\cdot10^{{{3}}}$'.format(a, b, c, exp)
+            return '${0}^{{+{1}}}_{{-{2}}}\cdot10^{{{3}}}$'.format(a, b, c, expo)
         else:
             return '${0}^{{+{1}}}_{{-{2}}}$'.format(a, b)
 

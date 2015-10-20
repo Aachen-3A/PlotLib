@@ -18,7 +18,7 @@ def Latex(pad=None):
 
 class CmsDecoration(object):
 
-    def __init__(self,sc_obj=sc.style_container(), extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", position=None, vspace=0, hspace=0, referenceHeight=None, pad=None):
+    def __init__(self,sc_obj=sc.style_container(useRoot = True), extraText=None, additionalText=None, lumiText="19.7 fb^{-1} (8 TeV)", position=None, vspace=0, hspace=0, referenceHeight=None, pad=None):
         self._style=sc_obj
         self.relPosX    = 0.055  #relative padding
         self.relPosY    = 0.035#55
@@ -46,9 +46,8 @@ class CmsDecoration(object):
                 self.pad = ROOT.gROOT.GetSelectedPad()
                 if repr(self.pad)!="<ROOT.TVirtualPad object at 0x(nil)>": break
 
-
         if position is None:
-            self._style._cmsTextPosition=sc.position(positiontext="top left", isText=True)
+            self._style._cmsTextPosition=sc.position(positiontext="lower left", isText=True)
 
         self.align_=2
         if self._style._cmsTextPosition.getX()<=0.3:
