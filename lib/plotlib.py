@@ -274,7 +274,7 @@ def makeTeXTable(dir_name,hist,histContainer):
         line=[]
         line.append( "{0}".format(histContainer.getData().xedgesl(ibin)))
         for bg in histContainer.bg.hists:
-            line.append( rnd.latex(max(0,histContainer.bg.hists[bg].integral(xbin1=ibin))))
+            line.append( rnd.latex(histContainer.bg.hists[bg].integral(xbin1=ibin)))
         integ,err=histContainer.bg.getAllAdded().integral(xbin1=ibin,error=True)
         line.append(rnd.latex(integ,err))
         line.append(rnd.latex(histContainer.getData().integral(xbin1=ibin)))
@@ -310,7 +310,7 @@ def makeTeXTable(dir_name,hist,histContainer):
         line=[]
         line.append( "{0} - {1}".format(histContainer.getData().xedgesl(ibin),histContainer.getData().xedgesh(ibin)))
         for bg in histContainer.bg.hists:
-            line.append( rnd.latex(max(0,histContainer.bg.hists[bg][ibin].value)))
+            line.append( rnd.latex(histContainer.bg.hists[bg][ibin].value))
         line.append(rnd.latex(histContainer.bg.getAllAdded()[ibin].value,histContainer.bg.getAllAdded()[ibin].error))
         line.append(rnd.latex(histContainer.getData()[ibin].value))
         for sg in histContainer.sg.hists:
@@ -440,6 +440,8 @@ class HistStorageContainer():
     #
     # @param[out] data.getHistList()[0] hist of Data
     def getData(self):
+        if len(self.data.getHistList())>1:
+            return sum(self.data.getHistList())
         return self.data.getHistList()[0]
 
     ## Function makeCumulative
