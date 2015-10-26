@@ -71,6 +71,8 @@ class plotter():
         self._add_plots_height     = [0, 0, 0]
         self._add_plots_labels     = ['', '', '']
         self._add_plots_ref_line   = [0, 0, 0]
+        self._add_plots_ymin = None
+        self._add_plots_ymax = None
         self._annotations_modified = False
         self._add_error_bands      = False
         self._error_hist           = []
@@ -165,7 +167,7 @@ class plotter():
     # @param[in] pos Position where the plot should be added, 0 is on top of the main plot, 1 and 2 at the bottom (default = 0)
     # @param[in] height Height of the Plot from the whole plotting range in percent (default = 15)
     # @param[in] label Label of the y-axis for this additional plot (default = ''[Use the default of this specific analysis plot])
-    def Add_plot(self, plot = 'Ratio', pos = 0, height = 15, label = ''):
+    def Add_plot(self, plot = 'Ratio', pos = 0, height = 15, label = '', ymin = None , ymax = None):
         if self._add_plots[pos] == '':
             self._add_plots[pos] = plot
             self._add_plots_height[pos] = height
@@ -180,6 +182,8 @@ class plotter():
                 self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
             if pos==2:
                 self._Style_cont._cmsTextPosition.addYspace(  0.9 * height / 100.)
+            self._add_plots_ymin = ymin
+            self._add_plots_ymax = ymax
         else:
             print('\n\tfor pos %.0f is already %s planned, so that is not possible\t'%(pos,self.add_plots[pos]))
             sys.exit(42)
@@ -1012,8 +1016,14 @@ class plotter():
             ymin=add_hist.min()*1.2 if add_hist.min()<0. else add_hist.min()*0.98
             ymax=add_hist.max()*1.2 if add_hist.max()<0. else add_hist.max()*0.98
             if self._add_plots[0]=="Ratio":
-                ymin=max(ymin,0.0)
-                ymax=min(ymax,2.)
+                if(self._add_plots_ymin):
+                    ymin=self._add_plots_ymin
+                else:
+                    ymin=max(ymin,0.0)
+                if(self._add_plots_ymax):
+                    ymax=self._add_plots_ymax
+                else:
+                    ymax=min(ymax,2.)
             self._ax0.set_ylim(ymin = ymin, ymax = ymax)
             self._ax0.axhline(self._add_plots_ref_line[0], color = self._Style_cont.Get_ref_line_color())
             self._ax0.set_ylabel(self._add_plots_labels[0],
@@ -1215,8 +1225,14 @@ class plotter():
                 ymin=0.0
                 ymax=2.0
             if self._add_plots[1]=="Ratio":
-                ymin=max(ymin,0.0)
-                ymax=min(ymax,2.)
+                if(self._add_plots_ymin):
+                    ymin=self._add_plots_ymin
+                else:
+                    ymin=max(ymin,0.0)
+                if(self._add_plots_ymax):
+                    ymax=self._add_plots_ymax
+                else:
+                    ymax=min(ymax,2.)
             self._ax2.set_ylim(ymin = ymin, ymax = ymax)
 
             self._ax2.axhline(self._add_plots_ref_line[1], color = self._Style_cont.Get_ref_line_color())
