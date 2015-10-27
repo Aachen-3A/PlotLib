@@ -65,6 +65,7 @@ class style_container():
         self._poisson_error=True
         self._show_minor_tick_labels = False
         self._do_minor_ticks         = False
+        self._do_overflowbin = False
 
         self._cmsTextPosition = position(cmsPositon, isText = True, useRoot=self._useRoot)
         self._LegendPosition = position(legendPosition, useRoot=self._useRoot)
@@ -305,6 +306,9 @@ class style_container():
     def Get_zmax(self):
         return self._zmax
 
+    def Get_do_overflowbin(self):
+        return self._do_overflowbin
+
     def Set_line_style(self, value):
         self._line_style = value
 
@@ -368,6 +372,9 @@ class style_container():
 
     def Set_minor_ticks(self):
         self._do_minor_ticks = True
+        
+    def Set_do_overflowbin(self):
+        self._do_overflowbin = True
 
     ## Function to set properties of the plotting axis
     #

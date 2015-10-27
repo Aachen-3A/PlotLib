@@ -36,7 +36,6 @@ import style_class as sc
 # uncertainties[optional]). Also different analysis distributions
 # like ratio or siginficance can be added.
 #
-# @TODO Include handling of overflow bins
 # @TODO Handling of asymetric errors (systematics)
 #
 # written by Soeren Erdweg 2014-2015
@@ -209,7 +208,7 @@ class plotter():
         self._Style_cont.Set_error_bands_center(band_center)
         self._Style_cont.Set_error_stacking(stacking)
 
-    ## Function to set properties of the plotting axis
+    ## Function to set properties of the plotting axis and handling of the overflow bin
     #
     # This function sets axis properties like the y-range or
     # if any axis should be logarithmic.
@@ -220,6 +219,17 @@ class plotter():
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
+
+        # overflow handling:
+        if self._Style_cont.Get_do_overflowbin() and xmax != -1:
+            for ihist in (self._hist + [self._data_hist] + self._sig_hist):
+                bin_xmax = ihist.GetXaxis().FindBin(xmax)
+                bin_hmax = ihist.GetXaxis().GetNbins()
+                overflow_val = ihist.Integral(bin_xmax,bin_hmax)
+                lastbin_val = ihist.GetBinContent(bin_xmax-1)
+                
+                ihist.SetBinContent(bin_xmax-1, lastbin_val+overflow_val)
+            
         self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax, grid = grid)
 
     ## Function to show the complete plot in the matplotlib browser
