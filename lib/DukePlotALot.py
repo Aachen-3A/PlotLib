@@ -940,7 +940,6 @@ class plotter():
             err.append(np.array(err_i))
             err_down.append(np.array(err_i_d))
         self._Draw_Any_uncertainty_band(axis1, x, y, err, err_down)
-        # self._Draw_Any_uncertainty_band(axis1, x, y, err)
 
     def _Draw_Any_uncertainty_band(self, axis, x, y, err, err_down = None):
         x_vals = x[0]
@@ -950,8 +949,6 @@ class plotter():
             err_i_d = np.absolute(err[0])
         else:
             err_i_d = np.absolute(err_down[0])
-        # for y,e in zip(y[0],np.absolute(err[0])):
-            # print('mean: %.2f, sigma: %.2f'%(y,e))
         if axis.get_yscale() == 'log':
             positive = dummy_y_p - err_i_d > 0
             plt.fill_between(x_vals, dummy_y_p - err_i_d, dummy_y_p + err_i,
@@ -971,15 +968,12 @@ class plotter():
         dummy_err_sum = np.copy(np.square(err[0]))
         if self._Style_cont.Get_error_stacking() == 'linear':
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
-            #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
             if err_down == None:
                 err_i_d = np.absolute(err[i])
             else:
                 err_i_d = np.absolute(err_down[i])
             if axis.get_yscale() == 'log':
-                # for y,e in zip(y[i],np.absolute(err[i])):
-                    # print('mean: %.2f, sigma: %.2f'%(y,e))
                 positive1 = y[i] - err_i_d > 0
                 plt.fill_between(x[i], y[i] - err_i_d, y[i] + np.absolute(err[i]),
                                  alpha = self._Style_cont.Get_error_bands_alph(),
@@ -997,7 +991,6 @@ class plotter():
                                  axes = axis, zorder = 2.1)
             if self._Style_cont.Get_error_stacking() == 'linear':
                 dummy_y_p = np.add(dummy_y_p, np.absolute(err[i]))
-                #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[i]))
             elif self._Style_cont.Get_error_stacking() == 'No':
                 dummy_err_sum = np.add(dummy_err_sum,np.square(err[i]))
         if self._Style_cont.Get_error_stacking() == 'No':
