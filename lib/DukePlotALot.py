@@ -1092,12 +1092,13 @@ class plotter():
                           #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
-                          capthick = self._Style_cont.Get_marker_error_cap_width())
+                          capthick = self._Style_cont.Get_marker_error_cap_width(),
+                          zorder=5)
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             ## Plot potential signal histograms
             if len(self._sig_hist) != 0:
-                hist_handle = rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
+                hist_handle = rplt.hist(self._sig_hist, stacked = False, axes = self._ax1, zorder = 3)
             ## Plot potential background histograms
             if len(self._hist) != 0:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)
