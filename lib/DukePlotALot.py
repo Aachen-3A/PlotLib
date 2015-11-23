@@ -902,10 +902,12 @@ class plotter():
         x = []
         y = []
         err = []
+        err_down = []
         for j in range(0,len(self._error_hist)):
             x_i = []
             y_i = []
             err_i = []
+            err_i_d = []
             for i in range(1,sum_hist.GetNbinsX()-1):
                 x_i.append(sum_hist.GetBinLowEdge(i))
                 x_i.append(sum_hist.GetBinLowEdge(i) + sum_hist.GetBinWidth(i))
@@ -916,18 +918,32 @@ class plotter():
                 temp_error = self._error_hist[j].GetBinContent(err_bin_number)
                 err_i.append(temp_content * abs(temp_error))
                 err_i.append(temp_content * abs(temp_error))
+                if abs(temp_error) >= 1.:
+                    err_i_d.append(temp_content - 1.e-10)
+                    err_i_d.append(temp_content - 1.e-10)
+                else:
+                    err_i_d.append(temp_content * abs(temp_error))
+                    err_i_d.append(temp_content * abs(temp_error))
             x.append(np.array(x_i))
             y.append(np.array(y_i))
             err.append(np.array(err_i))
-        self._Draw_Any_uncertainty_band(axis1, x, y, err)
+            err_down.append(np.array(err_i_d))
+        self._Draw_Any_uncertainty_band(axis1, x, y, err, err_down)
+        # self._Draw_Any_uncertainty_band(axis1, x, y, err)
 
-    def _Draw_Any_uncertainty_band(self, axis, x, y, err):
+    def _Draw_Any_uncertainty_band(self, axis, x, y, err, err_down = None):
         x_vals = x[0]
         dummy_y_p = np.copy(y[0])
         err_i = np.absolute(err[0])
+        if err_down == None:
+            err_i_d = np.absolute(err[0])
+        else:
+            err_i_d = np.absolute(err_down[0])
+        # for y,e in zip(y[0],np.absolute(err[0])):
+            # print('mean: %.2f, sigma: %.2f'%(y,e))
         if axis.get_yscale() == 'log':
-            positive = dummy_y_p - err_i > 0
-            plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
+            positive = dummy_y_p - err_i_d > 0
+            plt.fill_between(x_vals, dummy_y_p - err_i_d, dummy_y_p + err_i,
                              alpha = self._Style_cont.Get_error_bands_alph(),
                              edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
                              facecolor = self._Style_cont.Get_error_bands_fcol()[0],
@@ -935,7 +951,7 @@ class plotter():
                              axes = axis, zorder = 2.1,
                              where = positive)
         else:
-            plt.fill_between(x_vals, dummy_y_p - err_i, dummy_y_p + err_i,
+            plt.fill_between(x_vals, dummy_y_p - err_i_d, dummy_y_p + err_i,
                              alpha = self._Style_cont.Get_error_bands_alph(),
                              edgecolor = self._Style_cont.Get_error_bands_ecol()[0],
                              facecolor = self._Style_cont.Get_error_bands_fcol()[0],
@@ -946,9 +962,15 @@ class plotter():
             dummy_y_p = np.add(dummy_y_p, np.absolute(err[0]))
             #dummy_y_m = np.subtract(dummy_y_m, np.absolute(err[0]))
         for i in range(1,len(self._error_hist)):
+            if err_down == None:
+                err_i_d = np.absolute(err[i])
+            else:
+                err_i_d = np.absolute(err_down[i])
             if axis.get_yscale() == 'log':
-                positive1 = y[i] - np.absolute(err[i]) > 0
-                plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
+                # for y,e in zip(y[i],np.absolute(err[i])):
+                    # print('mean: %.2f, sigma: %.2f'%(y,e))
+                positive1 = y[i] - err_i_d > 0
+                plt.fill_between(x[i], y[i] - err_i_d, y[i] + np.absolute(err[i]),
                                  alpha = self._Style_cont.Get_error_bands_alph(),
                                  edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
                                  facecolor = self._Style_cont.Get_error_bands_fcol()[i],
@@ -956,7 +978,7 @@ class plotter():
                                  axes = axis, zorder = 2.1,
                                  where = positive1)
             else:
-                plt.fill_between(x[i], y[i] - np.absolute(err[i]), y[i] + np.absolute(err[i]),
+                plt.fill_between(x[i], y[i] - err_i_d, y[i] + np.absolute(err[i]),
                                  alpha = self._Style_cont.Get_error_bands_alph(),
                                  edgecolor = self._Style_cont.Get_error_bands_ecol()[i],
                                  facecolor = self._Style_cont.Get_error_bands_fcol()[i],
