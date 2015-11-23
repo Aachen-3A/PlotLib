@@ -228,10 +228,10 @@ def plot_resolution_fit(axis1, histo, xmin = 0, xmax = 0, startvals = [], plottr
     
 $ \chi^2/Ndf = %.2f/%.0f = %.2f$
 
-$ A = %f \pm %f$
-$ B = %f \pm %f$
-$ C = %f \pm %f$
-$ D = %f \pm %f$'''%(fit_res.Chi2(),
+$ A = %.2g \pm %.2g$
+$ B = %.2g \pm %.2g$
+$ C = %.2g \pm %.2g$
+$ D = %.2g \pm %.2g$'''%(fit_res.Chi2(),
                              fit_res.Ndf(),
                              fit_res.Chi2()/fit_res.Ndf(),
                              fit_res.Parameter(0),fit_res.ParError(0),
