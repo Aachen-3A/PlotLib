@@ -36,7 +36,6 @@ import style_class as sc
 # uncertainties[optional]). Also different analysis distributions
 # like ratio or siginficance can be added.
 #
-# @TODO Include handling of overflow bins
 # @TODO Handling of asymetric errors (systematics)
 #
 # written by Soeren Erdweg 2014-2015
@@ -209,7 +208,7 @@ class plotter():
         self._Style_cont.Set_error_bands_center(band_center)
         self._Style_cont.Set_error_stacking(stacking)
 
-    ## Function to set properties of the plotting axis
+    ## Function to set properties of the plotting axis and handling of the overflow bin
     #
     # This function sets axis properties like the y-range or
     # if any axis should be logarithmic.
@@ -220,6 +219,17 @@ class plotter():
     # @param[in] xmin Minimum plotting range for the x-axis (Default = -1 range from hist)
     # @param[in] xmax Maximum plotting range for the x-axis (Default = -1 range from hist)
     def Set_axis(self, logx = False, logy = True, ymin = -1, ymax = -1, xmin = -1, xmax = -1, grid = False):
+
+        # overflow handling:
+        if self._Style_cont.Get_do_overflowbin() and xmax != -1:
+            for ihist in (self._hist + [self._data_hist] + self._sig_hist):
+                bin_xmax = ihist.GetXaxis().FindBin(xmax)
+                bin_hmax = ihist.GetXaxis().GetNbins()
+                overflow_val = ihist.Integral(bin_xmax,bin_hmax)
+                lastbin_val = ihist.GetBinContent(bin_xmax-1)
+                
+                ihist.SetBinContent(bin_xmax-1, lastbin_val+overflow_val)
+            
         self._Style_cont.Set_axis(logx = logx, logy = logy, ymin = ymin, ymax = ymax, xmin = xmin, xmax = xmax, grid = grid)
 
     ## Function to show the complete plot in the matplotlib browser
@@ -561,6 +571,7 @@ class plotter():
                     L = ROOT.Math.gamma_quantile(alpha/2,N,1.)
                     U =  ROOT.Math.gamma_quantile_c(alpha/2,N+1,1)
                 else:
+                    g.SetPoint(i,g.GetX()[i],1e-9)
                     U=1.84105476095
                 if nonUniform:
                     g.SetPointEYlow(i, (N-L)/(self._data_hist.GetBinWidth(i)/minwidth))
@@ -1084,6 +1095,7 @@ class plotter():
                           markersize = self._Style_cont.Get_marker_size(),
                           marker = self._Style_cont.Get_marker_style(),
                           ecolor = self._Style_cont.Get_marker_color(),
+                          markeredgewidth=0,
                           #linestyle = convert_linestyle(self._data_hist.GetLineStyle(), 'mpl'),
                           markerfacecolor = self._Style_cont.Get_marker_color(),
                           markeredgecolor = self._Style_cont.Get_marker_color(),
@@ -1091,8 +1103,8 @@ class plotter():
         ## Crete the standard plots with histograms
         if self._Style_cont.Get_kind() == 'Standard' or self._Style_cont.Get_kind() == 'Lines':
             ## Plot potential signal histograms
-            if len(self._sig_hist) > 0:
-                rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
+            if len(self._sig_hist) != 0:
+                hist_handle = rplt.hist(self._sig_hist, stacked = False, axes = self._ax1)
             ## Plot potential background histograms
             if len(self._hist) != 0:
                 hist_handle = rplt.hist(self._hist, stacked = True, axes = self._ax1, zorder = 2)

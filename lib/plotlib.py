@@ -8,6 +8,7 @@ except ImportError:
     from ordered import OrderedDict
 import logging; logging.basicConfig(level=logging.DEBUG)
 from rootpy import log
+from rootpy import asrootpy
 from rounding import rounding
 import re
 from configobj import ConfigObj
@@ -238,7 +239,99 @@ def getRGBTColor(color):
     col=ROOT.gROOT.GetColor(color)
     return (col.GetRed(),col.GetGreen(),col.GetBlue())
 
+def makeTeXTable(dir_name,hist,histContainer):
+    rnd=rounding()
+    #make a nice tex table
+    mtBinOutTeX=open(dir_name+"/"+hist.replace("/","")+"output.tex","w+")
 
+
+    head=r"""\documentclass[a4paper,landscape]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[landscape]{geometry}
+\title{}
+\date{\today}
+\begin{document}
+
+
+"""
+    mtBinOutTeX.write(head)
+    mtBinOutTeX.write(r"\begin{table}[h]")
+    mtBinOutTeX.write(r"\begin{tabular}{"+" ".join(["l" for i in range(len(histContainer.bg.hists)+len(histContainer.sg.hists)+3)])+r"}"+"\n")
+
+
+
+    line=["$M^{min}_{T}$"]
+    for bg in histContainer.bg.hists:
+        line.append(bg)
+    line.append("Background")
+    line.append("Data")
+    for sg in histContainer.sg.hists:
+        line.append(sg)
+    mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+    emptylines=0
+    for ibin in range(1,histContainer.getData().GetNbinsX()):
+        #mt bin
+        line=[]
+        line.append( "{0}".format(histContainer.getData().xedgesl(ibin)))
+        for bg in histContainer.bg.hists:
+            line.append( rnd.latex(histContainer.bg.hists[bg].integral(xbin1=ibin)))
+        integ,err=histContainer.bg.getAllAdded().integral(xbin1=ibin,error=True)
+        line.append(rnd.latex(integ,err))
+        line.append(rnd.latex(histContainer.getData().integral(xbin1=ibin)))
+        for sg in histContainer.sg.hists:
+            line.append( rnd.latex(histContainer.sg.hists[sg].integral(xbin1=ibin)))
+        if (histContainer.getData().integral(xbin1=ibin)+histContainer.bg.getAllAdded().integral(xbin1=ibin)) < 0.01:
+            emptylines+=1
+        else:
+            mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+        if emptylines>0:
+            break
+    mtBinOutTeX.write("\n\n")
+
+
+    mtBinOutTeX.write(r"\end{tabular}"+"\n")
+    mtBinOutTeX.write(r"\caption{}"+"\n")
+    mtBinOutTeX.write(r"\label{tab:}"+"\n")
+    mtBinOutTeX.write(r"\end{table}"+"\n")
+    mtBinOutTeX.write(r"\begin{table}[h]"+"\n")
+    mtBinOutTeX.write(r"\begin{tabular}{"+" ".join(["l" for i in range(len(histContainer.bg.hists)+len(histContainer.sg.hists)+3)])+r"}"+"\n")
+
+    line=["$M_{T}$"]
+    for bg in histContainer.bg.hists:
+        line.append(bg)
+    line.append("Background")
+    line.append("Data")
+    for sg in histContainer.sg.hists:
+        line.append(sg)
+    mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+    emptylines=0
+    for ibin in range(1,histContainer.getData().GetNbinsX()):
+        #mt bin
+        line=[]
+        line.append( "{0} - {1}".format(histContainer.getData().xedgesl(ibin),histContainer.getData().xedgesh(ibin)))
+        for bg in histContainer.bg.hists:
+            line.append( rnd.latex(histContainer.bg.hists[bg][ibin].value))
+        line.append(rnd.latex(histContainer.bg.getAllAdded()[ibin].value,histContainer.bg.getAllAdded()[ibin].error))
+        line.append(rnd.latex(histContainer.getData()[ibin].value))
+        for sg in histContainer.sg.hists:
+            line.append( rnd.latex(histContainer.sg.hists[sg][ibin].value))
+        if (histContainer.getData()[ibin].value+histContainer.bg.getAllAdded()[ibin].value) < 0.01:
+            emptylines+=1
+        else:
+            mtBinOutTeX.write(" & ".join(line) + r"\\"+"\n" )
+        if emptylines>5:
+            break
+        tail="""
+\end{tabular}
+\caption{}
+\label{tab:}
+\end{table}
+
+
+\end{document}
+"""
+    mtBinOutTeX.write(tail)
+    mtBinOutTeX.close()
 
 ##@class HistSorageContainer Class to handle data, bg and sg HistStorages
 #
@@ -277,9 +370,9 @@ class HistStorageContainer():
     # the hists ate added to .hists and joined if a joinList exist
     # the hist will be put in the corresponding HistStorage class
     # @param[in] hist string name of the hist
-    def getHist(self,hist):
+    def getHist(self,hist,noScale=False):
         for stored in self.allStored:
-            stored.getHist(hist)
+            stored.getHist(hist,noScale=noScale)
 
     def getHistFromTree(self,binns,xmin,xmax,xtitle,cut,value,tree,weight=None):
         for stored in self.allStored:
@@ -347,6 +440,8 @@ class HistStorageContainer():
     #
     # @param[out] data.getHistList()[0] hist of Data
     def getData(self):
+        if len(self.data.getHistList())>1:
+            return sum(self.data.getHistList())
         return self.data.getHistList()[0]
 
     ## Function makeCumulative
@@ -425,7 +520,10 @@ class HistStorage(object):
                 continue
             try:
                 counter=self.files[name].Get("h_counters")
-                Nev=max(counter[1].value,counter[2].value)
+                if(counter[2].value>0):
+                    Nev=counter[2].value
+                else:
+                    Nev=counter[1].value
             except:
                 if self.verbosity==3:
                     log_plotlib.info("[Info] If you want to use Nev from the root file store 'h_counters'")
@@ -657,15 +755,18 @@ class HistStorage(object):
     #
     # the hists are added to .hists and joined if a joinList exist
     # @param[in] hist string of the hist in the files
-    def getHist(self,hist):
+    def getHist(self,hist,noScale=False):
         self.clearHists()
         for f in self.views:
             try:
-                self.hists[f]=self.views[f].Get(hist)
-                self.hists[f].Sumw2()
-            except:
+                if not "/eff_" in hist and not noScale:
+                    self.hists[f]=self.views[f].Get(hist)
+                    self.hists[f].Sumw2()
+                else:
+                    self.hists[f]=self.files[f].Get(hist)
+            except Exception as e:
                 #self.hists[f]=self.files[f].Get(hist)
-                log_plotlib.warning( "No %s in %s"%(hist,f))
+                log_plotlib.warning( "No %s in %s (error:%s)"%(hist,f,e))
                 if len(self.hists)>0:
                     self.hists[f]=self.hists.values()[0].clone()
                     self.hists[f].Reset()
@@ -698,14 +799,19 @@ class HistStorage(object):
             self.hists[f]=Hist(bins,xmin,xmax)
             self.hists[f].GetXaxis().SetTitle(xtitle)
             try:
-            #if weight is None:
-                _tree.Draw(value,selection=cut,hist=self.hists[f])
-            #else:
-                #tmpFile=File("tmp.root", "recreate")
-                #sel_tree=_tree.copy_tree(selection=cut)
-                #print weight
-                #sel_tree.Draw(value,selection=weight,hist=self.hists[f])
-            except:
+                if weight is None:
+                    _tree.Draw(value,selection=cut,hist=self.hists[f])
+                else:
+                    #_tree.Draw(value,selection="(%s)*(%s)"%(cut,weight),hist=self.hists[f])
+                    tmpFile=File("/tmp/tmp.root", "recreate")
+                    #sel_tree=_tree.copy_tree(selection=cut)
+                    sel_tree=asrootpy(_tree.CopyTree(cut))
+                    ##print weight
+                    sel_tree.Draw(value,selection=weight,hist=self.hists[f])
+                    tmpFile.Close()
+            except Exception as e:
+                log_plotlib.info( "error:%s"%(e))
+                log_plotlib.info( "file :%s"%(f))
                 log_plotlib.info( "Perhaps try this one:")
                 for i in _tree.glob("*"):
                     log_plotlib.info( i)
